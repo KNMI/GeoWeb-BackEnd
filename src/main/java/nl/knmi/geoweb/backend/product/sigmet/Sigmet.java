@@ -74,6 +74,8 @@ public class Sigmet {
 
 	@Getter
 	public class SigmetLevelPart{
+		public SigmetLevelPart(){
+		}
 		float value;
 		SigmetLevelUnit unit;
 		public SigmetLevelPart(SigmetLevelUnit unit, float val) {
@@ -84,6 +86,8 @@ public class Sigmet {
 	
 	@Getter
 	public class SigmetLevel {
+		public SigmetLevel(){			
+		}
 		SigmetLevelPart lev1;
 		SigmetLevelPart lev2;
 		public SigmetLevel(SigmetLevelPart lev1) {
@@ -224,6 +228,11 @@ public class Sigmet {
 		sm.setGeo("json string");
 		
 		System.err.println(sm);
+		final SigmetStore store =new SigmetStore("/tmp");
+		for(int i=0;i<20;i++){
+			sm = getRandomSigmet();
+			store.storeSigmet(sm);
+		}
 		
 	}
 }
