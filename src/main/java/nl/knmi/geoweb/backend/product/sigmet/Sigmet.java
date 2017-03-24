@@ -260,6 +260,5 @@ public class Sigmet {
 			store.storeSigmet(sm);
 			System.err.println(i+": "+sm);
 		}
-
 	}
 }
