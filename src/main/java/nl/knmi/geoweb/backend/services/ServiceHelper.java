@@ -67,7 +67,22 @@ public class ServiceHelper {
 
 			}
 		} catch (Exception e) {
-			response.setStatus(500);
+			e.printStackTrace();
+			try {
+				if (callback==null) {
+					response.setContentType("application/json");
+					out.write("{\"error\":\"error\"}".getBytes());
+				} else {
+					response.setContentType("application/javascript");
+					out.write(callback.getBytes());
+					out.write("(".getBytes());
+					out.write("{\"error\":\"error\"}".getBytes());
+					out.write(");".getBytes());
+
+				}
+			}catch (Exception e1) {
+				response.setStatus(500);
+			}
 		}
 	}
 }
