@@ -149,7 +149,7 @@ public class Sigmet {
 	public static final long WSVALIDTIME = 4*3600*1000;
 	public static final long WVVALIDTIME = 6*3600*1000;
 
-	private GeoJsonObject geo;
+	private GeoJsonObject geojson;
 	private Phenomenon phenomenon;
 	private ObsFc obs_or_forecast;
 	private SigmetLevel level;
@@ -174,7 +174,7 @@ public class Sigmet {
 		PrintStream ps=new PrintStream(baos);
 		ps.println(String.format("Sigmet: %s %s %s [%s]", this.firname, icao_location_indicator, location_indicator_mwo, uuid));
 		ps.println(String.format("seq: %d issued at %s valid from %s",sequence, this.issuedate, this.validdate));
-		ps.println(String.format("change: %s geo: %s", this.change, this.geo));
+		ps.println(String.format("change: %s geo: %s", this.change, this.geojson));
 		return baos.toString();
 	}
 
@@ -222,13 +222,13 @@ public class Sigmet {
 		GeoJsonObject geo;	
 		try {
 			geo = new ObjectMapper().readValue(testGeoJson.getBytes(), GeoJsonObject.class);
-			this.setGeo(geo);
+			this.setGeojson(geo);
 			return;
 		} catch (JsonParseException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
 		}
-		this.setGeo(null);
+		this.setGeojson(null);
 	}
 
 	public void serializeSigmet(String fn) {
