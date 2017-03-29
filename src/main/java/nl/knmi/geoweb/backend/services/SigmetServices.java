@@ -1,10 +1,12 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
+import tools.Debug;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
 @RestController
@@ -23,13 +26,12 @@ import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 public class SigmetServices {
 
 	final static SigmetStore store =new SigmetStore("/tmp");
-
 	@RequestMapping(path="/storesigmet", method=RequestMethod.POST)
-	public String storeSigmet(@RequestParam(value="sigmet", required=true) String sigmet) throws JsonParseException, JsonMappingException, IOException{
-		Sigmet sm=new ObjectMapper().readValue(sigmet, Sigmet.class);
+	public String storeJSONSigmet(@RequestBody String sigmet) throws JsonParseException, JsonMappingException, IOException{
+		Debug.println("storesigmet");
+		Sigmet sm=new ObjectMapper().readValue(URLDecoder.decode(sigmet, "UTF-8"), Sigmet.class);
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setIssuedate(new Date());
-		System.out.println("SIGMET PHENOMENON: " + sm.getPhenomenon());
 		store.storeSigmet(sm);
 		return "sigmet "+sm.getUuid()+" stored";
 	}
