@@ -25,7 +25,7 @@ public class SigmetStore {
 	}
 
 	public synchronized int getSequence() {
-		Sigmet[]sigmets=getSigmets(true);
+		Sigmet[]sigmets=getSigmets(true, null);
 		int seq=-1;
 		Date now=new Date();
 		if (sigmets.length>0){
@@ -41,7 +41,7 @@ public class SigmetStore {
 		return 1;
 	}
 
-	public Sigmet[] getSigmets(boolean selectActive) {
+	public Sigmet[] getSigmets(boolean selectActive, SigmetStatus selectStatus) {
 		Comparator<Sigmet> comp = new Comparator<Sigmet>() {
 			public int compare(Sigmet lhs, Sigmet rhs) {
 				return rhs.getIssuedate().compareTo(lhs.getIssuedate());
@@ -72,7 +72,11 @@ public class SigmetStore {
 						if ((sm.getStatus()==SigmetStatus.PUBLISHED)&&(sm.getValiddate().getTime()+Sigmet.WSVALIDTIME)<now.getTime()) {
 							sigmets.add(sm);
 						}
-					}else {
+					}else if (selectStatus != null) {
+						if (sm.getStatus()==selectStatus) {
+							sigmets.add(sm);
+						}
+					} else {
 						sigmets.add(sm);
 					}
 				} catch (JsonParseException e) {
@@ -93,7 +97,7 @@ public class SigmetStore {
 	}
 
 	public Sigmet getByUuid(String uuid) {
-		for (Sigmet sigmet: getSigmets(false)) {
+		for (Sigmet sigmet: getSigmets(false, null)) {
 			if (uuid.equals(sigmet.getUuid())){
 				return sigmet;
 			}
