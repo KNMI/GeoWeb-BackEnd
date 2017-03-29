@@ -64,7 +64,6 @@ public class SigmetStore {
 		if (files!=null) {
 			List<Sigmet> sigmets=new ArrayList<Sigmet>();
 			for (File f: files) {
-				System.err.println("F:"+f);
 				Sigmet sm;
 				try {
 					sm = Sigmet.getSigmetFromFile(f);

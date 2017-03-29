@@ -5,7 +5,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 
 
-public class SuperDebug {
+public class Debug {
   static boolean showFileAndLineNumber = true;
   protected static String getSignature(StackTraceElement trace) {
     if(!showFileAndLineNumber||trace==null){return "";}

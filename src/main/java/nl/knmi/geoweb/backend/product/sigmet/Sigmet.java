@@ -4,10 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
 import org.geojson.GeoJsonObject;
+import org.json.JSONException;
+import org.json.JSONTokener;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -17,14 +21,38 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+
 import lombok.Getter;
 import lombok.Setter;
-
-import tools.SuperDebug;
+import org.json.JSONObject;
+import tools.Debug;
 @JsonInclude(Include.NON_NULL)
 @Getter
 @Setter
 public class Sigmet {
+	
+	public static final long WSVALIDTIME = 4*3600*1000;
+	public static final long WVVALIDTIME = 6*3600*1000;
+
+	private GeoJsonObject geojson;
+	private Phenomenon phenomenon;
+	private ObsFc obs_or_forecast;
+	private SigmetLevel level;
+	private SigmetMovement movement;
+	private SigmetChange change;
+
+	private String forecast_position;
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
+	private java.util.Date issuedate;
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
+	private Date validdate;
+	private String firname;
+	private String location_indicator_icao;
+	private String location_indicator_mwo;
+	private String uuid;
+	private SigmetStatus status;
+	private int sequence;
+	
 	@Getter
 	public enum Phenomenon {
 		OBSC_TS("OBSC TS", "Obscured Thunderstorms"),OBSC_TSGR("OBSC TSGR", "Obscured Thunderstorms with hail"),
@@ -148,11 +176,10 @@ public class Sigmet {
 		PRODUCTION("Production"), CANCELLED("Cancelled"), PUBLISHED("Published"); 
 		private String status;
 		private SigmetStatus (String status) {
-			SuperDebug.println(status);
 			this.status = status;
 		}
 		public static SigmetStatus getSigmetStatus(String status){
-			SuperDebug.println("SIGMET status: " + status);
+			Debug.println("SIGMET status: " + status);
 
 			for (SigmetStatus sstatus: SigmetStatus.values()) {
 				if (status.equals(sstatus.toString())){
@@ -164,27 +191,7 @@ public class Sigmet {
 
 	}
 
-	public static final long WSVALIDTIME = 4*3600*1000;
-	public static final long WVVALIDTIME = 6*3600*1000;
 
-	private GeoJsonObject geojson;
-	private Phenomenon phenomenon;
-	private ObsFc obs_or_forecast;
-	private SigmetLevel level;
-	private SigmetMovement movement;
-	private SigmetChange change;
-
-	private String forecast_position;
-	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ssZ")
-	private Date issuedate;
-	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ssZ")
-	private Date validdate;
-	private String firname;
-	private String location_indicator_icao;
-	private String location_indicator_mwo;
-	private String uuid;
-	private SigmetStatus status;
-	private int sequence;
 
 	@Override
 	public String toString() {
@@ -239,7 +246,7 @@ public class Sigmet {
 	}
 	
 	public void setGeoFromString(String json) {
-		System.err.println("SEtting json from "+json);
+		Debug.println("setGeoFromString "+json);
 		GeoJsonObject geo;	
 		try {
 			geo = new ObjectMapper().readValue(testGeoJson.getBytes(), GeoJsonObject.class);
@@ -253,10 +260,11 @@ public class Sigmet {
 	}
 
 	public void serializeSigmet(String fn) {
+		Debug.println("serializeSigmet to "+fn);
 		if(this.geojson == null || this.phenomenon == null) {
 			throw new IllegalArgumentException("GeoJSON and Phenomenon are required");
 		}
-		// ....
+		// .... value from constructor is lost here, set it explicitly. (Why?)
 		if(this.status == null) {
 			this.status = SigmetStatus.PRODUCTION;
 		}
@@ -278,15 +286,34 @@ public class Sigmet {
 		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", "abcd");
 		sm.setPhenomenon(Phenomenon.getPhenomenon("OBSC_TS"));
 		sm.setValiddate(new Date(117,2,13,16,0));
+		Debug.println(sm.getValiddate().toString());
 		sm.setChange(SigmetChange.NC);
 		sm.setGeoFromString(testGeoJson);
-		SuperDebug.println(sm.getPhenomenon().toString());
-		System.err.println(sm);
+		Debug.println(sm.getPhenomenon().toString());
+		
 		SigmetStore store=new SigmetStore("/tmp");
-		for (int i=0; i<1; i++) {
-			sm=Sigmet.getRandomSigmet();
-			store.storeSigmet(sm);
-			System.err.println(i+": "+sm);
+//		store.storeSigmet(sm);
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		// DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+		// objectMapper.setDateFormat(df);
+		try{
+			String v = objectMapper.writeValueAsString(sm);
+			JSONObject j = (JSONObject) new JSONTokener(v).nextValue();
+			Debug.println(j.get("issuedate").toString());
+		}catch(JsonProcessingException e){
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		
+//		System.err.println(sm);
+//		
+//		for (int i=0; i<1; i++) {
+//			sm=Sigmet.getRandomSigmet();
+//			store.storeSigmet(sm);
+//			System.err.println(i+": "+sm);
+//		}
 	}
 }
