@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
+import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
 @RestController
@@ -28,6 +29,7 @@ public class SigmetServices {
 		Sigmet sm=new ObjectMapper().readValue(sigmet, Sigmet.class);
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setIssuedate(new Date());
+		System.out.println("SIGMET PHENOMENON: " + sm.getPhenomenon());
 		store.storeSigmet(sm);
 		return "sigmet "+sm.getUuid()+" stored";
 	}
@@ -44,9 +46,10 @@ public class SigmetServices {
 
 	@RequestMapping("/getsigmetlist")
 	public Sigmet[] getSigmetList(@RequestParam(value="active", required=true) Boolean active, 
+			@RequestParam(value="status", required=false) SigmetStatus status,
 			@RequestParam(value="page", required=false) Integer page,
 			@RequestParam(value="count", required=false) Integer count) {
-		Sigmet[] sigmets=store.getSigmets(active);
+		Sigmet[] sigmets=store.getSigmets(active, status);
 		int len=sigmets.length;
 		int first;
 		int last;

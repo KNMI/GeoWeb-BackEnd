@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.Setter;
 
+import tools.SuperDebug;
 @JsonInclude(Include.NON_NULL)
 @Getter
 @Setter
@@ -49,13 +50,14 @@ public class Sigmet {
 			this.shortDescription=shrt;
 			this.description=description;
 		}
-		public static Phenomenon getPhenomenon(String desc){
+		public static Phenomenon getPhenomenon(String desc) {
 			for (Phenomenon phen: Phenomenon.values()) {
 				if (desc.equals(phen.toString())){
 					return phen;
 				}
 			}
 			return null;
+			//throw new Exception("You NOOB: Non existing pheonomenon!!!" + desc);
 		}
 	}
 	@JsonInclude(Include.NON_NULL)
@@ -140,16 +142,32 @@ public class Sigmet {
 			this.description=desc;
 		}
 	}
-
+	
 	@Getter
 	public enum SigmetStatus {
-		PRODUCTION, CANCELED, PUBLISHED; 
+		PRODUCTION("Production"), CANCELLED("Cancelled"), PUBLISHED("Published"); 
+		private String status;
+		private SigmetStatus (String status) {
+			SuperDebug.println(status);
+			this.status = status;
+		}
+		public static SigmetStatus getSigmetStatus(String status){
+			SuperDebug.println("SIGMET status: " + status);
+
+			for (SigmetStatus sstatus: SigmetStatus.values()) {
+				if (status.equals(sstatus.toString())){
+					return sstatus;
+				}
+			}
+			return null;
+		}
+
 	}
 
 	public static final long WSVALIDTIME = 4*3600*1000;
 	public static final long WVVALIDTIME = 6*3600*1000;
 
-	private GeoJsonObject geo;
+	private GeoJsonObject geojson;
 	private Phenomenon phenomenon;
 	private ObsFc obs_or_forecast;
 	private SigmetLevel level;
@@ -162,7 +180,7 @@ public class Sigmet {
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ssZ")
 	private Date validdate;
 	private String firname;
-	private String icao_location_indicator;
+	private String location_indicator_icao;
 	private String location_indicator_mwo;
 	private String uuid;
 	private SigmetStatus status;
@@ -172,9 +190,9 @@ public class Sigmet {
 	public String toString() {
 		ByteArrayOutputStream baos=new ByteArrayOutputStream();
 		PrintStream ps=new PrintStream(baos);
-		ps.println(String.format("Sigmet: %s %s %s [%s]", this.firname, icao_location_indicator, location_indicator_mwo, uuid));
+		ps.println(String.format("Sigmet: %s %s %s [%s]", this.firname, location_indicator_icao, location_indicator_mwo, uuid));
 		ps.println(String.format("seq: %d issued at %s valid from %s",sequence, this.issuedate, this.validdate));
-		ps.println(String.format("change: %s geo: %s", this.change, this.geo));
+		ps.println(String.format("change: %s geo: %s", this.change, this.geojson));
 		return baos.toString();
 	}
 
@@ -183,11 +201,14 @@ public class Sigmet {
 
 	public Sigmet(String firname, String location, String issuing_mwo, String uuid) {
 		this.firname=firname;
-		this.icao_location_indicator=location;
+		this.location_indicator_icao=location;
 		this.location_indicator_mwo=issuing_mwo;
 		this.uuid=uuid;
 		this.sequence=-1;
 		this.issuedate=new Date();
+		this.phenomenon = null;
+		// If a SIGMET is posted, this has no effect
+		this.status=SigmetStatus.PRODUCTION;
 	}
 
 	static String testGeoJson="{\"type\":\"FeatureCollection\",\"features\":[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]},\"properties\":{\"prop0\":\"value0\",\"prop1\":{\"this\":\"that\"}}}]}";
@@ -222,16 +243,23 @@ public class Sigmet {
 		GeoJsonObject geo;	
 		try {
 			geo = new ObjectMapper().readValue(testGeoJson.getBytes(), GeoJsonObject.class);
-			this.setGeo(geo);
+			this.setGeojson(geo);
 			return;
 		} catch (JsonParseException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
 		}
-		this.setGeo(null);
+		this.setGeojson(null);
 	}
 
 	public void serializeSigmet(String fn) {
+		if(this.geojson == null || this.phenomenon == null) {
+			throw new IllegalArgumentException("GeoJSON and Phenomenon are required");
+		}
+		// ....
+		if(this.status == null) {
+			this.status = SigmetStatus.PRODUCTION;
+		}
 		ObjectMapper om=new ObjectMapper();
 		try {
 			om.writeValue(new File(fn), this);
@@ -252,10 +280,10 @@ public class Sigmet {
 		sm.setValiddate(new Date(117,2,13,16,0));
 		sm.setChange(SigmetChange.NC);
 		sm.setGeoFromString(testGeoJson);
-
+		SuperDebug.println(sm.getPhenomenon().toString());
 		System.err.println(sm);
 		SigmetStore store=new SigmetStore("/tmp");
-		for (int i=0; i<20; i++) {
+		for (int i=0; i<1; i++) {
 			sm=Sigmet.getRandomSigmet();
 			store.storeSigmet(sm);
 			System.err.println(i+": "+sm);
