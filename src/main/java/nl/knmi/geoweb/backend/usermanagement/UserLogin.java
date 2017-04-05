@@ -41,7 +41,7 @@ public class UserLogin {
 			GeoWebUser geowebUser=userstore.getUser(user);
 			return geowebUser;
 		}
-		String[] roles={"USER"};
+		RoleType[] roles={RoleType.USER};
 		return userstore.new GeoWebUser("guest","XXX", roles);
 	}	
 
@@ -76,7 +76,7 @@ public class UserLogin {
 			HttpServletResponse response) throws IOException {
 		GeoWebUser user=userstore.checkUser(name, password);
 		if (user==null) {
-			List<String>roles=new ArrayList<String>();
+			List<RoleType>roles=new ArrayList<RoleType>();
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//, "User/password incorrect");
 			response.sendError(401, "User/password incorrect");
 			return userstore.new GeoWebUser(null, null, roles);
