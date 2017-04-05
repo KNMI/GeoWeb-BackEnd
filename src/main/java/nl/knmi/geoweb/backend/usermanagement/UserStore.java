@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import nl.knmi.geoweb.backend.usermanagement.RoleType;
 
 public class UserStore {
 
@@ -13,18 +14,18 @@ public class UserStore {
 	public class GeoWebUser {
 		private String username;
 		private String password;
-		private List<String>roles=new ArrayList<String>();
-		public GeoWebUser(String nm, String pw, String[]roles) {
+		private List<RoleType>roles=new ArrayList<RoleType>();
+		public GeoWebUser(String nm, String pw, RoleType[]roles) {
 			username=nm;
 			password=pw;
-			for (String role: roles) {
+			for (RoleType role: roles) {
 				this.roles.add(role);
 			}
 		}
-		public GeoWebUser(String nm, String pw, List<String>roles) {
+		public GeoWebUser(String nm, String pw, List<RoleType>roles) {
 			username=nm;
 			password=pw;
-			for (String role: roles) {
+			for (RoleType role: roles) {
 				this.roles.add(role);
 			}
 		}
@@ -34,7 +35,7 @@ public class UserStore {
 
 	public boolean userHasRole(String user, String role) {
 		if (store.containsKey(user)){
-          for (String r: store.get(user).getRoles()) {
+          for (RoleType r: store.get(user).getRoles()) {
         	  if (r.equals(role)) return true;
           }
 		}
@@ -63,19 +64,22 @@ public class UserStore {
 	public UserStore() {
 	}
 
-	private void addUserToStore(String name, String pw, String[]roles){
+	private void addUserToStore(String name, String pw, RoleType[]roles){
 		store.put(name, new GeoWebUser(name, pw, roles));
 	}
 
 	private void generateUserStore() {
 		store=new HashMap<String, GeoWebUser>();
-		addUserToStore("ernst", "ernst",new String[]{"USER"});
-		addUserToStore("guest", "guest",new String[]{"USER"});
-		addUserToStore("met1", "met1",new String[]{"USER","MET"});
-		addUserToStore("met2", "met1",new String[]{"USER", "MET"});
-		addUserToStore("admin", "admin",new String[]{"USER","ADMIN"});
+		addUserToStore("ernst", "ernst",new RoleType[]{RoleType.USER});
+		addUserToStore("guest", "guest",new RoleType[]{RoleType.USER});
+		addUserToStore("met1", "met1",new RoleType[]{RoleType.USER,RoleType.MET});
+		addUserToStore("beheerder1", "beheerder1",new RoleType[]{RoleType.USER,RoleType.ADMIN});
+		addUserToStore("met2", "met1",new RoleType[]{RoleType.USER, RoleType.MET});
+		addUserToStore("admin", "admin",new RoleType[]{RoleType.USER,RoleType.ADMIN});
+		addUserToStore("admin", "admin",new RoleType[]{RoleType.USER, RoleType.ADMIN});
 	}
 
+	
 	public GeoWebUser getUser(String nm) {
 		if (store==null) {
 			generateUserStore();
