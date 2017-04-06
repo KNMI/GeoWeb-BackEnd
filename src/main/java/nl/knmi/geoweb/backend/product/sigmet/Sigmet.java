@@ -46,6 +46,8 @@ public class Sigmet {
 	private java.util.Date issuedate;
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
 	private Date validdate;
+	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
+	private Date validdate_end;
 	private String firname;
 	private String location_indicator_icao;
 	private String location_indicator_mwo;
