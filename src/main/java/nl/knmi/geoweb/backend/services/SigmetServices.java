@@ -2,6 +2,7 @@ package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.nio.file.NotDirectoryException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -26,7 +27,12 @@ import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 @RequestMapping("/sigmet")
 public class SigmetServices {
 
-	final static SigmetStore store =new SigmetStore("/tmp");
+	static SigmetStore store = null;
+	
+	SigmetServices () throws NotDirectoryException {
+		store = new SigmetStore("/tmp");
+	}
+	
 	private static final String Sigmet = null;
 	@RequestMapping(path="/storesigmet", method=RequestMethod.POST)
 	public String storeJSONSigmet(@RequestBody String sigmet) throws JsonParseException, JsonMappingException, IOException{
