@@ -3,6 +3,7 @@ package nl.knmi.geoweb.backend.product.sigmet;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -12,10 +13,21 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
+import tools.Debug;
 
 public class SigmetStore {
 	private String directory;
-	public SigmetStore(String dir) {
+	public SigmetStore(String dir) throws NotDirectoryException {
+		File f = new File(dir);
+		if(f.exists() == false){
+			Debug.errprintln("Sigmet directory does not exist");
+			throw new NotDirectoryException("Sigmet directory does not exist");
+		}
+		if(f.isDirectory() == false){
+			Debug.errprintln("Sigmet directory location is not a directorty");
+			throw new NotDirectoryException("Sigmet directory location is not a directorty");
+		}
+		
 		this.directory=dir;
 	}
 

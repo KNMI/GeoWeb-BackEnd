@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.NotDirectoryException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -282,7 +283,7 @@ public class Sigmet {
 		return om.writeValueAsString(this);
 	}
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws NotDirectoryException {
 		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", "abcd");
 		sm.setPhenomenon(Phenomenon.getPhenomenon("OBSC_TS"));
 		sm.setValiddate(new Date(117,2,13,16,0));
