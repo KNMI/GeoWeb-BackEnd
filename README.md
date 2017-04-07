@@ -11,6 +11,7 @@ For setting up development environment:
 5) In STS, select Run as java application
 6) Select GeoWebBackEndApplication
 7) To adjust the server port, set in Run Configuration the argument like this: --server.port=8090
+8) Copy pre-commit to ./git/hooks to enable automatic unit testing on new commits.
 
 For creating a new package:
 

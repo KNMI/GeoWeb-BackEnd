@@ -155,8 +155,7 @@ public class GeoWebBackEndApplicationTests {
         assertThat(jsonResult.get("error").asText().length(), not(0));
 	}
 	
-	@Test
-	public void apiTestStoreSigmetOK() throws Exception {
+	public String apiTestStoreSigmetOK() throws Exception {
 		MvcResult result = mockMvc.perform(post("/sigmet/storesigmet")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
                 .andExpect(status().isOk())
@@ -166,7 +165,11 @@ public class GeoWebBackEndApplicationTests {
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("error"), is(false));
         assertThat(jsonResult.has("message"), is(true));
+        assertThat(jsonResult.has("message"), is(true));
         assertThat(jsonResult.get("message").asText().length(), not(0));
+        String uuid = jsonResult.get("uuid").asText();
+        Debug.println("Sigmet uuid = " + uuid);
+        return uuid;
 	}
 	
 	public ObjectNode getSigmetList() throws Exception {
@@ -188,12 +191,41 @@ public class GeoWebBackEndApplicationTests {
 	}
 	
 	@Test
-	public void apiTestStoreGetSigmetListIncrement () throws Exception {
+	public void apiTestGetSigmetListIncrement () throws Exception {
 		ObjectNode jsonResult = getSigmetList();
         int currentNrOfSigmets = jsonResult.get("nsigmets").asInt();
 		apiTestStoreSigmetOK();
 		jsonResult = getSigmetList();
 		int newNrOfSigmets = jsonResult.get("nsigmets").asInt();
 		assertThat(newNrOfSigmets, is(currentNrOfSigmets + 1));
+	}
+	@Test
+	public void apiTestGetSigmetByUUID () throws Exception {
+		String sigmetUUID = apiTestStoreSigmetOK();
+		
+		/*getsigmet by uuid*/
+		MvcResult result = mockMvc.perform(post("/sigmet/getsigmet?uuid=" + sigmetUUID)
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+		
+		String responseBody = result.getResponse().getContentAsString();
+		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        assertThat(jsonResult.get("uuid").asText(), is(sigmetUUID));
+        assertThat(jsonResult.get("phenomenon").asText(), is("OBSC_TS"));
+        assertThat(jsonResult.get("obs_or_forecast").get("obs").asBoolean(), is(true));
+        assertThat(jsonResult.get("level").get("lev1").get("value").asDouble(), is(100.0));
+        assertThat(jsonResult.get("level").get("lev1").get("unit").asText(), is("FL"));
+        assertThat(jsonResult.get("movement").get("stationary").asBoolean(), is(true)); 
+        assertThat(jsonResult.get("change").asText(), is("NC"));
+        assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
+        assertThat(jsonResult.get("firname").asText(), is("AMSTERDAM FIR"));
+        assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
+        assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
+        assertThat(jsonResult.get("status").asText(), is("PRODUCTION"));
+        assertThat(jsonResult.get("sequence").asInt(), is(0));
+        assertThat(jsonResult.has("geojson"), is(true));
+        Debug.println(responseBody);	
 	}
 }

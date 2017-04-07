@@ -56,7 +56,7 @@ public class SigmetServices {
 		sm.setIssuedate(new Date());
 		try{
 			store.storeSigmet(sm);
-			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").toString();
+			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 			try {
