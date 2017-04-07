@@ -1,0 +1,10 @@
+#!/bin/sh
+
+mvn clean test
+rc=$?
+if [ $rc -ne 0 ] ; then
+  echo 'could not perform tests'; exit $rc
+  exit 1
+fi
+
+exit 0

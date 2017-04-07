@@ -176,6 +176,7 @@ public class GeoWebBackEndApplicationTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
+		
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
