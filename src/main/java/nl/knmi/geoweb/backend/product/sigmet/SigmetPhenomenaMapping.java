@@ -64,7 +64,7 @@ public class SigmetPhenomenaMapping {
 		phen.addVariant("Squall line", "SQL");
 		phen.addAddition("with hail",  "GR");
 		phenomena.add(phen);
-		phen=new SigmetPhenomenon("Turbulence",  "SEV_TURB", "sigmet_layer_SEV_TURB");
+		phen=new SigmetPhenomenon("Severe Turbulence",  "SEV_TURB", "sigmet_layer_SEV_TURB");
 		phenomena.add(phen);
 		phen=new SigmetPhenomenon("Severe Icing",  "SEV_ICE", "sigmet_layer_SEV_ICE");
 		phen.addAddition("due to freezing rain", "FRZA");
