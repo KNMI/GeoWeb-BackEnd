@@ -186,7 +186,7 @@ public class GeoWebBackEndApplicationTests {
         assertThat(jsonResult.has("npages"), is(true));
         assertThat(jsonResult.has("nsigmets"), is(true));
         assertThat(jsonResult.has("sigmets"), is(true));
-        assertThat(jsonResult.get("nsigmets").asInt(), not(0));
+        assertThat(jsonResult.has("nsigmets"), is(true));
         return jsonResult;
 	}
 	

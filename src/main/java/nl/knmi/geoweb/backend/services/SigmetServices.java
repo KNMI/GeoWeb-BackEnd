@@ -19,8 +19,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
@@ -91,8 +89,12 @@ public class SigmetServices {
 	}
 
 	@RequestMapping("/getsigmetphenomena")
-	public List<SigmetPhenomenaMapping.SigmetPhenomenon> SigmetPhenomena() {
-		return new SigmetPhenomenaMapping().getPhenomena();
+	public ResponseEntity<String> SigmetPhenomena() {
+		try {
+		  ObjectMapper mapper = new ObjectMapper();
+			return ResponseEntity.ok(mapper.writeValueAsString(new SigmetPhenomenaMapping().getPhenomena()));
+		}catch(Exception e){}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
 	
 	@Getter
