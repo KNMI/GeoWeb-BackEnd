@@ -107,7 +107,7 @@ public class Sigmet {
 	}
 
 	public enum SigmetLevelUnit {
-		FT, FL, SFC, TOP, TOP_ABV;
+		FT, FL, SFC, M, TOP, TOP_ABV;
 	}
 
 	@JsonInclude(Include.NON_NULL)

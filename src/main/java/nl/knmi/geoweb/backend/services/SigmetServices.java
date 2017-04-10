@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
 import tools.Debug;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
@@ -47,7 +50,17 @@ public class SigmetServices {
 	public String publishSigmet(String uuid) {
 		return "sigmet "+store.getByUuid(uuid)+" published";
 	}
+	
+	@RequestMapping(path="/getsigmetparameters")
+	public SigmetParameters getSigmetParameters() {
+		return new SigmetParameters();
+	}
 
+	@RequestMapping("/getsigmetphenomena")
+	public List<SigmetPhenomenaMapping.SigmetPhenomenon> SigmetPhenomena() {
+		return new SigmetPhenomenaMapping().getPhenomena();
+	}
+	
 	@Getter
 	private class SigmetList {
 		Sigmet[] sigmets;
