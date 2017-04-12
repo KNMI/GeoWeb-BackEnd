@@ -257,7 +257,7 @@ public class PresetStore {
 			e.printStackTrace();
 		}
 		AreaPreset pi1=PresetItem.createAreaPreset(60, 50, "EPSG:4326");
-		DisplayPreset pi2=PresetItem.createDisplayPreset("QUADCOL");
+		DisplayPreset pi2=PresetItem.createDisplayPreset("QUADCOL", 4);
 
 		Map<String, String> dims=new HashMap<String, String>();
 		String[] layers={"layer1", "layer2"};

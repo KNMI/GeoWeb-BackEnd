@@ -5,6 +5,8 @@ import java.nio.file.NotDirectoryException;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import nl.knmi.geoweb.backend.usermanagement.UserLogin;
+import nl.knmi.geoweb.backend.usermanagement.UserStore;
+
 @RestController
 @RequestMapping("/preset")
 public class PresetServices {
@@ -29,12 +34,16 @@ public class PresetServices {
 		store = new PresetStore("/tmp/presets");
 	}
 	@RequestMapping(path="/getpresets")
-	public ResponseEntity<String> getPresets(@RequestParam("system")Boolean system) throws JsonProcessingException {
+	public ResponseEntity<String> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		if (system) {
 			List<Preset>presets=store.readSystemPresets();
 			String json=new ObjectMapper().writeValueAsString(presets);
 			return ResponseEntity.status(HttpStatus.OK).body(json);
 		} else {
+			UserStore userStore=UserStore.getInstance();
+			String user=UserLogin.getUserFromRequest(req);
+			String[]roles=userStore.getUserRoles(user);
+			if (roles==null) roles=new String[]{"USER"};
 			List<Preset>presets=store.readUserPresets("ernst");
 			List<Preset>rolepresets=store.readRolePresets("met");
 			presets.addAll(rolepresets);
@@ -46,7 +55,6 @@ public class PresetServices {
 
 	@RequestMapping(path="/putsystempreset", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> storeSystemPreset(@RequestParam("name")String name, @RequestBody String preset) {
-		logger.error("PRESET:"+name+" "+preset);
 		Preset pr = store.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
@@ -63,12 +71,18 @@ public class PresetServices {
 	}
 
 	@RequestMapping(path="/putsrolespreset", method=RequestMethod.POST)
-	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, @RequestParam("roles")String roles, @RequestBody String preset) {
+	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, /*@RequestParam("roles")String roles,*/ @RequestBody String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
+			
+			UserStore userStore=UserStore.getInstance();
+			String user=UserLogin.getUserFromRequest(req);
+			String[]roles=userStore.getUserRoles(user);
+			if (roles==null) roles=new String[]{"USER"};
+
 			try {
-				store.storeRolePreset(Arrays.asList(roles.split(",")), pr);
+				store.storeRolePreset(Arrays.asList(roles), pr); //roles.split(",")), pr);
 				return ResponseEntity.status(HttpStatus.OK).body("Role preset "+name+" stored");				
 
 			} catch (IOException e) {
@@ -80,12 +94,16 @@ public class PresetServices {
 	}
 
 	@RequestMapping(path="/putuserpreset", method=RequestMethod.POST)
-	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestParam("preset")String preset) {
+	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestParam("preset")String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
+		
 		if (pr!=null) {
 			pr.setName(name);
+			
+			UserStore userStore=UserStore.getInstance();
+			String user=UserLogin.getUserFromRequest(req);
 			try {
-				store.storeUserPreset(name, pr);
+				store.storeUserPreset(user, pr);
 				return ResponseEntity.status(HttpStatus.OK).body("User preset "+name+" stored");				
 
 			} catch (IOException e) {
