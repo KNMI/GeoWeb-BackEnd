@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,13 +29,12 @@ public class AdminServices {
 	//http://bhw485.knmi.nl:8090/admin/read?type=locations&name=locations
 
 	@RequestMapping(path="/create", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public void createConfigurationItem(HttpServletRequest req, HttpServletResponse response) throws JsonProcessingException {
+	public void createConfigurationItem(HttpServletRequest req, HttpServletResponse response, @RequestBody String payload) throws JsonProcessingException {
 		Debug.println("admin/create");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			String type = HTTPTools.getHTTPParam(req, "type");
 			String name = HTTPTools.getHTTPParam(req, "name");
-			String payload = HTTPTools.getHTTPParam(req, "payload");
 			JSONObject result = new JSONObject();
 			Debug.println("type:" +type);
 			Debug.println("name:" +name);
@@ -43,7 +43,7 @@ public class AdminServices {
 			result.put("message", "ok");
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
-			jsonResponse.setException("create failed",e);
+			jsonResponse.setException("create failed " + e.getMessage(),e);
 		}
 		try {
 			jsonResponse.print(response);
