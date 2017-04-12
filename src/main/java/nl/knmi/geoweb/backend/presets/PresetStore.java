@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 
+
 @Getter
 public class PresetStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -258,10 +259,11 @@ public class PresetStore {
 
 		Map<String, String> dims=new HashMap<String, String>();
 		String[] layers={"layer1", "layer2"};
-		LayerPreset pi3=PresetItem.createLayerPreset(layers[0] ,  dims);
+		String[] services={"http://service.knmi.nl/service1", "http://service.knmi.nl/service1"};
+		LayerPreset pi3=PresetItem.createLayerPreset(services[0], layers[0],  dims);
 		List<LayerPreset>lyrs=new ArrayList<LayerPreset>();
 		lyrs.add(pi3);
-		LayerPreset pi4=PresetItem.createLayerPreset(layers[1] ,  dims);
+		LayerPreset pi4=PresetItem.createLayerPreset(services[1], layers[1],  dims);
 		lyrs.add(pi4);
 		try {
 			System.err.println(new ObjectMapper().writeValueAsString(lyrs));
