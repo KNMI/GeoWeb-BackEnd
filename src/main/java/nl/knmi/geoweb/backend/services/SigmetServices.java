@@ -44,15 +44,16 @@ public class SigmetServices {
 			path = "/storesigmet", 
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) {
+	public ResponseEntity<String> storeJSONSigmet(@RequestBody Sigmet sigmet) {
 		Debug.println("storesigmet");
 		Sigmet sm = null;
-		try {
-			sm = new ObjectMapper().readValue(URLDecoder.decode(sigmet, "UTF-8"), Sigmet.class);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+//		try {
+//			sm = new ObjectMapper().readValue(URLDecoder.decode(sigmet, "UTF-8"), Sigmet.class);
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
+		sm=sigmet;
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setIssuedate(new Date());
 		try{
@@ -87,7 +88,12 @@ public class SigmetServices {
 	public SigmetParameters getSigmetParameters() {
 		return new SigmetParameters();
 	}
-
+	
+	@RequestMapping(path="/putsigmetparameters")
+	public ResponseEntity<String> storeSigmetParameters(String json) { 
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
+	}
+	
 	@RequestMapping("/getsigmetphenomena")
 	public ResponseEntity<String> SigmetPhenomena() {
 		try {
@@ -96,6 +102,7 @@ public class SigmetServices {
 		}catch(Exception e){}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
+
 	
 	@Getter
 	private class SigmetList {
