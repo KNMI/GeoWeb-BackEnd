@@ -35,21 +35,19 @@ public class PresetServices {
 	}
 	@RequestMapping(path="/getpresets")
 	public ResponseEntity<String> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
-		if (system) {
-			List<Preset>presets=store.readSystemPresets();
-			String json=new ObjectMapper().writeValueAsString(presets);
-			return ResponseEntity.status(HttpStatus.OK).body(json);
-		} else {
+		List<Preset>presets=store.readSystemPresets();
+		if (!system) {
 			UserStore userStore=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=userStore.getUserRoles(user);
 			if (roles==null) roles=new String[]{"USER"};
-			List<Preset>presets=store.readUserPresets("ernst");
-			List<Preset>rolepresets=store.readRolePresets("met");
-			presets.addAll(rolepresets);
-			String json=new ObjectMapper().writeValueAsString(presets);
-			return ResponseEntity.status(HttpStatus.OK).body(json);
+			List<Preset>userPresets=store.readUserPresets("ernst");
+			presets.addAll(userPresets);
+			List<Preset>rolePresets=store.readRolePresets("met");
+			presets.addAll(rolePresets);
 		}
+		String json=new ObjectMapper().writeValueAsString(presets);
+		return ResponseEntity.status(HttpStatus.OK).body(json);
 //		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
 	}
 
