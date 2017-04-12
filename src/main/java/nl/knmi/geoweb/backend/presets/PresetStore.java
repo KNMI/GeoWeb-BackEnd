@@ -141,10 +141,7 @@ public class PresetStore {
 	public Preset loadJsonPreset(String json) {
 		ObjectMapper om=new ObjectMapper();
 		try {
-			StoredPreset sp=om.readValue(json, StoredPreset.class);
-			if (sp!=null) {
-			  return om.readValue(json, StoredPreset.class).getPreset();
-			}
+			  return om.readValue(json, Preset.class);
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -192,8 +189,8 @@ public class PresetStore {
 				) {
 
 			for (Path path : files) {
-				Preset preset=loadJsonPresetFromFile(path.toString());
-				presets.add(preset);
+				StoredPreset preset=loadJsonStoredPresetFromFile(path.toString());
+				presets.add(preset.getPreset());
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -238,8 +235,8 @@ public class PresetStore {
 				) {
 
 			for (Path path : files) {
-				Preset preset=loadJsonPresetFromFile(path.toString());
-				presets.add(preset);
+				StoredPreset preset=loadJsonStoredPresetFromFile(path.toString());
+				presets.add(preset.getPreset());
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -247,6 +244,7 @@ public class PresetStore {
 		}
 		return presets;
 	}
+	
 	public static void main(String[]args) {
 		PresetStore ps=null;
 		try {
