@@ -7,6 +7,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
+
 @Configuration
 @EnableWebMvc
 public class WebConfig extends WebMvcConfigurerAdapter {
@@ -15,12 +16,14 @@ public class WebConfig extends WebMvcConfigurerAdapter {
 	public void addCorsMappings(CorsRegistry registry) {
 		registry.addMapping("/**");
 	}
-	
+
 	//This matcher makes request paths case insensitive
-    @Override
-    public void configurePathMatch(PathMatchConfigurer configurer) {
-        AntPathMatcher matcher = new AntPathMatcher();
-        matcher.setCaseSensitive(false);
-        configurer.setPathMatcher(matcher);
-    }
+	@Override
+	public void configurePathMatch(PathMatchConfigurer configurer) {
+		AntPathMatcher matcher = new AntPathMatcher();
+		matcher.setCaseSensitive(false);
+		configurer.setPathMatcher(matcher);
+	}
+
+
 }

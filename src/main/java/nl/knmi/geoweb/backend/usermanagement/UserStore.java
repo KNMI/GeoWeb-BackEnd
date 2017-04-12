@@ -29,6 +29,13 @@ public class UserStore {
 				this.roles.add(role);
 			}
 		}
+		public List<String> getRoleNames(){
+			List<String> roles=new ArrayList<String>();
+			for (RoleType r: this.roles) {
+				roles.add(r.toString());
+			}
+			return roles;
+		}
 	}
 	
 	private static UserStore instance;
@@ -44,7 +51,7 @@ public class UserStore {
 	
 	public String[] getUserRoles(String user) {
 		if (store.containsKey(user)){
-			return store.get(user).getRoles().toArray(new String[0]);
+			return store.get(user).getRoleNames().toArray(new String[0]);
 		}
 		return null;
 	}
