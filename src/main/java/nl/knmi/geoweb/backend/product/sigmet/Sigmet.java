@@ -5,13 +5,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.NotDirectoryException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
 import org.geojson.GeoJsonObject;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONTokener;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -22,11 +21,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-
 import lombok.Getter;
 import lombok.Setter;
-import org.json.JSONObject;
-import tools.Debug;
+import nl.knmi.adaguc.tools.Debug;
 @JsonInclude(Include.NON_NULL)
 @Getter
 @Setter

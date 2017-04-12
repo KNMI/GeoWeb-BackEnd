@@ -12,15 +12,15 @@ import java.util.List;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
-import tools.Debug;
 
 public class SigmetStore {
 	private String directory;
 	public SigmetStore(String dir) throws NotDirectoryException {
 		File f = new File(dir);
 		if(f.exists() == false){
-			Debug.errprintln("Sigmet directory does not exist");
+			Debug.errprintln("Sigmet directory "+dir+" does not exist");
 			throw new NotDirectoryException("Sigmet directory does not exist");
 		}
 		if(f.isDirectory() == false){
