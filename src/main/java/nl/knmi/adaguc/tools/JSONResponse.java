@@ -106,7 +106,7 @@ public class JSONResponse {
 		//    if(e2.getClass() == tools.HTTPTools.WebRequestBadStatusException.class){
 		//      this.statusCode = ((tools.HTTPTools.WebRequestBadStatusException)e2).getStatusCode();
 		//    }
-		this.statusCode = 400;
+		this.statusCode = 422;
 		JSONObject error = new JSONObject();
 		try {
 			error.put("error", string);
