@@ -1,11 +1,8 @@
 package nl.knmi.geoweb.backend.services;
 
-import java.io.IOException;
-import java.net.URLDecoder;
 import java.nio.file.NotDirectoryException;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 import org.json.JSONException;
@@ -22,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
+import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
-import tools.Debug;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
 @RestController
