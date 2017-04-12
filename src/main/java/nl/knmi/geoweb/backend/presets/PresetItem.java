@@ -23,10 +23,10 @@ public class PresetItem {
 	//		return new LayerPreset(layers.toArray(new String[0]), dimensions);
 	//	}
 
-	public static LayerPreset createLayerPreset(String layer, Map<String,String>dimensions) {
+	public static LayerPreset createLayerPreset(String service, String name, Map<String,String>dimensions) {
 		boolean active=true;
 		boolean overlay=false;
 		float opacity=1;
-		return new LayerPreset(layer, dimensions, overlay, active, opacity);
+		return new LayerPreset(service, name, dimensions, overlay, active, opacity);
 	}
 }
