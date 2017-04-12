@@ -25,7 +25,8 @@ public class PresetItem {
 
 	public static LayerPreset createLayerPreset(String layer, Map<String,String>dimensions) {
 		boolean active=true;
+		boolean overlay=false;
 		float opacity=1;
-		return new LayerPreset(layer, dimensions, active, opacity);
+		return new LayerPreset(layer, dimensions, overlay, active, opacity);
 	}
 }
