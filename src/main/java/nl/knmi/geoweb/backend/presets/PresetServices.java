@@ -41,10 +41,12 @@ public class PresetServices {
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=userStore.getUserRoles(user);
 			if (roles==null) roles=new String[]{"USER"};
-			List<Preset>userPresets=store.readUserPresets("ernst");
+			List<Preset>userPresets=store.readUserPresets(user);
 			presets.addAll(userPresets);
-			List<Preset>rolePresets=store.readRolePresets("met");
-			presets.addAll(rolePresets);
+			for (String role: roles) {
+			  List<Preset>rolePresets=store.readRolePresets(role);
+			  presets.addAll(rolePresets);
+			}
 		}
 		String json=new ObjectMapper().writeValueAsString(presets);
 		return ResponseEntity.status(HttpStatus.OK).body(json);
@@ -69,18 +71,13 @@ public class PresetServices {
 	}
 
 	@RequestMapping(path="/putsrolespreset", method=RequestMethod.POST)
-	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, /*@RequestParam("roles")String roles,*/ @RequestBody String preset, HttpServletRequest req) {
+	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, @RequestParam("roles")String roles, @RequestBody String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
 			
-			UserStore userStore=UserStore.getInstance();
-			String user=UserLogin.getUserFromRequest(req);
-			String[]roles=userStore.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER"};
-
 			try {
-				store.storeRolePreset(Arrays.asList(roles), pr); //roles.split(",")), pr);
+				store.storeRolePreset(Arrays.asList(roles.split(",")), pr);
 				return ResponseEntity.status(HttpStatus.OK).body("Role preset "+name+" stored");				
 
 			} catch (IOException e) {
@@ -92,13 +89,12 @@ public class PresetServices {
 	}
 
 	@RequestMapping(path="/putuserpreset", method=RequestMethod.POST)
-	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestParam("preset")String preset, HttpServletRequest req) {
+	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestBody String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
 		
 		if (pr!=null) {
 			pr.setName(name);
 			
-			UserStore userStore=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			try {
 				store.storeUserPreset(user, pr);
