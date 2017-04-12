@@ -15,8 +15,8 @@ public class PresetItem {
 		return new AreaPreset(top, bottom, crs);
 	}
 
-	public static DisplayPreset createDisplayPreset(String type){
-		return new DisplayPreset(DisplayPreset.DisplayType.valueOf(type));	
+	public static DisplayPreset createDisplayPreset(String type, int npanels){
+		return new DisplayPreset(type, npanels);
 	}
 
 	//	public static PresetItem createLayerPreset(List<String>layers, Map<String,String>[]dimensions) {
