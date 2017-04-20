@@ -70,7 +70,7 @@ public class PresetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERR");				
 	}
 
-	@RequestMapping(path="/putsrolespreset", method=RequestMethod.POST)
+	@RequestMapping(path="/putrolespreset", method=RequestMethod.POST)
 	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, @RequestParam("roles")String roles, @RequestBody String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
 		if (pr!=null) {
