@@ -19,7 +19,7 @@ import nl.knmi.adaguc.tools.HTTPTools;
 import nl.knmi.adaguc.tools.JSONResponse;
 
 @RestController
-@RequestMapping(path="/admin", method=RequestMethod.GET)
+@RequestMapping(path={"/admin", "/store"}, method=RequestMethod.GET)
 public class AdminServices {
 	static AdminStore store = null;
 
