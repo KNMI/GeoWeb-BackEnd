@@ -43,8 +43,8 @@ public class Trigger {
 	public static class TriggerTransport {
 		private List<TriggerLocation> locations;
 		private TriggerPhenomenon phenomenon;
-//		@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
-//		private Date triggerdate;
+		@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
+		private Date triggerdate;
 		public TriggerTransport(){}
 	}
 	List<TriggerLocation> locations;
