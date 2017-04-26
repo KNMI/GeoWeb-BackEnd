@@ -67,7 +67,7 @@ public class Trigger {
 		 
 	}
 	public Trigger(TriggerTransport transport) {
-		this(transport.getPhenomenon(), transport.getLocations(),new Date(), UUID.randomUUID().toString());
+		this(transport.getPhenomenon(), transport.getLocations(), transport.getTriggerdate(), UUID.randomUUID().toString());
 		
 	}
 }
