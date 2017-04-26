@@ -54,7 +54,7 @@ public class TriggerStore {
 			public boolean accept(Path entry) throws IOException {
 				if (entry.getFileName().toString().startsWith("trigger_")) {
 					Trigger trig=loadTriggerFromFile(entry.toString());
-					Date trigdt=trig.getIssuedate();
+					Date trigdt=trig.getTriggerdate();
 					return !startDate.after(trigdt)&&endDate.after(trigdt);
 				}
 				return false;

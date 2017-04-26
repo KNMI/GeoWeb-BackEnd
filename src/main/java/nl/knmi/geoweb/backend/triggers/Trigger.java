@@ -13,26 +13,61 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Trigger {
-	private String group;
-	private String phenomenon;
-	private String triggername;
+	@Getter
+	public static class TriggerPhenomenon {
+		private String parameter;
+		private String operator;
+		private double threshold;
+		private String units;
+		private String source;
+		public TriggerPhenomenon(){}
+	}
+	@Getter
+	public static class TriggerLocation {
+		private double lat;
+		private double lon;
+		private String name;
+		private String code;
+		private double value;
+		public TriggerLocation(){}
+		public TriggerLocation(double lat, double lon, String name, String code, double value){
+			this.code=code;
+			this.lat=lat;
+			this.lon=lon;
+			this.name=name;
+			this.value=value;
+		}
+	}
+	@Getter
+	@Setter
+	public static class TriggerTransport {
+		private List<TriggerLocation> locations;
+		private TriggerPhenomenon phenomenon;
+//		@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
+//		private Date triggerdate;
+		public TriggerTransport(){}
+	}
+	List<TriggerLocation> locations;
 	private String uuid;
-	private List<String> tasks;
 	private List<String> presets;
 	@JsonFormat(shape=JsonFormat.Shape.STRING, pattern="yyyy-MM-dd'T'HH:mm:ss'Z'")
-	private Date issuedate;
-	private String parameters;
-
+	private Date triggerdate;
+	private TriggerPhenomenon phenomenon;
+	
 	public Trigger() {
-		this.uuid=UUID.randomUUID().toString();
-		this.setPhenomenon("t2m");
-		this.setGroup("heat");
-		this.setTriggername("obs above 10");
-		this.tasks=new ArrayList<String>(); 
-		this.presets=new ArrayList<String>();
-		this.issuedate=new Date();
-		this.parameters=null;
-		this.parameters="{\"var\": \"t2m\"}";
+		this.locations=new ArrayList<TriggerLocation>();
 	}
-
+	
+	public Trigger(TriggerPhenomenon phenomenon, List<TriggerLocation>triggerLocations, Date triggerdate, String uuid){
+		this.uuid=UUID.randomUUID().toString();	
+		this.locations=triggerLocations;
+		this.phenomenon=phenomenon;
+		this.triggerdate=triggerdate;
+		this.uuid=uuid;
+		 
+	}
+	public Trigger(TriggerTransport transport) {
+		this(transport.getPhenomenon(), transport.getLocations(),new Date(), UUID.randomUUID().toString());
+		
+	}
 }
