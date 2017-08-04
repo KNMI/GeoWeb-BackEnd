@@ -70,12 +70,11 @@ public class PresetServices {
 		}
 		for (Preset preset : presets) {
 			if (preset.getName().equals(name)) {
-				String json=new ObjectMapper().writeValueAsString(presets);
+				String json=new ObjectMapper().writeValueAsString(preset);
 				return ResponseEntity.status(HttpStatus.OK).body(json);
 			}
 		}
-
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
+		return ResponseEntity.status(HttpStatus.OK).body("{}");
 	}
 
 	@RequestMapping(path="/putsystempreset", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
