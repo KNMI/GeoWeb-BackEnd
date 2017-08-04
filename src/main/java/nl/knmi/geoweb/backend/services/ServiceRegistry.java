@@ -21,6 +21,7 @@ public class ServiceRegistry {
 		services.add(new Service("HARM_N25_EXT", "HARM_N25_EXT","http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi?", new String[]{"USER"}));
 		services.add(new Service("RADAR_EXT", "RADAR_EXT","http://geoservices.knmi.nl/cgi-bin/RADNL_OPER_R___25PCPRR_L3.cgi?", new String[]{"USER"}));
 		services.add(new Service("OVL", "OVL","http://birdexp07.knmi.nl/cgi-bin/geoweb/adaguc.OVL.cgi?", Service.ServiceGoal.OVERLAY, new String[]{"USER","MET"}));
+		services.add(new Service("NOWCASTMIX", "NOWCASTMIX","http://birdexp07.knmi.nl/cgi-bin/geoweb/adaguc.NOWCASTMIX.cgi?", new String[]{"MET"}));
 	}
 
 	public List<Service> getWMSServicesForRole(String role) {
