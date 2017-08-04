@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -39,18 +38,6 @@ public class TriggerServices {
 		return triggers;
 	}
 
-    @RequestMapping("/newtrigger")
-    public String newTrigger() {
-    	Trigger trig=new Trigger();
-    	try {
-			store.storeTrigger(trig);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	return "stored trigger "+trig.getUuid().toString();
-    }
-    
     @RequestMapping(path="/addtrigger", method=RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<String> addTrigger(@RequestBody Trigger.TriggerTransport transport) {
     	Trigger trig=new Trigger(transport);

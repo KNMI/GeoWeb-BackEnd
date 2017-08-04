@@ -5,7 +5,7 @@
 
 	<groupId>nl.knmi.geoweb</groupId>
 	<artifactId>demo</artifactId>
-	<version>0.6.7-SNAPSHOT</version>
+	<version>0.6.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>GeoWeb-BackEnd</name>
@@ -67,12 +67,19 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
-		
+		<dependency>
+		<groupId>com.fasterxml.jackson.datatype</groupId>
+		<artifactId>jackson-datatype-jdk8</artifactId>
+		</dependency>
 
 
 
 
-		
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

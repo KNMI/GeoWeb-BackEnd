@@ -44,13 +44,37 @@ public class PresetServices {
 			List<Preset>userPresets=store.readUserPresets(user);
 			presets.addAll(userPresets);
 			for (String role: roles) {
-			  List<Preset>rolePresets=store.readRolePresets(role);
-			  presets.addAll(rolePresets);
+				List<Preset>rolePresets=store.readRolePresets(role);
+				presets.addAll(rolePresets);
 			}
 		}
 		String json=new ObjectMapper().writeValueAsString(presets);
 		return ResponseEntity.status(HttpStatus.OK).body(json);
-//		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
+		//		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
+	}
+
+	@RequestMapping(path="/getpreset")
+	public ResponseEntity<String> getPreset(@RequestParam("name")String name, @RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
+		List<Preset>presets=store.readSystemPresets();
+		if (!system) {
+			UserStore userStore=UserStore.getInstance();
+			String user=UserLogin.getUserFromRequest(req);
+			String[]roles=userStore.getUserRoles(user);
+			if (roles==null) roles=new String[]{"USER"};
+			List<Preset>userPresets=store.readUserPresets(user);
+			presets.addAll(userPresets);
+			for (String role: roles) {
+				List<Preset>rolePresets=store.readRolePresets(role);
+				presets.addAll(rolePresets);
+			}
+		}
+		for (Preset preset : presets) {
+			if (preset.getName().equals(name)) {
+				String json=new ObjectMapper().writeValueAsString(preset);
+				return ResponseEntity.status(HttpStatus.OK).body(json);
+			}
+		}
+		return ResponseEntity.status(HttpStatus.OK).body("{}");
 	}
 
 	@RequestMapping(path="/putsystempreset", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -75,7 +99,7 @@ public class PresetServices {
 		Preset pr = store.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
-			
+
 			try {
 				store.storeRolePreset(Arrays.asList(roles.split(",")), pr);
 				return ResponseEntity.status(HttpStatus.OK).body("Role preset "+name+" stored");				
@@ -91,10 +115,10 @@ public class PresetServices {
 	@RequestMapping(path="/putuserpreset", method=RequestMethod.POST)
 	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestBody String preset, HttpServletRequest req) {
 		Preset pr = store.loadJsonPreset(preset);
-		
+
 		if (pr!=null) {
 			pr.setName(name);
-			
+
 			String user=UserLogin.getUserFromRequest(req);
 			try {
 				store.storeUserPreset(user, pr);
