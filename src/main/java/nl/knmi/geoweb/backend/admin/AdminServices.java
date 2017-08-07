@@ -1,5 +1,6 @@
 package nl.knmi.geoweb.backend.admin;
 
+import java.io.IOException;
 import java.nio.file.NotDirectoryException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,7 +24,7 @@ import nl.knmi.adaguc.tools.JSONResponse;
 public class AdminServices {
 	static AdminStore store = null;
 
-	AdminServices () throws NotDirectoryException {
+	AdminServices () throws IOException {
 		store = new AdminStore("/tmp/admin");
 	}
 	//http://bhw485.knmi.nl:8090/admin/read?type=locations&name=locations

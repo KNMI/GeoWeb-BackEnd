@@ -20,11 +20,11 @@ public class AdminStore {
 
 	public AdminStore() {}
 
-	public AdminStore(String dir) throws NotDirectoryException {
+	public AdminStore(String dir) throws IOException {
 		File f = new File(dir);
 		if(f.exists() == false){
-			Debug.errprintln("Admin store directory does not exist");
-			throw new NotDirectoryException("Admin store  directory does not exist");
+			Tools.mksubdirs(f.getAbsolutePath());
+			Debug.println("Creating admin store at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
 			Debug.errprintln("Admin store directory location is not a directory");

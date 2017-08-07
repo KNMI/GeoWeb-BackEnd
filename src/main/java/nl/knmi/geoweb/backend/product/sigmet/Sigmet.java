@@ -251,11 +251,13 @@ public class Sigmet {
 		try {
 			geo = new ObjectMapper().readValue(testGeoJson.getBytes(), GeoJsonObject.class);
 			this.setGeojson(geo);
+			Debug.println("setGeoFromString ["+json+"] set");
 			return;
 		} catch (JsonParseException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
 		}
+		Debug.errprintln("setGeoFromString on ["+json+"] failed");
 		this.setGeojson(null);
 	}
 
@@ -282,7 +284,7 @@ public class Sigmet {
 		return om.writeValueAsString(this);
 	}
 
-	public static void main(String args[]) throws NotDirectoryException {
+	public static void main(String args[]) throws IOException {
 		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", "abcd");
 		sm.setPhenomenon(Phenomenon.getPhenomenon("OBSC_TS"));
 		sm.setValiddate(new Date(117,2,13,16,0));

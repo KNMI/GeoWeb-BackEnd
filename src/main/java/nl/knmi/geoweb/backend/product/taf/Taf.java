@@ -1,6 +1,8 @@
 package nl.knmi.geoweb.backend.product.taf;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.Period;
 import java.time.ZoneId;
@@ -10,14 +12,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -25,6 +34,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.Getter;
 import lombok.Setter;
+import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFDefines.TAFCloudTypeName;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFDefines.TAFWeather;
 
@@ -32,6 +43,8 @@ import nl.knmi.geoweb.backend.product.taf.Taf.TAFDefines.TAFWeather;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Taf {
+	private String uuid = null;
+	
 	public static class TAFDefines {
 		public enum WWModifier {LIGHT, NORMAL,HEAVY};
 		@Getter
@@ -304,8 +317,13 @@ public class Taf {
 	}
 
 	public enum TAFReportStatus {
-		NORMAL, AMENDMENT, CANCEL, CORRECTION, MISSING;
+		RETARDED, NORMAL, AMENDMENT, CANCEL, CORRECTION, MISSING;
 	}
+	
+	public enum TAFReportPublishedConcept {
+		CONCEPT, PUBLISHED
+	}
+	
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING)
 	OffsetDateTime issueTime;
@@ -318,7 +336,7 @@ public class Taf {
 	List<ChangeForecast> changeForecasts;
 	String previousReportAerodrome;
 	Period previousValidPeriod;
-	TAFReportStatus status;
+	TAFReportPublishedConcept status = TAFReportPublishedConcept.CONCEPT;
 
 	public Taf() {
 		//		this.changeForecasts=new ArrayList<ChangeForecast>();
@@ -328,7 +346,7 @@ public class Taf {
 		this.previousReportAerodrome=aerodrome;
 		this.validityStart=validityStart;
 		this.validityEnd=validityEnd;
-		this.issueTime=OffsetDateTime.now(ZoneId.of("UTC")); //Update when publishing
+		this.issueTime=null;//OffsetDateTime.now(ZoneId.of("UTC")); //Update when publishing
 		this.changeForecasts=new ArrayList<ChangeForecast>();
 	}
 
@@ -375,6 +393,7 @@ public class Taf {
 	}
 
 	public static String toDDHHMM(OffsetDateTime t) {
+		if(t==null)return null;
 		DateTimeFormatter fmt= DateTimeFormatter.ofPattern("ddHHmm'Z'");
 		return t.format(fmt);
 	}
@@ -402,14 +421,41 @@ public class Taf {
 	}
 
 	public String toJSON() throws JsonProcessingException {
-		ObjectMapper om=new ObjectMapper();	
-		om.registerModule(new JavaTimeModule());
-		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-
+		ObjectMapper om=getObjectMapperBean();	
 		return om.writerWithDefaultPrettyPrinter().writeValueAsString(this);
 	}
+	
+	public static Taf fromJSONString(String tafJson) throws JsonParseException, JsonMappingException, IOException{
+		ObjectMapper om=getObjectMapperBean();	
+		Taf taf = om.readValue(tafJson, Taf.class);
+		return taf;
+	}
+
+
+	public static Taf fromFile(File f) throws JsonParseException, JsonMappingException, IOException {
+		return fromJSONString(Tools.readFile(f.getAbsolutePath()));
+	}
+
+    /** The standard date/time format used in JSON messages. */
+
+    public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+	// TODO use BEAN in proper way (Ask WvM)
+	@Bean(name = "objectMapper")
+    public static ObjectMapper getObjectMapperBean() {
+        ObjectMapper om=new ObjectMapper();	
+		om.registerModule(new JavaTimeModule());
+		om.setTimeZone(TimeZone.getTimeZone("UTC"));
+		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
+		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return om;
+
+    }
+
 
 	public static void main(String[]args) throws JsonProcessingException {
+		Debug.println("start");
 		OffsetDateTime s=OffsetDateTime.of(2017, 8, 4, 12, 0, 0, 0, ZoneOffset.UTC);
 		OffsetDateTime e=OffsetDateTime.of(2017, 8, 5, 18, 0, 0, 0, ZoneOffset.UTC);
 		Taf taf=new Taf("EHAM", s, e);
@@ -427,9 +473,7 @@ public class Taf {
 		System.err.println("JSON:"+taf.toJSON());
 		String tafjson=taf.toJSON();
 
-		ObjectMapper om=new ObjectMapper();	
-		om.registerModule(new JavaTimeModule());
-		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		ObjectMapper om=getObjectMapperBean();
 		try {
 			Taf newTaf=om.readValue(tafjson, Taf.class);
 			String taf_s2=newTaf.toTAC();
@@ -440,4 +484,6 @@ public class Taf {
 			e1.printStackTrace();
 		}
 	}
+
+	
 }

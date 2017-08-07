@@ -1,6 +1,7 @@
 package nl.knmi.geoweb.backend.triggers;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/triggers") 
 public class TriggerServices {
 	static TriggerStore store=null;	
-	TriggerServices () throws NotDirectoryException {
+	TriggerServices () throws IOException {
 		store = new TriggerStore("/tmp/triggers");
 	}
 	

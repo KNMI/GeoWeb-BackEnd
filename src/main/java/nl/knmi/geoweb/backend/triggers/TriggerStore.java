@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 
 @Getter
 public class TriggerStore {
@@ -32,11 +33,11 @@ public class TriggerStore {
 
 	String dir;
 
-	public TriggerStore(String dir) throws NotDirectoryException {
+	public TriggerStore(String dir) throws IOException {
 		File f = new File(dir);
 		if(f.exists() == false){
-			Debug.errprintln("Trigger directory does not exist");
-			throw new NotDirectoryException("Trigger directory does not exist");
+			Tools.mksubdirs(f.getAbsolutePath());
+			Debug.println("Creating triggerdir at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
 			Debug.errprintln("Trigger directory location is not a directory");
