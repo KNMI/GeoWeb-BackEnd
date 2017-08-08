@@ -177,6 +177,28 @@ public class TafServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
+	
+	/**
+	 * Delete a TAF by its uuid
+	 * @param uuid
+	 * @return ok if the TAF was successfully deleted, BAD_REQUEST if the taf didn't exist or if some other error occurred
+	 */
+	@RequestMapping(path="/tafs/{uuid}",
+			method = RequestMethod.DELETE,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> deleteTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Taf taf = store.getByUuid(uuid);
+		if (taf == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
+		}
+		boolean ret = store.deleteTafByUuid(uuid);
+		if(ret) {
+			return ResponseEntity.ok(String.format("deleted %s", uuid));
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
+	}
+
 
 	@RequestMapping(path="/tafs/{uuid}",
 			method = RequestMethod.GET,
