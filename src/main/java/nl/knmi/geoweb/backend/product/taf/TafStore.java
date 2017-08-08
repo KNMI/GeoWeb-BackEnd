@@ -112,4 +112,10 @@ public class TafStore {
 		}
 		return null;
 	}
+	
+	public boolean deleteTafByUuid(String uuid) throws IOException {
+		String fn=String.format("%s/taf_%s.json", this.directory, uuid);
+		return Tools.rm(fn);
+
+	}
 }
