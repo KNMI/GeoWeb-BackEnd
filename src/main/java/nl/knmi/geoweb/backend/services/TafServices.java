@@ -181,7 +181,7 @@ public class TafServices {
 	/**
 	 * Delete a TAF by its uuid
 	 * @param uuid
-	 * @return ok if the TAF was successfully deleted, BAD_REQUEST if the taf didn't exist or if some other error occurred
+	 * @return ok if the TAF was successfully deleted, BAD_REQUEST if the taf didn't exist, is not in concept, or if some other error occurred
 	 */
 	@RequestMapping(path="/tafs/{uuid}",
 			method = RequestMethod.DELETE,
@@ -190,6 +190,10 @@ public class TafServices {
 		Taf taf = store.getByUuid(uuid);
 		if (taf == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
+		}
+		boolean tafIsInConcept = taf.getStatus() == TAFReportPublishedConcept.CONCEPT;
+		if (tafIsInConcept == false) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
 		}
 		boolean ret = store.deleteTafByUuid(uuid);
 		if(ret) {
