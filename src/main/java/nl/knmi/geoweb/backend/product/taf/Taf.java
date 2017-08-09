@@ -177,6 +177,7 @@ public class Taf {
 		}
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
+			
 			if (isVariable) {
 				sb.append("VRB");
 			} else {
@@ -262,6 +263,7 @@ public class Taf {
 
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
+			
 			sb.append(getWind().toTAC());
 			if (CaVOK) {
 				sb.append(" CAVOK");
@@ -316,7 +318,7 @@ public class Taf {
 		}
 	}
 
-	public enum TAFReportStatus {
+	public enum TAFReportType {
 		RETARDED, NORMAL, AMENDMENT, CANCEL, CORRECTION, MISSING;
 	}
 	
@@ -337,6 +339,7 @@ public class Taf {
 	String previousReportAerodrome;
 	Period previousValidPeriod;
 	TAFReportPublishedConcept status = TAFReportPublishedConcept.CONCEPT;
+	TAFReportType type = TAFReportType.NORMAL;
 
 	public Taf() {
 		//		this.changeForecasts=new ArrayList<ChangeForecast>();
@@ -406,14 +409,31 @@ public class Taf {
 	public String toTAC() {
 		StringBuilder sb=new StringBuilder();
 		sb.append("TAF ");
+		if (this.type == TAFReportType.AMENDMENT) {
+			sb.append(" AMD ");
+		}
+		if (this.type == TAFReportType.CORRECTION) {
+			sb.append(" COR ");
+		}
+		if (this.type == TAFReportType.RETARDED) {
+			sb.append(" RTD ");
+		}
+		
 		sb.append(previousReportAerodrome);
 		sb.append(" "+toDDHHMM(issueTime));
-		sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
-
-		sb.append(" "+forecast.toTAC());
-		if (this.changeForecasts!=null) {
-			for (ChangeForecast ch: this.changeForecasts) {
-				sb.append("\n"+ch.toTAC());
+		if (this.type == TAFReportType.MISSING) {
+			sb.append(" NIL ");
+		} else {
+			sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
+			if (this.type == TAFReportType.CANCEL) {
+				sb.append("CNL");
+			} else {
+				sb.append(" "+forecast.toTAC());
+				if (this.changeForecasts!=null) {
+					for (ChangeForecast ch: this.changeForecasts) {
+						sb.append("\n"+ch.toTAC());
+					}
+				}
 			}
 		}
 

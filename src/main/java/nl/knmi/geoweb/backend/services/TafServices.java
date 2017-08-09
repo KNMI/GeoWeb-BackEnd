@@ -29,7 +29,7 @@ import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportStatus;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 import nl.knmi.geoweb.backend.product.taf.TafStore;
 
 @RestController

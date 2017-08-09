@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportStatus;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 
 public class TafStore {
 	private String directory;
