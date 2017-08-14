@@ -409,31 +409,47 @@ public class Taf {
 	public String toTAC() {
 		StringBuilder sb=new StringBuilder();
 		sb.append("TAF ");
-		if (this.type == TAFReportType.AMENDMENT) {
+		switch(this.type) {
+		case AMENDMENT:
 			sb.append(" AMD ");
-		}
-		if (this.type == TAFReportType.CORRECTION) {
+			break;
+		case CORRECTION:
 			sb.append(" COR ");
-		}
-		if (this.type == TAFReportType.RETARDED) {
+			break;
+		case RETARDED:
 			sb.append(" RTD ");
+			break;
+		default: 
+			// Append nothing here
+			break;
 		}
 		
 		sb.append(previousReportAerodrome);
 		sb.append(" "+toDDHHMM(issueTime));
-		if (this.type == TAFReportType.MISSING) {
-			sb.append(" NIL ");
-		} else {
-			sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
-			if (this.type == TAFReportType.CANCEL) {
-				sb.append("CNL");
-			} else {
-				sb.append(" "+forecast.toTAC());
-				if (this.changeForecasts!=null) {
-					for (ChangeForecast ch: this.changeForecasts) {
-						sb.append("\n"+ch.toTAC());
-					}
-				}
+		switch(this.type) {
+		case MISSING:
+			// If missing, we're done here
+			sb.append(" NIL");
+			return sb.toString();
+		default:
+			// do nothing
+			break;
+		}
+		sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
+		switch(this.type) {
+		case CANCEL:
+			// In case of a cancel there are no change groups so we're done here
+			sb.append(" CNL");
+			return sb.toString();
+		default: 
+			// do nothing
+			break;
+		}
+		// Add the rest of the TAC
+		sb.append(" "+forecast.toTAC());
+		if (this.changeForecasts!=null) {
+			for (ChangeForecast ch: this.changeForecasts) {
+				sb.append("\n"+ch.toTAC());
 			}
 		}
 
