@@ -200,13 +200,6 @@ public class GeoWebBackEndApplicationTests {
 		validateSigmet(sm);
 	}
 
-	@Test
-	public void createSigmetStoreAtEmptyDirCheckException () throws Exception {
-		Tools.rmdir(sigmetStoreLocation);
-		exception.expect(NotDirectoryException.class);
-		new SigmetStore(sigmetStoreLocation);
-	}
-	
 	public SigmetStore createNewStore() throws IOException {
 		Tools.rmdir(sigmetStoreLocation);
 		Tools.mksubdirs(sigmetStoreLocation);
