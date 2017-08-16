@@ -29,7 +29,7 @@ import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportStatus;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 import nl.knmi.geoweb.backend.product.taf.TafStore;
 
 @RestController
@@ -177,6 +177,32 @@ public class TafServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
+	
+	/**
+	 * Delete a TAF by its uuid
+	 * @param uuid
+	 * @return ok if the TAF was successfully deleted, BAD_REQUEST if the taf didn't exist, is not in concept, or if some other error occurred
+	 */
+	@RequestMapping(path="/tafs/{uuid}",
+			method = RequestMethod.DELETE,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> deleteTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Taf taf = store.getByUuid(uuid);
+		if (taf == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
+		}
+		boolean tafIsInConcept = taf.getStatus() == TAFReportPublishedConcept.CONCEPT;
+		if (tafIsInConcept == false) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
+		}
+		boolean ret = store.deleteTafByUuid(uuid);
+		if(ret) {
+			return ResponseEntity.ok(String.format("deleted %s", uuid));
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
+	}
+
 
 	@RequestMapping(path="/tafs/{uuid}",
 			method = RequestMethod.GET,

@@ -177,6 +177,7 @@ public class Taf {
 		}
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
+			
 			if (isVariable) {
 				sb.append("VRB");
 			} else {
@@ -262,6 +263,7 @@ public class Taf {
 
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
+			
 			sb.append(getWind().toTAC());
 			if (CaVOK) {
 				sb.append(" CAVOK");
@@ -316,7 +318,7 @@ public class Taf {
 		}
 	}
 
-	public enum TAFReportStatus {
+	public enum TAFReportType {
 		RETARDED, NORMAL, AMENDMENT, CANCEL, CORRECTION, MISSING;
 	}
 	
@@ -337,6 +339,7 @@ public class Taf {
 	String previousReportAerodrome;
 	Period previousValidPeriod;
 	TAFReportPublishedConcept status = TAFReportPublishedConcept.CONCEPT;
+	TAFReportType type = TAFReportType.NORMAL;
 
 	public Taf() {
 		//		this.changeForecasts=new ArrayList<ChangeForecast>();
@@ -406,10 +409,43 @@ public class Taf {
 	public String toTAC() {
 		StringBuilder sb=new StringBuilder();
 		sb.append("TAF ");
+		switch(this.type) {
+		case AMENDMENT:
+			sb.append(" AMD ");
+			break;
+		case CORRECTION:
+			sb.append(" COR ");
+			break;
+		case RETARDED:
+			sb.append(" RTD ");
+			break;
+		default: 
+			// Append nothing here
+			break;
+		}
+		
 		sb.append(previousReportAerodrome);
 		sb.append(" "+toDDHHMM(issueTime));
+		switch(this.type) {
+		case MISSING:
+			// If missing, we're done here
+			sb.append(" NIL");
+			return sb.toString();
+		default:
+			// do nothing
+			break;
+		}
 		sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
-
+		switch(this.type) {
+		case CANCEL:
+			// In case of a cancel there are no change groups so we're done here
+			sb.append(" CNL");
+			return sb.toString();
+		default: 
+			// do nothing
+			break;
+		}
+		// Add the rest of the TAC
 		sb.append(" "+forecast.toTAC());
 		if (this.changeForecasts!=null) {
 			for (ChangeForecast ch: this.changeForecasts) {

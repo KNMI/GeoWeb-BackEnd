@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportStatus;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 
 public class TafStore {
 	private String directory;
@@ -111,5 +111,11 @@ public class TafStore {
 			}
 		}
 		return null;
+	}
+	
+	public boolean deleteTafByUuid(String uuid) throws IOException {
+		String fn=String.format("%s/taf_%s.json", this.directory, uuid);
+		return Tools.rm(fn);
+
 	}
 }
