@@ -1,7 +1,6 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -64,7 +63,6 @@ public class SigmetServices {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());
 				String json = obj.toString();
-				Debug.errprintln("Method not allowed" + json);
 				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
 			} catch (JSONException e1) {
 			}

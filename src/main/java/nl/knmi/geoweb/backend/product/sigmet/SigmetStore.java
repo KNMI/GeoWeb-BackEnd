@@ -19,6 +19,7 @@ import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 public class SigmetStore {
 	private String directory;
 	public SigmetStore(String dir) throws IOException {
+		Debug.println("SIGMET STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());

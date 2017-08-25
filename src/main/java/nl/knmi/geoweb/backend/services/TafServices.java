@@ -20,17 +20,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.report.ProcessingReport;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 import nl.knmi.geoweb.backend.product.taf.TafStore;
+import nl.knmi.geoweb.backend.product.taf.TafValidator;
 
 @RestController
 
@@ -41,13 +42,14 @@ public class TafServices {
 	TafServices () throws IOException {
 		store = new TafStore("/tmp/tafs");
 	}
-
+	boolean enableDebug = false;
 
 	/**
 	 * POST a TAF to the product store
 	 * @param tafStr
 	 * @return
 	 * @throws IOException
+	 * @throws JSONException 
 	 */
 	@RequestMapping(
 			path = "/tafs", 
@@ -55,15 +57,45 @@ public class TafServices {
 			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE
 			)
-	public ResponseEntity<String> storeTAF(@RequestBody String  tafStr) throws IOException {
+	public ResponseEntity<String> storeTAF(@RequestBody String  tafStr) throws IOException, JSONException {
 		Debug.println("storetaf");
 		Taf taf = null;
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
+		if(enableDebug)Debug.println("TAF from String: " + tafStr);
 		try {
-			ObjectMapper objectMapper=Taf.getObjectMapperBean();
+			if(enableDebug)Debug.println("start taf validation");
+			ProcessingReport tafValidationReport;
+			tafValidationReport = TafValidator.validate(tafStr);
+			if(tafValidationReport.isSuccess() == false){
+				Debug.errprintln("TAF validation failed");
+				try {
+					String json = new JSONObject().
+							put("validationreport", tafValidationReport.toString()).
+							put("message","taf validation failed").toString();
+					return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		} catch (ProcessingException e3) {
+			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
+			e3.printStackTrace();
+			String json = null;
+			try {
+				json = new JSONObject().
+						put("message","Unable to validate taf").toString();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
+		}
+	
+		try {
+			ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 			taf = objectMapper.readValue(tafStr, Taf.class);
 		} catch (IOException e2) {
 			Debug.errprintln("Error parsing taf ["+tafStr+"]");
+			Debug.printStackTrace(e2);
 			try {
 				JSONObject obj=new JSONObject();
 				obj.put("error","Error parsing taf").put("exception", e2.getMessage());
@@ -72,16 +104,47 @@ public class TafServices {
 			} catch (JSONException e1) {
 			}
 		}
-		if(taf.getUuid() != null){
-			// TODO Check if existing TAF in store is not in published state
-			Debug.println("Overwriting TAF with uuid ["+taf.getUuid()+"]");
+		if(enableDebug)Debug.println("TAF from Object: " + taf.toJSON());
+
+		if(!new JSONObject(tafStr).toString().equals(new JSONObject(taf.toJSON()).toString())) {
+			throw new IllegalArgumentException("TAF JSON is different from origional JSON");
 		} else {
-			taf.setUuid(UUID.randomUUID().toString());
+			Debug.println("Incoming TAF string is equal to serialized and deserialized TAF string");
 		}
-		taf.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
+		if(taf.metadata.getUuid() != null){
+			// TODO Check if existing TAF in store is not in published state
+			Debug.println("Overwriting TAF with uuid ["+taf.metadata.getUuid()+"]");
+		} else {
+			taf.metadata.setUuid(UUID.randomUUID().toString());
+		}
+		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
+
+		try {
+			// We enforce this to check our TAF code, should always validate
+			ProcessingReport tafValidationReport = TafValidator.validate(taf);
+			if(tafValidationReport.isSuccess() == false){
+				Debug.errprintln(tafValidationReport.toString());
+				try {
+					String json = new JSONObject().
+							put("validationreport", tafValidationReport.toString()).
+							put("message","taf "+taf.metadata.getUuid()+" stored").
+							put("uuid",taf.metadata.getUuid()).toString();
+					Debug.errprintln(tafValidationReport.toString());
+					return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
+				} catch (JSONException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			
+		} catch (ProcessingException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		
 		try{
 			store.storeTaf(taf);
-			String json = new JSONObject().put("message","taf "+taf.getUuid()+" stored").put("uuid",taf.getUuid()).toString();
+			String json = new JSONObject().put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 			try {
@@ -169,7 +232,7 @@ public class TafServices {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());
 				String json = obj.toString();
-				Debug.errprintln("Method not allowed" + json);
+				Debug.errprintln("Method not allowed");
 				Debug.printStackTrace(e);
 				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
 			} catch (JSONException e1) {
@@ -191,7 +254,7 @@ public class TafServices {
 		if (taf == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
 		}
-		boolean tafIsInConcept = taf.getStatus() == TAFReportPublishedConcept.CONCEPT;
+		boolean tafIsInConcept = taf.metadata.getStatus() == TAFReportPublishedConcept.concept;
 		if (tafIsInConcept == false) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
 		}

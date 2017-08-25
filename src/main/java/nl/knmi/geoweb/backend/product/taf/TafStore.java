@@ -17,11 +17,11 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 
 public class TafStore {
 	private String directory;
 	public TafStore(String dir) throws IOException {
+		Debug.println("TAF STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
@@ -36,7 +36,7 @@ public class TafStore {
 	}
 
 	public void storeTaf(Taf taf) throws JsonProcessingException, IOException {
-		String fn=String.format("%s/taf_%s.json", this.directory, taf.getUuid());
+		String fn=String.format("%s/taf_%s.json", this.directory, taf.metadata.getUuid());
 		Tools.writeFile(fn, taf.toJSON());
 	}
 
@@ -46,7 +46,7 @@ public class TafStore {
 		Comparator<Taf> comp = new Comparator<Taf>() {
 			public int compare(Taf lhs, Taf rhs) {
 				try{
-					return rhs.getIssueTime().compareTo(lhs.getIssueTime());
+					return rhs.metadata.getIssueTime().compareTo(lhs.metadata.getIssueTime());
 				}catch(Exception e){
 					return 0;
 				}
@@ -71,13 +71,13 @@ public class TafStore {
 				Taf taf;
 				taf = Taf.fromFile(f);
 				//Check on UUID
-				if(taf.getUuid()!=null && uuid!=null){
-					if(taf.getUuid().equals(uuid) == false ) continue;
+				if(taf.metadata.getUuid()!=null && uuid!=null){
+					if(taf.metadata.getUuid().equals(uuid) == false ) continue;
 				}
 				//Check on Location
 				if(location!=null){
-					if(taf.getPreviousReportAerodrome()!=null){ 
-						if(taf.getPreviousReportAerodrome().equals(location) == false ) continue;
+					if(taf.metadata.getLocation()!=null){ 
+						if(taf.metadata.getLocation().equals(location) == false ) continue;
 					}else{
 						continue;
 					}
@@ -85,13 +85,13 @@ public class TafStore {
 				if (selectActive) {
 					
 					if (
-							(taf.getStatus()==TAFReportPublishedConcept.PUBLISHED) &&
-							(taf.getValidityEnd().compareTo(now)>0)
+							(taf.metadata.getStatus()==TAFReportPublishedConcept.published) &&
+							(taf.metadata.getValidityEnd().compareTo(now)>0)
 					) {
 						tafs.add(taf);
 					}
 				}else if (selectStatus != null) {
-					if (taf.getStatus()==selectStatus) {
+					if (taf.metadata.getStatus()==selectStatus) {
 						tafs.add(taf);
 					}
 				} else {
@@ -106,7 +106,7 @@ public class TafStore {
 
 	public Taf getByUuid(String uuid) throws JsonParseException, JsonMappingException, IOException {
 		for (Taf taf: getTafs(false, null, uuid, null)) {
-			if (uuid.equals(taf.getUuid())){
+			if (uuid.equals(taf.metadata.getUuid())){
 				return taf;
 			}
 		}

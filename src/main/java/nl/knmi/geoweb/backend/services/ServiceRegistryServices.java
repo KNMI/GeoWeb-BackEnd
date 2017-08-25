@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.Getter;
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 import nl.knmi.geoweb.backend.usermanagement.UserStore;
 

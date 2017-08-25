@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -389,4 +391,27 @@ public class Tools {
   public static void rmdir(File file) {
    rmdir(file.getAbsolutePath());
   }
+  
+  /**
+	 * Loads a resource from the current package, e.g. useful for adding test files like sigmet json and taf json
+	 * @param Name The name of the resource in the package
+	 * @return String representation fo the resource
+	 * @throws Exception
+	 */
+	public static String getResourceFromClassPath (Class c, String name) throws IOException {
+		InputStream in = c.getResourceAsStream(name);
+		if (in == null){
+			String msg = "ERROR, unable to find resource with name " + name + " and class " + c.getName();
+			Debug.errprintln(msg);
+			throw new IOException(msg);
+		}
+      BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+      StringBuilder out = new StringBuilder();
+      String line;
+		while ((line = reader.readLine()) != null) {
+		    out.append(line);
+		}
+		reader.close();
+		return out.toString(); 
+	}
 }
