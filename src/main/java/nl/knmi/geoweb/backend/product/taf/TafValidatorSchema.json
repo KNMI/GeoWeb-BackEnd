@@ -1,0 +1,403 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "definitions": {
+        "temperature": {
+            "type": "object",
+            "properties": {
+                "minimum": { "type": "integer", "minimum": -30, "maximum": 40 },
+                "maximum": { "type": "integer", "minimum": -30, "maximum": 40 }
+            },
+            "additionalProperties": false,
+            "required": ["minimum", "maximum"]
+        },
+        "vertical_visibility":
+        {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 999,
+            "multipleOf": 30
+        },
+        "first_cloud": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+            }, "additionalProperties": false
+        },
+        "first_cloud_mod": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "mod": { "type": "string", "enum": ["CB", "TCU"]}
+            }, "additionalProperties": false
+        }, 
+
+        "second_cloud": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["SCT", "BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+            }, "additionalProperties": false
+        },
+        "second_cloud_mod": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["SCT", "BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "mod": { "type": "string", "enum": ["CB", "TCU"]}
+            }, "additionalProperties": false
+        }, 
+        "third_cloud": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+            }, "additionalProperties": false
+        },
+        "third_cloud_mod": {
+            "type": "object",
+            "required": ["amount", "height"],
+            "properties": {
+                "amount": { "type": "string", "enum": ["BKN", "OVC"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "mod": { "type": "string", "enum": ["CB", "TCU"]}
+            }, "additionalProperties": false
+        }, 
+        "fourth_cloud": {
+            "required": ["mod", "height"],
+            "type": "object",
+            "properties": {
+                "mod": { "type": "string", "enum": ["CB", "TCU"]},
+                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+            }, "additionalProperties": false
+        },
+        "clouds": {
+            "oneOf": [ {
+                "type": "array",
+                "minItems": 0,
+                "maxItems": 3,
+                "items": [
+                {"$ref": "#/definitions/first_cloud_mod"}, 
+                {"$ref": "#/definitions/second_cloud_mod"}, 
+                {"$ref": "#/definitions/third_cloud_mod"}
+            ]
+            }, {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items":  [
+                    {"$ref": "#/definitions/first_cloud"}, 
+                    {"$ref": "#/definitions/second_cloud"}, 
+                    {"$ref": "#/definitions/third_cloud"}, 
+                    {"$ref": "#/definitions/fourth_cloud"}]
+
+            }, {
+                "type": "string", "enum": ["NSC"]
+            }]
+        },
+
+        "weather_group":
+        {
+            "type": "object",
+            "oneOf": [
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "descriptor": { "type": "string", "enum": ["freezing"] },
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "enum": ["fog", "drizzle", "rain", "unknown precipitation"] } }
+                },
+                "required": ["phenomena", "descriptor"]
+            },
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { "type": "string", "enum": ["duststorm", "funnel cloud", "squall"] } }
+                },
+                "required": ["phenomena"]
+            },
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "descriptor": { "type": "string", "enum": ["blowing", "low drifting"] },
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { "type": "string", "enum": ["widespread dust", "sand", "snow"] } }
+                },
+                "required": ["phenomena", "descriptor"]
+            },
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "descriptor": { "type": "string", "enum": ["blowing", "low drifting"] },
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { "type": "string", "enum": ["widespread dust", "sand", "snow"] } }
+                },
+                "required": ["phenomena", "descriptor"]
+            },
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "descriptor": { "type": "string", "enum": ["thunderstorm"] },
+                    "phenomena": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"] } }
+                },
+                "required": ["descriptor"]
+            },
+            {
+                "additionalProperties": false,
+                "properties": {
+                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
+                    "descriptor": { "type": "string", "enum": ["showers"] },
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"] } }
+                },
+                "required": ["phenomena", "descriptor"]
+            }
+        ]
+        }, 
+        "weather": {
+            "oneOf": [{
+
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 3,
+                "items":  {"$ref": "#/definitions/weather_group"}  
+            }, {
+                "type": "string", "enum": ["NSW"]
+            }]
+        },
+        "visibility": {
+            "required": ["value"],
+            "type": "object",
+            "oneOf": [{
+                "properties": {
+                    "value": { "type": "integer", "minimum": 0, "maximum": 799, "multipleOf": 50 }
+                },
+                "additionalProperties": false
+            },{
+                "properties": {
+                    "value": { "type": "integer", "minimum": 800, "maximum": 4999, "multipleOf": 100 }
+                },
+                "additionalProperties": false
+            }, {
+                "properties": {
+                    "value": { "type": "integer", "minimum": 5000, "maximum": 9999, "multipleOf": 1000 }
+                },
+                "additionalProperties": false
+            }, {
+                "properties": {
+                    "value": { "type": "integer", "enum": [9999] }
+                },
+                "additionalProperties": false
+            }, {
+                "properties": {
+                    "value": { "type": "integer", "minimum": 0, "maximum": 99 },
+                    "unit": { "type": "string", "enum": ["KM"] }
+                },
+                "additionalProperties": false,
+                "required": ["value", "unit"]
+            }]
+        },
+        "wind": { 
+            "required": ["direction", "speed", "unit"],
+            "type": "object",
+            "oneOf": [{
+                "additionalProperties": false,
+                "properties": {
+                    "direction": { "type": "string", "enum": ["VRB"] },
+                    "speed": { "type": "integer", "maximum": 2, "minimum": 0 },
+                    "unit": { "type": "string", "enum": ["KT"] },
+                    "gusts": {
+                        "oneOf": [{ "type": "integer", "minimum": 10, "maximum": 99 },
+                                  { "type": "string", "enum": ["P99"] }]
+                    }
+                }
+            }, {
+                "additionalProperties": false,
+                "properties": {
+                    "direction": {"oneOf": [
+                        { "type": "string", "enum": ["VRB"] },
+                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                      ]},
+                    "speed": { "type": "integer", "minimum": 3, "maximum": 99 },
+                    "unit": { "type": "string", "enum": ["KT"] },
+                    "gusts": {
+                        "oneOf": [{ "type": "integer", "minimum": 13, "maximum": 99 },
+                                  { "type": "string", "enum": ["P99"] }]
+                    }
+
+                }
+            }, {
+                "additionalProperties": false,  
+                "properties": {
+                    "direction": {"oneOf": [
+                        { "type": "string", "enum": ["VRB"] },
+                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                      ]},
+                    "speed": { "type": "string", "enum": ["P99"] },
+                    "unit": { "type": "string", "enum": ["KT"] },
+                    "gusts": { "type": "string", "enum": ["P99"]  }
+                }
+            }, {
+                "additionalProperties": false,
+                "properties": {
+                    "direction": {"oneOf": [
+                        { "type": "string", "enum": ["VRB"] },
+                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                      ]},
+                    "speed": { "type": "string", "enum": ["P49"] },
+                    "unit": { "type": "string", "enum": ["MPS"] },
+                    "gusts": { "type": "string", "enum": ["P49"] }
+
+                }
+            }, {
+                "additionalProperties": false,
+                "properties": {
+                    "direction": {"oneOf": [
+                        { "type": "string", "enum": ["VRB"] },
+                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                      ]},
+                    "speed": { "type": "integer", "minimum": 2, "maximum": 49 },
+                    "unit": { "type": "string", "enum": ["MPS"] },
+                    "gusts": {
+                        "oneOf": [{ "type": "integer", "minimum": 7, "maximum": 49 },
+                                  { "type": "string", "enum": ["P49"] }]
+                    }
+
+                }
+            }
+        ]},
+        "forecast": {
+            "type": "object",
+
+            "oneOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "visibility": {"$ref": "#/definitions/visibility"},
+                        "weather": {"$ref": "#/definitions/weather"},
+                        "clouds": {"$ref": "#/definitions/clouds"}
+                    },
+                    "required": ["wind", "visibility", "weather", "clouds"]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "visibility": {"$ref": "#/definitions/visibility"},
+                        "weather": {"$ref": "#/definitions/weather"},
+                        "vertical_visibility": {"$ref": "#/definitions/vertical_visibility"}
+                    },
+                    "required": ["wind", "visibility", "weather", "vertical_visibility"]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "caVOK": {"type": "boolean" }                    
+                    },
+                    "required": ["wind", "caVOK"]
+                }
+            ]
+        },
+        "base_forecast": {
+            "type": "object",
+
+            "oneOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "visibility": {"$ref": "#/definitions/visibility"},
+                        "weather": {"$ref": "#/definitions/weather"},
+                        "clouds": {"$ref": "#/definitions/clouds"},
+                        "temperature": {"$ref": "#/definitions/temperature"}
+                    },
+                    "required": ["wind", "visibility", "weather", "clouds"]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "visibility": {"$ref": "#/definitions/visibility"},
+                        "weather": {"$ref": "#/definitions/weather"},
+                        "vertical_visibility": {"$ref": "#/definitions/vertical_visibility"},
+                        "temperature": {"$ref": "#/definitions/temperature"}
+                    },
+                    "required": ["wind", "visibility", "weather", "vertical_visibility"]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "wind": {"$ref": "#/definitions/wind"},
+                        "caVOK": {"type": "boolean" },
+                        "temperature": {"$ref": "#/definitions/temperature"}
+                    },
+                    "required": ["wind", "caVOK"]
+                }
+            ]
+
+        },
+        "base_metadata": {
+            "type": "object",
+            "properties": {
+            	"uuid": { "type": "string", "format": "uuid" },
+                "issueTime": { "type": "string", "format": "date-time" },
+                "validityStart": { "type": "string", "format": "date-time" },
+                "validityEnd": { "type": "string", "format": "date-time" },
+                "status": { "type": "string", "enum": ["concept", "published", "expired"] },
+                "type": { "type": "string", "enum": ["normal", "amendment", "correction", "cancel", "missing", "retarded"] },
+                "location": { "type": "string", "enum": ["EHAL", "EHAM", "EHBD", "EHBK", "EHDB", "EHDL", "EHDP", "EHDR", "EHEH", "EHGG", "EHGR", "EHND", "EHHO", "EHHV", "EHKD", "EHVK", "EHLE", "EHLW", "EHMC", "EHMZ", "EHOW", "EHRD", "EHSB", "EHSE", "EHST", "EHTE", "EHTL", "EHTW", "EHTX", "EHVB", "EHVE", "EHWO", "EHYB", "EHYP"]}
+            },
+            "additionalProperties": false,
+            "required": ["issueTime", "validityStart", "validityEnd", "status", "type", "location"]
+        },
+        "changegroup": {
+            "type": "object",
+            "oneOf": [{
+                "additionalProperties": false,
+                "properties": {
+                    "changeType": { "type": "string", "enum": ["BECMG", "TEMPO", "PROB30", "PROB30 TEMPO", "PROB40", "PROB40 TEMPO"]},
+                    "changeStart": { "type": "string", "format": "date-time" },
+                    "changeEnd": { "type": "string", "format": "date-time" },
+                    "forecast": {"$ref": "#/definitions/forecast"}
+                },
+                "required": ["changeType", "changeStart", "changeEnd", "forecast"]
+            }, {
+                "additionalProperties": false,
+                "properties": {
+                    "changeType": { "type": "string", "enum": ["FM"]},
+                    "changeStart": { "type": "string", "format": "date-time" },
+                    "forecast": {"$ref": "#/definitions/forecast"}
+                },
+                "required": ["changeType", "changeStart", "forecast"]
+            }]
+        },
+        "changegroups": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 5,
+            "items": [{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"}],
+            "additionalProperties": false
+        }
+    },
+
+    "type": "object",
+    "properties":
+    {
+        "metadata": {"$ref": "#/definitions/base_metadata"},
+        "forecast": {"$ref": "#/definitions/base_forecast"},
+        "changegroups": {"$ref": "#/definitions/changegroups"}
+
+    },
+    "additionalProperties": false,
+    "required": ["metadata", "forecast", "changegroups"]
+}

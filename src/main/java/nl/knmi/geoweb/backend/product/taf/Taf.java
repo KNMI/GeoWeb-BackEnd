@@ -1,260 +1,200 @@
 package nl.knmi.geoweb.backend.product.taf;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
-import java.time.Period;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.TimeZone;
+
+import org.springframework.context.annotation.Bean;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.Getter;
 import lombok.Setter;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFDefines.TAFCloudTypeName;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFDefines.TAFWeather;
+import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.product.taf.serializers.CloudsSerializer;
+import nl.knmi.geoweb.backend.product.taf.serializers.WeathersSerializer;
 
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Taf {
-	public static class TAFDefines {
-		public enum WWModifier {LIGHT, NORMAL,HEAVY};
+
+	public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+	public enum TAFReportType {
+		retarded, normal, amendment, cancel, correction, missing;
+	}
+
+	public enum TAFReportPublishedConcept {
+		concept, published
+	}
+	
+	@Getter
+	@Setter
+	public static class Metadata {
+		private String uuid = null;
+		@JsonFormat(shape = JsonFormat.Shape.STRING)
+		OffsetDateTime issueTime;
+		@JsonFormat(shape = JsonFormat.Shape.STRING)
+		OffsetDateTime validityStart;
+		@JsonFormat(shape = JsonFormat.Shape.STRING)
+		OffsetDateTime validityEnd;
+		String location;
+		TAFReportPublishedConcept status = TAFReportPublishedConcept.concept;
+		TAFReportType type = TAFReportType.normal;
+	};
+	public Metadata metadata;
+
+	@Setter
+	@Getter
+	public static class Forecast {
+		@Getter
+		@Setter
+		public static class TAFCloudType {
+			Boolean isNSC=null;
+			String amount;
+			String mod;
+			Integer height;
+
+			public TAFCloudType() {this.isNSC=null;}
+
+			public TAFCloudType(String cld) {
+				if ("NSC".equalsIgnoreCase(cld)) {
+					isNSC=true;
+				} 
+			}
+
+			public String toTAC() {
+				StringBuilder sb=new StringBuilder();
+				if (isNSC!=null&&isNSC){
+					sb.append("NSC");
+				} else {
+					sb.append(amount.toString());
+					sb.append(String.format("%03d", height));
+					if (mod!=null) {
+						sb.append(mod);
+					}
+				}
+				return sb.toString();
+			}
+		}
+		@JsonSerialize(using = CloudsSerializer.class)
+		@JsonInclude(JsonInclude.Include.NON_EMPTY)
+		List<TAFCloudType>clouds;
+		
 		@Getter
 		@Setter
 		public static class TAFWeather {
-			String value;
+			Boolean isNSW=null;
+			String qualifier;
+			String descriptor;
+			List<String> phenomena;
 
-			TAFWeather(String value) {
-				this.value=value;
+			TAFWeather(String ww) {
+				isNSW = true;
 			}
-			public TAFWeather() {}
+			
+			public TAFWeather() { isNSW = null; }
 
-			@JsonValue			
-			public String getValue() {
-				return value;
-			}
-
-			@Override
-			public String toString() {
-				return this.value;
-			}
-		}
-
-		public static class TAFWeatherSet {
-			//weather codes should be fetched from http://codes.wmo.int/306/_4678
-			private static Map<String,TAFWeather> values=new HashMap<String,TAFWeather>();
-			static {
-				init();
-			}
-			private static void init() {
-				values.put("MI", new TAFWeather("MI"));
-				values.put("BC", new TAFWeather("BC"));
-				values.put("PR", new TAFWeather("PR"));
-				values.put("SHRA", new TAFWeather("SHRA"));
-				values.put("+SHRA", new TAFWeather("+SHRA"));
-				values.put("TSRA", new TAFWeather("TSRA"));
-			}
-
-			public static TAFWeather getValueOf(String s) {
-				return values.get(s);
-			}
-		}
-
-		public enum TAFCloudModifier {
-			CB,TCU;
-		}
-		public enum TAFCloudTypeName {
-			FEW,SCT,BKN,OVC;
-		}
-		public enum TAFChangeType {
-			FM,BECMG,TEMPO,PROB30,PROB40,PROB30_TEMPO,PROB40_TEMPO;
-		}
-		public enum TAFWindUnits {
-			M_S, KT,MPH;
-		}
-	}
-	@Getter
-	@Setter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class TAFCloudType {
-		Boolean isNSC;
-		TAFDefines.TAFCloudTypeName type;
-		TAFDefines.TAFCloudModifier mod;
-		Integer h;
-
-		public TAFCloudType() {this.isNSC=false;}
-
-		public TAFCloudType(String cld) {
-			if ("NSC".equalsIgnoreCase(cld)) {
-				isNSC=true;
-			} else {
-				isNSC=null;
-				String clouds="";
-				for (TAFCloudTypeName name:TAFCloudTypeName.values()){
-					if (clouds.length()>0) {
-						clouds+="|"+name.toString();
-					} else {
-						clouds=name.toString();
+			public String toString () {
+				StringBuilder sb = new StringBuilder();
+				if(this.qualifier != null) {
+					sb.append(TAFtoTACMaps.getQualifier(this.qualifier));
+				}
+				if(this.descriptor != null) {
+					sb.append(TAFtoTACMaps.getDescriptor(this.descriptor));
+				}
+				if(this.phenomena != null) {
+					for (String phenomenon : this.phenomena) {
+						sb.append(TAFtoTACMaps.getPhenomena(phenomenon));
 					}
 				}
-				Pattern r=Pattern.compile("("+clouds+")(\\d{0,3})");
-				Matcher m = r.matcher(cld);
-				if (m.find()) {
-					type=TAFDefines.TAFCloudTypeName.valueOf(m.group(1));
-					h=Integer.parseInt(m.group(2))*100; //FT
-
-					if (cld.contains("CB")) {
-						mod=TAFDefines.TAFCloudModifier.valueOf("CB");
-					} else if (cld.contains("TCU")) {
-						mod=TAFDefines.TAFCloudModifier.valueOf("TCU");
-					}
+				return sb.toString();
+			}
+		}
+		@JsonInclude(JsonInclude.Include.NON_EMPTY)
+		@JsonSerialize(using = WeathersSerializer.class)
+		List<TAFWeather> weather;
+		
+		@Setter
+		@Getter
+		public static class TAFVisibility {
+			Integer value;
+			String unit;
+			public String toTAC() {
+				if(unit == null) {
+					return String.format(" %04d", value);
 				}
-			}
-		}
-
-		public String toTAC() {
-			StringBuilder sb=new StringBuilder();
-			if (isNSC!=null&&isNSC){
-				sb.append("NSC");
-			} else {
-				sb.append(type.toString());
-				sb.append(String.format("%03d", h/100));
-				if (mod!=null) {
-					sb.append(mod);
+				if(unit.equals("KM")) {
+					return String.format(" %02d", value) + "KM";
 				}
+				throw new IllegalArgumentException("Unknown unit found for visibility");
 			}
-			return sb.toString();
-		}
-	}
-
-	@Getter
-	@Setter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class TAFWind {
-		@JsonProperty("isVariable")
-		Boolean isVariable;
-		Integer direction;
-		Integer speed;
-		Integer gusts;
-		TAFDefines.TAFWindUnits units;
-
-		public TAFWind(){}
-
-		public TAFWind(boolean isVariable, Integer direction, Integer speed, Integer gusts, String units) {
-			this.direction=direction;
-			this.speed=speed;
-			this.gusts=gusts;
-			this.isVariable=isVariable;
-			this.units=TAFDefines.TAFWindUnits.valueOf(units.toUpperCase());
-		}
-		public String toTAC() {
-			StringBuilder sb=new StringBuilder();
-			if (isVariable) {
-				sb.append("VRB");
-			} else {
-				sb.append(String.format("%03d", direction));
-			}
-			sb.append(String.format("%02d", speed));
-			if (gusts!=null) {
-				sb.append(String.format("G%02d", gusts));
-			}
-			sb.append(units.toString());
-			return sb.toString();
-		}
-	}
-
-	@Getter
-	@Setter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public static class TAFVisibility {
-		Integer visibilityRange;
-
-		public TAFVisibility() {}
-
-		public TAFVisibility(Integer visibilityRange) {
-			this.visibilityRange=visibilityRange;
-		}
-	}
-
-	@Getter
-	@Setter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public class TAFTemperature {
-		float maxTemperature;
-		OffsetDateTime maxTime;
-		float minTemperature;
-		OffsetDateTime minTime;
-
-		public TAFTemperature() {}
-	}
-
-	@Setter
-	@Getter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	//	@JsonTypeInfo(use=JsonTypeInfo.Id.CLASS, 
-	//		      include=JsonTypeInfo.As.PROPERTY, property="@type")
-	//	@JsonSubTypes({
-	//		@Type(value=Forecast.class),
-	//		@Type(value=ChangeForecast.class)
-	//	})
-	public static class Forecast {
-		@JsonDeserialize(as=ArrayList.class, contentAs=TAFDefines.TAFWeather.class)
-		List<TAFDefines.TAFWeather> weather;
-		@JsonDeserialize(as=ArrayList.class, contentAs=TAFCloudType.class)
-		List<TAFCloudType>clouds;
+		}		
 		TAFVisibility visibility;
+		
+		@Getter
+		@Setter
+		public static class TAFWind {
+			Object direction;
+			Integer speed;
+			Integer gusts;
+			String unit;
+
+			public String toTAC() {
+				StringBuilder sb=new StringBuilder();
+				if (direction.toString().equals("VRB")) {
+					sb.append("VRB");
+				} else {
+					sb.append(String.format("%03d", Integer.parseInt(direction.toString())));
+				}
+				sb.append(String.format("%02d", speed));
+				if (gusts!=null) {
+					sb.append(String.format("G%02d", gusts));
+				}
+				sb.append(unit.toString());
+				return sb.toString();
+			}
+		}		
 		TAFWind wind;
+		
+		@Getter
+		@Setter
+		public class TAFTemperature {
+			float maxTemperature;
+			OffsetDateTime maxTime;
+			float minTemperature;
+			OffsetDateTime minTime;
+		}
 		TAFTemperature temperature;
 
-		//		@JsonProperty("CaVOK")
 		Boolean CaVOK;
-		public Forecast() {
-			this.CaVOK=false;
-			this.weather=new ArrayList<TAFDefines.TAFWeather>();
-			this.clouds=new ArrayList<TAFCloudType>();
-			this.temperature=null;
-		}
 
-		public void addWeather(String ww) {
-			//			if (this.weather==null) {
-			//				this.weather=new ArrayList<TAFDefines.TAFWeather>();
-			//			}
-			CaVOK="NSW".equalsIgnoreCase(ww);
-			this.weather.add(TAFDefines.TAFWeatherSet.getValueOf(ww));
-		}
-
-		public void addWind(TAFWind tafWind) {
-			wind=tafWind;
-		}
-
-
-		public void addCloud(TAFCloudType cld) {
-			this.clouds.add(cld);
-		}
-
+		/**
+		 * Converts Forecast to TAC 
+		 * @return String with TAC representation of Forecast
+		 */
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
-			sb.append(getWind().toTAC());
-			if (CaVOK) {
+			if(getWind() != null) {
+				sb.append(getWind().toTAC());
+			}
+			if (CaVOK != null && CaVOK == true) {
 				sb.append(" CAVOK");
 			} else {
-				if (getVisibility().visibilityRange!=null) {
-					sb.append(" "+String.format("%04d", getVisibility().visibilityRange));
+				if (visibility != null && visibility.value!=null) {
+					sb.append(visibility.toTAC());
 				}
 				if (getWeather()!=null) {
 					for (TAFWeather w:getWeather() ) {
@@ -272,128 +212,88 @@ public class Taf {
 			return sb.toString();
 		}
 	}
+	Forecast forecast;
 
 	@Getter
 	@Setter
-	@JsonInclude(JsonInclude.Include.NON_NULL)
 	public static class ChangeForecast extends Forecast{
-		TAFDefines.TAFChangeType changeType;
+		String changeType;
 		@JsonFormat(shape = JsonFormat.Shape.STRING)
 		OffsetDateTime changeStart;
 		@JsonFormat(shape = JsonFormat.Shape.STRING)
 		OffsetDateTime changeEnd;
 		Forecast forecast;
-
-		public ChangeForecast() {super();}
-
-		public ChangeForecast(String changeType, OffsetDateTime s, OffsetDateTime e) {
-			super();
-			this.changeType=TAFDefines.TAFChangeType.valueOf(changeType);
-			this.changeStart=s;
-			this.changeEnd=e;
-		}
 		@Override
 		public String toTAC() {
 			StringBuilder sb=new StringBuilder();
 			sb.append(changeType.toString());
-			sb.append(" "+toDDHH(changeStart));
-			sb.append("/"+toDDHH(changeEnd));
-			sb.append(" "+super.toTAC());
+			sb.append(" "+TAFtoTACMaps.toDDHH(changeStart));
+			sb.append("/"+TAFtoTACMaps.toDDHH(changeEnd));
+			sb.append(" "+forecast.toTAC());
 			return sb.toString();
 		}
 	}
+	List<ChangeForecast> changegroups;
 
-	public enum TAFReportStatus {
-		NORMAL, AMENDMENT, CANCEL, CORRECTION, MISSING;
+	public String toJSON() throws JsonProcessingException {
+		ObjectMapper om=getTafObjectMapperBean();	
+		return om.writerWithDefaultPrettyPrinter().writeValueAsString(this);
 	}
 
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	OffsetDateTime issueTime;
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	OffsetDateTime validityStart;
-	@JsonFormat(shape = JsonFormat.Shape.STRING)
-	OffsetDateTime validityEnd;
-	Forecast forecast;
-	@JsonDeserialize(as=ArrayList.class, contentAs=ChangeForecast.class)
-	List<ChangeForecast> changeForecasts;
-	String previousReportAerodrome;
-	Period previousValidPeriod;
-	TAFReportStatus status;
-
-	public Taf() {
-		//		this.changeForecasts=new ArrayList<ChangeForecast>();
+	public static Taf fromJSONString(String tafJson) throws JsonParseException, JsonMappingException, IOException{
+		ObjectMapper om=getTafObjectMapperBean();	
+		Taf taf = om.readValue(tafJson, Taf.class);
+		return taf;
 	}
 
-	public Taf(String aerodrome, OffsetDateTime validityStart, OffsetDateTime validityEnd){
-		this.previousReportAerodrome=aerodrome;
-		this.validityStart=validityStart;
-		this.validityEnd=validityEnd;
-		this.issueTime=OffsetDateTime.now(ZoneId.of("UTC")); //Update when publishing
-		this.changeForecasts=new ArrayList<ChangeForecast>();
-	}
-
-	public void setForecast(Integer visibility, Integer windDir, Integer windSpd, Integer gust, String[] wws, boolean CaVOK, String[] clouds) {
-		Forecast forecast=new Taf.Forecast();
-		forecast.setWind(new TAFWind(false, windDir, windSpd, gust, "KT"));
-		if (CaVOK) {
-			forecast.CaVOK=true;
-		} else {
-			for (String ww:wws) {
-				forecast.addWeather(ww);
-			}
-			for (String cld: clouds) {
-				forecast.addCloud(new TAFCloudType(cld));
-			}
-			if (visibility!=null) {
-				forecast.setVisibility(new TAFVisibility(visibility));
-			}
-		}
-		this.forecast=forecast;
-	}
-
-	public void addChangeForecast(String changeType, OffsetDateTime s, OffsetDateTime e, Integer visibility, Integer windDir, Integer windSpd, Integer gust, String[] wws, boolean CaVOK, String[] clouds) {
-		ChangeForecast changeForecast=new ChangeForecast(changeType, s, e);
-		changeForecast.setWind(new TAFWind(false, windDir, windSpd, gust, "KT"));
-		if (CaVOK) {
-			changeForecast.CaVOK=true;
-		} else {
-			if (wws!=null) {
-				for (String ww:wws) {
-					changeForecast.addWeather(ww);
-				}
-			}
-			if (clouds!=null) {
-				for (String cld: clouds) {
-					changeForecast.addCloud(new TAFCloudType(cld));
-				}
-			}
-			if (visibility!=null) {
-				changeForecast.setVisibility(new TAFVisibility(visibility));
-			}
-		}
-		this.changeForecasts.add(changeForecast);
-	}
-
-	public static String toDDHHMM(OffsetDateTime t) {
-		DateTimeFormatter fmt= DateTimeFormatter.ofPattern("ddHHmm'Z'");
-		return t.format(fmt);
-	}
-
-	public static String toDDHH(OffsetDateTime t) {
-		DateTimeFormatter fmt= DateTimeFormatter.ofPattern("ddHH");
-		return t.format(fmt);
+	public static Taf fromFile(File f) throws JsonParseException, JsonMappingException, IOException {
+		return fromJSONString(Tools.readFile(f.getAbsolutePath()));
 	}
 
 	public String toTAC() {
+		Taf taf = this;
 		StringBuilder sb=new StringBuilder();
 		sb.append("TAF ");
-		sb.append(previousReportAerodrome);
-		sb.append(" "+toDDHHMM(issueTime));
-		sb.append(" "+toDDHH(validityStart)+"/"+toDDHH(validityEnd));
+		switch(taf.metadata.type) {
+		case amendment:
+			sb.append(" AMD ");
+			break;
+		case correction:
+			sb.append(" COR ");
+			break;
+		case retarded:
+			sb.append(" RTD ");
+			break;
+		default: 
+			// Append nothing here
+			break;
+		}
 
-		sb.append(" "+forecast.toTAC());
-		if (this.changeForecasts!=null) {
-			for (ChangeForecast ch: this.changeForecasts) {
+		sb.append(taf.metadata.location);
+		sb.append(" "+TAFtoTACMaps.toDDHHMM(taf.metadata.issueTime));
+		switch(taf.metadata.type) {
+		case missing:
+			// If missing, we're done here
+			sb.append(" NIL");
+			return sb.toString();
+		default:
+			// do nothing
+			break;
+		}
+		sb.append(" "+TAFtoTACMaps.toDDHH(taf.metadata.validityStart)+"/"+TAFtoTACMaps.toDDHH(taf.metadata.validityEnd));
+		switch(taf.metadata.type) {
+		case cancel:
+			// In case of a cancel there are no change groups so we're done here
+			sb.append(" CNL");
+			return sb.toString();
+		default: 
+			// do nothing
+			break;
+		}
+		// Add the rest of the TAC
+		sb.append(" "+taf.forecast.toTAC());
+		if (taf.changegroups!=null) {
+			for (ChangeForecast ch: taf.changegroups) {
 				sb.append("\n"+ch.toTAC());
 			}
 		}
@@ -401,43 +301,29 @@ public class Taf {
 		return sb.toString();
 	}
 
-	public String toJSON() throws JsonProcessingException {
+	// TODO use BEAN in proper way (Ask WvM)
+	@Bean(name = "objectMapper")
+	public static ObjectMapper getTafObjectMapperBean() {
 		ObjectMapper om=new ObjectMapper();	
 		om.registerModule(new JavaTimeModule());
+		om.setTimeZone(TimeZone.getTimeZone("UTC"));
+		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+		return om;
 
-		return om.writerWithDefaultPrettyPrinter().writeValueAsString(this);
 	}
-
-	public static void main(String[]args) throws JsonProcessingException {
-		OffsetDateTime s=OffsetDateTime.of(2017, 8, 4, 12, 0, 0, 0, ZoneOffset.UTC);
-		OffsetDateTime e=OffsetDateTime.of(2017, 8, 5, 18, 0, 0, 0, ZoneOffset.UTC);
-		Taf taf=new Taf("EHAM", s, e);
-		taf.setForecast(9999, 200, 15, 25, new String[]{"SHRA","TSRA"}, true, new String[]{"FEW008", "SCT040", "OVC050"});
-
-		OffsetDateTime c1_s=OffsetDateTime.of(2017, 8, 4, 16, 0, 0, 0, ZoneOffset.UTC);
-		OffsetDateTime c1_e=OffsetDateTime.of(2017, 8, 4, 20, 0, 0, 0, ZoneOffset.UTC);
-		taf.addChangeForecast("BECMG", c1_s, c1_e, 9999, 220, 17, 27, new String[]{"SHRA","TSRA"}, false, new String[]{"FEW009", "SCT041", "OVC051"} );
-		taf.addChangeForecast("PROB30", c1_s, c1_e, 9999, 220, 17, 27, new String[]{"+SHRA"}, false, new String[]{"FEW009", "OVC470TCU"} );
-		OffsetDateTime c3_s=OffsetDateTime.of(2017, 8, 5, 3, 0, 0, 0, ZoneOffset.UTC);
-		OffsetDateTime c3_e=OffsetDateTime.of(2017, 8, 5, 5, 0, 0, 0, ZoneOffset.UTC);
-		taf.addChangeForecast("BECMG", c3_s, c3_e, 9999, 200, 7, 17, new String[]{"SHRA","TSRA"}, false, new String[]{"FEW011", "SCT027"} );
-		String taf_s=taf.toTAC();
-		System.err.println("'"+taf_s+"'");
-		System.err.println("JSON:"+taf.toJSON());
-		String tafjson=taf.toJSON();
-
+	@Bean(name = "objectMapper")
+	public static ObjectMapper getObjectMapperBean() {
 		ObjectMapper om=new ObjectMapper();	
 		om.registerModule(new JavaTimeModule());
+		om.setTimeZone(TimeZone.getTimeZone("UTC"));
+		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		try {
-			Taf newTaf=om.readValue(tafjson, Taf.class);
-			String taf_s2=newTaf.toTAC();
-			System.err.println("'"+taf_s2+"'");
-			System.err.println("EQUAL: "+taf_s2.equals(taf_s));
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		return om;
+
 	}
 }

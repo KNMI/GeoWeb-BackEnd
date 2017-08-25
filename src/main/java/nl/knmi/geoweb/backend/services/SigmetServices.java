@@ -1,6 +1,6 @@
 package nl.knmi.geoweb.backend.services;
 
-import java.nio.file.NotDirectoryException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
@@ -32,25 +32,26 @@ public class SigmetServices {
 
 	static SigmetStore store = null;
 
-	SigmetServices () throws NotDirectoryException {
-		store = new SigmetStore("/tmp");
+	SigmetServices () throws IOException {
+		store = new SigmetStore("/tmp/sigmets/");
 	}
-
-	private static final String Sigmet = null;
 	@RequestMapping(
 			path = "/storesigmet", 
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmet(@RequestBody Sigmet sigmet) {
+	public ResponseEntity<String> storeJSONSigmet(@RequestBody Sigmet sigmet) throws IOException {
 		Debug.println("storesigmet");
+		//ObjectMapper om = new ObjectMapper();
 		Sigmet sm = null;
+//		sigmet = URLDecoder.decode(sigmet,"UTF-8");
 //		try {
-//			sm = new ObjectMapper().readValue(URLDecoder.decode(sigmet, "UTF-8"), Sigmet.class);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			sm = om.readValue(sigmet, Sigmet.class);
+//		} catch (IOException e2) {
+//			e2.printStackTrace();
+//			throw e2;
 //		}
-		sm=sigmet;
+		sm = sigmet;
+
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setIssuedate(new Date());
 		try{
@@ -62,7 +63,6 @@ public class SigmetServices {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());
 				String json = obj.toString();
-				Debug.errprintln("Method not allowed" + json);
 				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
 			} catch (JSONException e1) {
 			}

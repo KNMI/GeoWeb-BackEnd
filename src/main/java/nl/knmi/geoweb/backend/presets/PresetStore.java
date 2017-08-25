@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 
 
 @Getter
@@ -63,11 +64,11 @@ public class PresetStore {
 
 	public PresetStore() {}
 
-	public PresetStore(String dir) throws NotDirectoryException {
+	public PresetStore(String dir) throws IOException {
 		File f = new File(dir);
 		if(f.exists() == false){
-			Debug.errprintln("Preset directory does not exist");
-			throw new NotDirectoryException("Preset directory does not exist");
+			Tools.mksubdirs(f.getAbsolutePath());
+			Debug.println("Creating presetstore at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
 			Debug.errprintln("Sigmet directory location is not a directory");
@@ -251,6 +252,9 @@ public class PresetStore {
 		try {
 			ps=new PresetStore("/tmp/presets");
 		} catch (NotDirectoryException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

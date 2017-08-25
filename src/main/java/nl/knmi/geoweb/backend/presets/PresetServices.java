@@ -30,7 +30,7 @@ public class PresetServices {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 	static PresetStore store = null;
 
-	PresetServices () throws NotDirectoryException {
+	PresetServices () throws IOException {
 		store = new PresetStore("/tmp/presets");
 	}
 	@RequestMapping(path="/getpresets")

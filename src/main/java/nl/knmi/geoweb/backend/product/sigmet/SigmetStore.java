@@ -13,16 +13,17 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 
 public class SigmetStore {
 	private String directory;
-	public SigmetStore(String dir) throws NotDirectoryException {
+	public SigmetStore(String dir) throws IOException {
+		Debug.println("SIGMET STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
-			Debug.errprintln("Sigmet directory "+dir+" does not exist");
-			throw new NotDirectoryException("Sigmet directory does not exist");
-		}
+			Tools.mksubdirs(f.getAbsolutePath());
+			Debug.println("Creating sigmet store at ["+f.getAbsolutePath()+"]");		}
 		if(f.isDirectory() == false){
 			Debug.errprintln("Sigmet directory location is not a directorty");
 			throw new NotDirectoryException("Sigmet directory location is not a directorty");
