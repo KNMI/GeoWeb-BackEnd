@@ -28,6 +28,7 @@ import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
 
+import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.validation.ValidationUtils;
 
@@ -234,9 +235,23 @@ public class TafValidator {
 		return messagesMap;
     }
 
-	public static JsonNode validate(String tafStr) throws IOException, ProcessingException, JsonMappingException, JSONException {
+	public static JsonNode validate(String tafStr) throws  ProcessingException, JSONException, IOException {
 		// Locate the schema file
-		String schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "/TafValidatorSchema.json");
+		
+		String myEnv = System.getenv("HOME");
+		String schemaFile = null;
+		try {
+			schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
+			Debug.println("Succesfully read schema from resource");
+		} catch (IOException e1) {
+			String schemaFileLocation = myEnv + "/TafValidatorSchema.json";
+			try {
+				schemaFile = Tools.readFile(schemaFileLocation);
+			} catch (IOException e) {
+				Debug.errprintln("Unable to read schema file " + schemaFileLocation);
+				throw e;
+			}
+		}
 		// Convert the TAF and the validation schema to JSON objects
 		JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
 		JsonNode schemaNode = ValidationUtils.getJsonNode(schemaFile);
