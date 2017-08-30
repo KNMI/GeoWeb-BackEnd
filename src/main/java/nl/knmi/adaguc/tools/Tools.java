@@ -401,7 +401,7 @@ public class Tools {
 	public static String getResourceFromClassPath (Class c, String name) throws IOException {
 		InputStream in = c.getResourceAsStream(name);
 		if (in == null){
-			String msg = "ERROR, unable to find resource with name " + name + " and class " + c.getName();
+			String msg = "ERROR, unable to find resource with name " + name + " under class " + c.getName();
 			Debug.errprintln(msg);
 			throw new IOException(msg);
 		}
