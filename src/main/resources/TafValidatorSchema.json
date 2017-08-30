@@ -355,12 +355,22 @@
             "oneOf": [{
                 "additionalProperties": false,
                 "properties": {
-                    "direction": { "type": "string", "enum": ["VRB"] },
+                    "direction": { "type": "string", "enum": ["VRB"],
+                    "$geoweb::messages": {
+                        "enum": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                    } },
                     "speed": { "type": "integer", "maximum": 2, "minimum": 0 },
-                    "unit": { "type": "string", "enum": ["KT"] },
+                    "unit": { "type": "string", "enum": ["KT"],
+                        "$geoweb::messages": {
+                            "enum": "Unit must be knots or meters per second"
+                        }
+                     },
                     "gusts": {
                         "oneOf": [{ "type": "integer", "minimum": 10, "maximum": 99 },
-                                  { "type": "string", "enum": ["P99"] }]
+                                  { "type": "string", "enum": ["P99"] }],
+                        "$geoweb::messages": {
+                            "oneOf": "Gust must be at least 10 knots or 5 meters per seconds more than average wind speed"
+                        }
                     }
                 }
             }, {
@@ -369,8 +379,14 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
-                    "speed": { "type": "integer", "minimum": 3, "maximum": 99 },
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
+                    "speed": { "type": "integer", "minimum": 3, "maximum": 99, 
+                    "$geoweb::messages": {
+                        "maximum": "Wind speed must be less than 100 knots or 50 meters per second"
+                    } },
                     "unit": { "type": "string", "enum": ["KT"] },
                     "gusts": {
                         "oneOf": [{ "type": "integer", "minimum": 13, "maximum": 99 },
@@ -384,7 +400,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
                     "speed": { "type": "string", "enum": ["P99"] },
                     "unit": { "type": "string", "enum": ["KT"] },
                     "gusts": { "type": "string", "enum": ["P99"]  }
@@ -395,7 +414,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
                     "speed": { "type": "string", "enum": ["P49"] },
                     "unit": { "type": "string", "enum": ["MPS"] },
                     "gusts": { "type": "string", "enum": ["P49"] }
@@ -407,7 +429,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                    "$geoweb::messages": {
+                        "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                    } },
                     "speed": { "type": "integer", "minimum": 2, "maximum": 49 },
                     "unit": { "type": "string", "enum": ["MPS"] },
                     "gusts": {

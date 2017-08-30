@@ -65,18 +65,13 @@ public class TafServices {
 		if(enableDebug)Debug.println("TAF from String: " + tafStr);
 		try {
 			if(enableDebug)Debug.println("start taf validation");
-			ProcessingReport tafValidationReport;
-			tafValidationReport = TafValidator.validate(tafStr);
-			if(tafValidationReport.isSuccess() == false){
+			JsonNode jsonValidation = TafValidator.validate(tafStr);
+			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
-				try {
-					String json = new JSONObject().
-							put("validationreport", tafValidationReport.toString()).
-							put("message","taf validation failed").toString();
-					return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+				String finalJson = new JSONObject().
+				put("errors", jsonValidation.toString()).
+				put("message","TAF is not valid").toString();
+				return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(finalJson);
 			}
 		} catch (ProcessingException e3) {
 			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
@@ -126,8 +121,8 @@ public class TafServices {
 
 		try {
 			// We enforce this to check our TAF code, should always validate
-			ProcessingReport tafValidationReport = TafValidator.validate(taf);
-			if(tafValidationReport.isSuccess() == false){
+			JsonNode tafValidationReport = TafValidator.validate(taf);
+			if(tafValidationReport.get("succeeded").asBoolean() == false){
 				Debug.errprintln(tafValidationReport.toString());
 				try {
 					String json = new JSONObject().
@@ -149,7 +144,7 @@ public class TafServices {
 		
 		try{
 			store.storeTaf(taf);
-			String json = new JSONObject().put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
+			String json = new JSONObject().put("succeeded", "true").put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 			try {
