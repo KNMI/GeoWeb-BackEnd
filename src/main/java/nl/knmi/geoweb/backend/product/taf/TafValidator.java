@@ -235,18 +235,22 @@ public class TafValidator {
 		return messagesMap;
     }
 
-	public static JsonNode validate(String tafStr) throws IOException, ProcessingException, JsonMappingException, JSONException {
+	public static JsonNode validate(String tafStr) throws  ProcessingException, JSONException, IOException {
 		// Locate the schema file
 		
 		String myEnv = System.getenv("HOME");
-		// String schemaFile = Tools.readFile(myEnv).getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
 		String schemaFile = null;
-		String schemaFileLocation = myEnv + "/TafValidatorSchema.json";
 		try {
-			schemaFile = Tools.readFile(schemaFileLocation);
-		} catch (IOException e) {
-			Debug.errprintln("Unable to read schema file " + schemaFileLocation);
-			throw e;
+			schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
+			Debug.println("Succesfully read schema from resource");
+		} catch (IOException e1) {
+			String schemaFileLocation = myEnv + "/TafValidatorSchema.json";
+			try {
+				schemaFile = Tools.readFile(schemaFileLocation);
+			} catch (IOException e) {
+				Debug.errprintln("Unable to read schema file " + schemaFileLocation);
+				throw e;
+			}
 		}
 		// Convert the TAF and the validation schema to JSON objects
 		JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
