@@ -402,8 +402,16 @@ public class Tools {
 	 */
 	public static String getResourceFromClassPath (@SuppressWarnings("rawtypes") Class c, String name) throws IOException{
 		String path = c.getProtectionDomain().getCodeSource().getLocation().getPath();
+		ClassLoader loader = Thread.currentThread().getContextClassLoader();
 		String fileName = path + "/" + name;
-		InputStream in = null;
+		// InputStream in = null;
+		InputStream in = loader.getResourceAsStream(name);
+		if (in == null) {
+			String msg = "ERROR, unable to find resource with name " + name + " under class " + c.getName();
+			// 
+			Debug.errprintln(msg);
+			throw new IOException(msg);
+		}
 		try {
 			in = new FileInputStream(fileName);
 		} catch (FileNotFoundException e) {
@@ -411,12 +419,7 @@ public class Tools {
 			Debug.errprintln(msg);
 			throw new IOException(msg);
 		}
-		//		if (in == null) {
-		//			String msg = "ERROR, unable to find resource with name " + name + " under class " + c.getName();
-		//			// 
-		//			Debug.errprintln(msg);
-		//			throw new IOException(msg);
-		//		}
+
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
 		StringBuilder out = new StringBuilder();
 		String line;

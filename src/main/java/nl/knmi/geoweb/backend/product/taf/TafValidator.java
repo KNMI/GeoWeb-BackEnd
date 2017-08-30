@@ -236,7 +236,7 @@ public class TafValidator {
 
 	public static JsonNode validate(String tafStr) throws IOException, ProcessingException, JsonMappingException, JSONException {
 		// Locate the schema file
-		String schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "/TafValidatorSchema.json");
+		String schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
 		// Convert the TAF and the validation schema to JSON objects
 		JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
 		JsonNode schemaNode = ValidationUtils.getJsonNode(schemaFile);
