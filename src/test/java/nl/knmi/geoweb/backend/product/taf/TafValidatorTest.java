@@ -17,17 +17,17 @@ import nl.knmi.adaguc.tools.Tools;
 public class TafValidatorTest {
 	@Test
 	public void testValidateOK () throws Exception {
-		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_valid.json");
+		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_valid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
 		ProcessingReport report = TafValidator.validate(tafAsJSON.toString());
 		assertThat(report.isSuccess(), is(true));
 	}
 	@Test
 	public void testValidateFails () throws IOException, JSONException, ProcessingException  {
-		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_invalid.json");
+		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_invalid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
 		ProcessingReport report = TafValidator.validate(tafAsJSON.toString());
 		assertThat(report.isSuccess(), is(false));
 	}
-
+	
 }
