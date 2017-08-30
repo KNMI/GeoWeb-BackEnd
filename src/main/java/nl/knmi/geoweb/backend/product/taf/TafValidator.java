@@ -17,7 +17,7 @@ public class TafValidator {
 	}
 
 	public static ProcessingReport validate(String tafStr) throws IOException, ProcessingException {
-		String schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
+		String schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "/TafValidatorSchema.json");
 		final JsonSchema schemaNode = ValidationUtils.getSchemaNode(schemaFile);
 		final JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
 		return schemaNode.validate(jsonNode);
