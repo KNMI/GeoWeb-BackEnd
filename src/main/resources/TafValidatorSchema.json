@@ -5,7 +5,13 @@
         "temperature": {
             "type": "object",
             "properties": {
-                "minimum": { "type": "integer", "minimum": -30, "maximum": 40 },
+                "minimum": { 
+                    "type": "integer", "minimum": -30, "maximum": 40,
+                    "$geoweb::messages": {
+                        "minimum": "Temperature cannot be lower than -30 degrees Celsius",
+                        "maximum": "Temperature cannot be higher than 40 degrees Celsius"
+                    }
+                },
                 "maximum": { "type": "integer", "minimum": -30, "maximum": 40 }
             },
             "additionalProperties": false,
@@ -16,22 +22,51 @@
             "type": "number",
             "minimum": 0,
             "maximum": 999,
-            "multipleOf": 30
+            "multipleOf": 30,
+            "$geoweb::messages": {
+                "minimum": "Vertical visibility must be greater than 0 meters",
+                "maximum": "Vertical visibility must be less than 1000 meters",
+                "multipleOf": "Vertical visibility must a multiple of 30 meters"
+            }
         },
         "first_cloud": {
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+                "amount": { 
+                    "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"], 
+                    "$geoweb::messages": {
+                        "enum": "First cloud group can only be one of few, scattered, broken, or overcast"
+                    }
+                },
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30, 
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                }
             }, "additionalProperties": false
         },
         "first_cloud_mod": {
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "amount": { 
+                    "type": "string", "enum": ["FEW", "SCT", "BKN", "OVC"],
+                    "$geoweb::messages": {
+                        "enum": "First cloud group can only be one of few, scattered, broken, or overcast"
+                    }
+                },
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                },
                 "mod": { "type": "string", "enum": ["CB", "TCU"]}
             }, "additionalProperties": false
         }, 
@@ -40,16 +75,40 @@
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["SCT", "BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+                "amount": { 
+                    "type": "string", "enum": ["SCT", "BKN", "OVC"],
+                    "$geoweb::messages": {
+                        "enum": "Second cloud group can only be one of scattered, broken, or overcast"
+                    }
+                },                
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                }
             }, "additionalProperties": false
         },
         "second_cloud_mod": {
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["SCT", "BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "amount": { 
+                    "type": "string", "enum": ["SCT", "BKN", "OVC"],
+                    "$geoweb::messages": {
+                        "enum": "Second cloud group can only be one of scattered, broken, or overcast"
+                    }
+                },
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                },
                 "mod": { "type": "string", "enum": ["CB", "TCU"]}
             }, "additionalProperties": false
         }, 
@@ -57,16 +116,40 @@
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+                "amount": { 
+                    "type": "string", "enum": ["BKN", "OVC"],
+                    "$geoweb::messages": {
+                        "enum": "Third cloud group can only be broken or overcast"
+                    }
+                },
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                }
             }, "additionalProperties": false
         },
         "third_cloud_mod": {
             "type": "object",
             "required": ["amount", "height"],
             "properties": {
-                "amount": { "type": "string", "enum": ["BKN", "OVC"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30},
+                "amount": { 
+                    "type": "string", "enum": ["BKN", "OVC"],
+                    "$geoweb::messages": {
+                        "enum": "Third cloud group can only be broken or overcast"
+                    }
+                },
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                },
                 "mod": { "type": "string", "enum": ["CB", "TCU"]}
             }, "additionalProperties": false
         }, 
@@ -75,7 +158,14 @@
             "type": "object",
             "properties": {
                 "mod": { "type": "string", "enum": ["CB", "TCU"]},
-                "height": { "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30}
+                "height": { 
+                    "type": "integer", "minimum": 0, "maximum": 999, "multipleOf": 30,
+                    "$geoweb::messages": {
+                        "minimum": "Clouds cannot be lower than 0 meters",
+                        "maximum": "Clouds cannot be higher than 1000 meters",
+                        "multipleOf": "Cloud height must a multiple of 30 meters"
+                    }
+                }
             }, "additionalProperties": false
         },
         "clouds": {
@@ -87,7 +177,10 @@
                 {"$ref": "#/definitions/first_cloud_mod"}, 
                 {"$ref": "#/definitions/second_cloud_mod"}, 
                 {"$ref": "#/definitions/third_cloud_mod"}
-            ]
+            ], 
+                "$geoweb::messages": {
+                    "maxItems": "Four cloud groups are only possible if the fourth cloud is just CB or TCU and the former three cloud groups have no such qualifiers"
+                }
             }, {
                 "type": "array",
                 "minItems": 4,
@@ -112,7 +205,14 @@
                 "properties": {
                     "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
                     "descriptor": { "type": "string", "enum": ["freezing"] },
-                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "enum": ["fog", "drizzle", "rain", "unknown precipitation"] } }
+                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, 
+                        "items": { 
+                            "type": "string", "enum": ["fog", "drizzle", "rain", "unknown precipitation"],
+                            "$geoweb::messages": {
+                                "enum": "Only freezing fob, drizzle, rain, or unknown precipitation is allowed"
+                            } 
+                        } 
+                    }
                 },
                 "required": ["phenomena", "descriptor"]
             },
@@ -129,16 +229,14 @@
                 "properties": {
                     "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
                     "descriptor": { "type": "string", "enum": ["blowing", "low drifting"] },
-                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { "type": "string", "enum": ["widespread dust", "sand", "snow"] } }
-                },
-                "required": ["phenomena", "descriptor"]
-            },
-            {
-                "additionalProperties": false,
-                "properties": {
-                    "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
-                    "descriptor": { "type": "string", "enum": ["blowing", "low drifting"] },
-                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { "type": "string", "enum": ["widespread dust", "sand", "snow"] } }
+                    "phenomena": { 
+                        "type": "array", "uniqueItems": true, "minItems": 1, "maxItems": 1, "items": { 
+                            "type": "string", "enum": ["widespread dust", "sand", "snow"],
+                            "$geoweb::messages": {
+                                "enum": "Blowing group only allowed with widespread dust, sand, or snow"
+                            } 
+                        } 
+                    }
                 },
                 "required": ["phenomena", "descriptor"]
             },
@@ -147,7 +245,14 @@
                 "properties": {
                     "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
                     "descriptor": { "type": "string", "enum": ["thunderstorm"] },
-                    "phenomena": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"] } }
+                    "phenomena": { 
+                        "type": "array", "uniqueItems": true, "items": { 
+                            "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"],
+                            "$geoweb::messages": {
+                                "enum": "Thunderstorm only allowed with no additional phenomena, rain, snow, small hail or unknown precipitation"
+                            } 
+                        } 
+                    }
                 },
                 "required": ["descriptor"]
             },
@@ -155,8 +260,20 @@
                 "additionalProperties": false,
                 "properties": {
                     "qualifier": { "type": "string", "enum": ["moderate", "heavy"]},
-                    "descriptor": { "type": "string", "enum": ["showers"] },
-                    "phenomena": { "type": "array", "uniqueItems": true, "minItems": 1, "items": { "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"] } }
+                    "descriptor": { 
+                        "type": "string", "enum": ["showers"],
+                        "$geoweb::messages": {
+                            "enum": "Descriptor unknown"
+                        } 
+                    },
+                    "phenomena": { 
+                        "type": "array", "uniqueItems": true, "minItems": 1, "items": { 
+                            "type": "string", "enum": ["rain", "snow", "small hail", "hail", "unkown precipitation"],
+                            "$geoweb::messages": {
+                                "enum": "Showers only allowed with rain, snow, small hail or unknown precipitation"
+                            } 
+                        }
+                    }
                 },
                 "required": ["phenomena", "descriptor"]
             }
@@ -168,27 +285,48 @@
                 "type": "array",
                 "minItems": 1,
                 "maxItems": 3,
-                "items":  {"$ref": "#/definitions/weather_group"}  
+                "items":  {"$ref": "#/definitions/weather_group"}
             }, {
                 "type": "string", "enum": ["NSW"]
-            }]
+            }],
+            "$geoweb::messages": {
+                "oneOf": "There are either maximally three weather groups or there is NSW"
+            }
         },
         "visibility": {
             "required": ["value"],
             "type": "object",
             "oneOf": [{
                 "properties": {
-                    "value": { "type": "integer", "minimum": 0, "maximum": 799, "multipleOf": 50 }
+                    "value": { 
+                        "type": "integer", "minimum": 0, "maximum": 799, "multipleOf": 50 ,
+                        "$geoweb::messages": {
+                            "minimum": "Visibility cannot be fewer than 0 meters",
+                            "multipleOf": "When visibility is between 0 and 800 meters it must be a multiple of 50 meters"
+                        }
+                    }
                 },
                 "additionalProperties": false
             },{
                 "properties": {
-                    "value": { "type": "integer", "minimum": 800, "maximum": 4999, "multipleOf": 100 }
+                    "value": { 
+                        "type": "integer", "minimum": 800, "maximum": 4999, "multipleOf": 100,
+                        "$geoweb::messages": {
+                            "multipleOf": "When visibility is between 800 and 5000 meters it must be a multiple of 100 meters"
+                        }
+
+                    }
                 },
                 "additionalProperties": false
             }, {
                 "properties": {
-                    "value": { "type": "integer", "minimum": 5000, "maximum": 9999, "multipleOf": 1000 }
+                    "value": { 
+                        "type": "integer", "minimum": 5000, "maximum": 9999, "multipleOf": 1000,
+                        "$geoweb::messages": {
+                            "maximum": "Visibility cannot be greater than 10000 meters",
+                            "multipleOf": "When visibility is between 5000 and 10000 meters it must be a multiple of 1000 meters"
+                        }
+                    }
                 },
                 "additionalProperties": false
             }, {
@@ -198,7 +336,13 @@
                 "additionalProperties": false
             }, {
                 "properties": {
-                    "value": { "type": "integer", "minimum": 0, "maximum": 99 },
+                    "value": { 
+                        "type": "integer", "minimum": 0, "maximum": 99,
+                        "$geoweb::messages": {
+                            "minimum": "Visibility cannot be fewer than 0 kilometers",
+                            "maximum": "Visibility cannot be greater than 100 kilometers"
+                        }
+                     },
                     "unit": { "type": "string", "enum": ["KM"] }
                 },
                 "additionalProperties": false,
@@ -211,12 +355,22 @@
             "oneOf": [{
                 "additionalProperties": false,
                 "properties": {
-                    "direction": { "type": "string", "enum": ["VRB"] },
+                    "direction": { "type": "string", "enum": ["VRB"],
+                    "$geoweb::messages": {
+                        "enum": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                    } },
                     "speed": { "type": "integer", "maximum": 2, "minimum": 0 },
-                    "unit": { "type": "string", "enum": ["KT"] },
+                    "unit": { "type": "string", "enum": ["KT"],
+                        "$geoweb::messages": {
+                            "enum": "Unit must be knots or meters per second"
+                        }
+                     },
                     "gusts": {
                         "oneOf": [{ "type": "integer", "minimum": 10, "maximum": 99 },
-                                  { "type": "string", "enum": ["P99"] }]
+                                  { "type": "string", "enum": ["P99"] }],
+                        "$geoweb::messages": {
+                            "oneOf": "Gust must be at least 10 knots or 5 meters per seconds more than average wind speed"
+                        }
                     }
                 }
             }, {
@@ -225,8 +379,14 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
-                    "speed": { "type": "integer", "minimum": 3, "maximum": 99 },
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
+                    "speed": { "type": "integer", "minimum": 3, "maximum": 99, 
+                    "$geoweb::messages": {
+                        "maximum": "Wind speed must be less than 100 knots or 50 meters per second"
+                    } },
                     "unit": { "type": "string", "enum": ["KT"] },
                     "gusts": {
                         "oneOf": [{ "type": "integer", "minimum": 13, "maximum": 99 },
@@ -240,7 +400,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
                     "speed": { "type": "string", "enum": ["P99"] },
                     "unit": { "type": "string", "enum": ["KT"] },
                     "gusts": { "type": "string", "enum": ["P99"]  }
@@ -251,7 +414,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                "$geoweb::messages": {
+                    "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                } },
                     "speed": { "type": "string", "enum": ["P49"] },
                     "unit": { "type": "string", "enum": ["MPS"] },
                     "gusts": { "type": "string", "enum": ["P49"] }
@@ -263,7 +429,10 @@
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
                         { "type": "integer", "minimum": 0, "maximum": 360 }
-                      ]},
+                      ],
+                    "$geoweb::messages": {
+                        "oneOf": "Direction must be variable or between 0 and 360 degrees. If the speed is less than 3 knots or 2 meters per second it is always variable"
+                    } },
                     "speed": { "type": "integer", "minimum": 2, "maximum": 49 },
                     "unit": { "type": "string", "enum": ["MPS"] },
                     "gusts": {
@@ -304,13 +473,15 @@
                         "wind": {"$ref": "#/definitions/wind"},
                         "caVOK": {"type": "boolean" }                    
                     },
-                    "required": ["wind", "caVOK"]
+                    "required": ["wind", "caVOK"],
+                    "$geoweb::messages": {
+                        "required": "Forecast is a wind group with visibilty, weather, either clouds or vertical visibility or CAVOK"
+                    }
                 }
             ]
         },
         "base_forecast": {
             "type": "object",
-
             "oneOf": [
                 {
                     "additionalProperties": false,
@@ -341,7 +512,10 @@
                         "caVOK": {"type": "boolean" },
                         "temperature": {"$ref": "#/definitions/temperature"}
                     },
-                    "required": ["wind", "caVOK"]
+                    "required": ["wind", "caVOK"],
+                    "$geoweb::messages": {
+                        "required": "Forecast is a wind group with visibilty, weather, either clouds or vertical visibility or CAVOK"
+                    }
                 }
             ]
 
@@ -349,7 +523,7 @@
         "base_metadata": {
             "type": "object",
             "properties": {
-            	"uuid": { "type": "string", "format": "uuid" },
+                "uuid": { "type": "string", "format": "uuid" },
                 "issueTime": { "type": "string", "format": "date-time" },
                 "validityStart": { "type": "string", "format": "date-time" },
                 "validityEnd": { "type": "string", "format": "date-time" },
@@ -358,7 +532,10 @@
                 "location": { "type": "string", "enum": ["EHAL", "EHAM", "EHBD", "EHBK", "EHDB", "EHDL", "EHDP", "EHDR", "EHEH", "EHGG", "EHGR", "EHND", "EHHO", "EHHV", "EHKD", "EHVK", "EHLE", "EHLW", "EHMC", "EHMZ", "EHOW", "EHRD", "EHSB", "EHSE", "EHST", "EHTE", "EHTL", "EHTW", "EHTX", "EHVB", "EHVE", "EHWO", "EHYB", "EHYP"]}
             },
             "additionalProperties": false,
-            "required": ["issueTime", "validityStart", "validityEnd", "status", "type", "location"]
+            "required": ["issueTime", "validityStart", "validityEnd", "status", "type", "location"],
+            "$geoweb::messages": {
+                "required": "Type, status, location, and validity times are required"
+            }
         },
         "changegroup": {
             "type": "object",

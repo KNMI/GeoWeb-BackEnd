@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
@@ -42,7 +43,7 @@ public class TafServices {
 	TafServices () throws IOException {
 		store = new TafStore("/tmp/tafs");
 	}
-	boolean enableDebug = false;
+	boolean enableDebug = true;
 
 	/**
 	 * POST a TAF to the product store
@@ -64,18 +65,13 @@ public class TafServices {
 		if(enableDebug)Debug.println("TAF from String: " + tafStr);
 		try {
 			if(enableDebug)Debug.println("start taf validation");
-			ProcessingReport tafValidationReport;
-			tafValidationReport = TafValidator.validate(tafStr);
-			if(tafValidationReport.isSuccess() == false){
+			JsonNode jsonValidation = TafValidator.validate(tafStr);
+			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
-				try {
-					String json = new JSONObject().
-							put("validationreport", tafValidationReport.toString()).
-							put("message","taf validation failed").toString();
-					return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
-				} catch (JSONException e) {
-					e.printStackTrace();
-				}
+				String finalJson = new JSONObject().
+				put("errors", jsonValidation.toString()).
+				put("message","TAF is not valid").toString();
+				return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(finalJson);
 			}
 		} catch (ProcessingException e3) {
 			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
@@ -105,8 +101,12 @@ public class TafServices {
 			}
 		}
 		if(enableDebug)Debug.println("TAF from Object: " + taf.toJSON());
+		// Assert that the JSONs are equal regardless of order
+		final ObjectMapper JSONMapper = new ObjectMapper();
 
-		if(!new JSONObject(tafStr).toString().equals(new JSONObject(taf.toJSON()).toString())) {
+		final JsonNode tree1 = JSONMapper.readTree(tafStr);
+		final JsonNode tree2 = JSONMapper.readTree(taf.toJSON());
+		if(!tree1.equals(tree2)) {
 			throw new IllegalArgumentException("TAF JSON is different from origional JSON");
 		} else {
 			Debug.println("Incoming TAF string is equal to serialized and deserialized TAF string");
@@ -121,8 +121,8 @@ public class TafServices {
 
 		try {
 			// We enforce this to check our TAF code, should always validate
-			ProcessingReport tafValidationReport = TafValidator.validate(taf);
-			if(tafValidationReport.isSuccess() == false){
+			JsonNode tafValidationReport = TafValidator.validate(taf);
+			if(tafValidationReport.get("succeeded").asBoolean() == false){
 				Debug.errprintln(tafValidationReport.toString());
 				try {
 					String json = new JSONObject().
@@ -144,7 +144,7 @@ public class TafServices {
 		
 		try{
 			store.storeTaf(taf);
-			String json = new JSONObject().put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
+			String json = new JSONObject().put("succeeded", "true").put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 			try {

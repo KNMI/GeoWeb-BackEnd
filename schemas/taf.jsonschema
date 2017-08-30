@@ -16,7 +16,12 @@
             "type": "number",
             "minimum": 0,
             "maximum": 999,
-            "multipleOf": 30
+            "multipleOf": 30$,
+			"$geoweb::messages": {
+				"minimum": "Vertical visibility must be between 0 and 1000M",
+				"maximum": "Vertical visibility must be between 0 and 1000M",
+				"multipleOf": "Vertical visibility must be a multiple of 30M"
+			}
         },
         "first_cloud": {
             "type": "object",

@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 
@@ -19,15 +20,15 @@ public class TafValidatorTest {
 	public void testValidateOK () throws Exception {
 		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_valid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
-		ProcessingReport report = TafValidator.validate(tafAsJSON.toString());
-		assertThat(report.isSuccess(), is(true));
+		JsonNode report = TafValidator.validate(tafAsJSON.toString());
+		assertThat(report.get("succeeded").asBoolean(), is(true));
 	}
 	@Test
 	public void testValidateFails () throws IOException, JSONException, ProcessingException  {
 		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_invalid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
-		ProcessingReport report = TafValidator.validate(tafAsJSON.toString());
-		assertThat(report.isSuccess(), is(false));
+		JsonNode report = TafValidator.validate(tafAsJSON.toString());
+		assertThat(report.get("succeeded").asBoolean(), is(false));
 	}
 	
 }
