@@ -99,7 +99,7 @@
 		</plugins>
 		<resources>
         <resource>
-            <directory>${basedir}/src/</directory>
+            <directory>${basedir}/</directory>
             <includes>
                 <include>**/*</include>
             </includes>
