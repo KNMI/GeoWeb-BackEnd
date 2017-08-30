@@ -89,10 +89,14 @@ public class Taf {
 				return sb.toString();
 			}
 		}
+
+		@JsonInclude(JsonInclude.Include.NON_NULL)
+		Integer vertical_visibility;
+		
 		@JsonSerialize(using = CloudsSerializer.class)
 		@JsonInclude(JsonInclude.Include.NON_EMPTY)
 		List<TAFCloudType>clouds;
-		
+
 		@Getter
 		@Setter
 		public static class TAFWeather {
@@ -123,6 +127,7 @@ public class Taf {
 				return sb.toString();
 			}
 		}
+
 		@JsonInclude(JsonInclude.Include.NON_EMPTY)
 		@JsonSerialize(using = WeathersSerializer.class)
 		List<TAFWeather> weather;
