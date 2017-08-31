@@ -71,7 +71,7 @@ public class TafServices {
 				String finalJson = new JSONObject().
 				put("errors", jsonValidation.toString()).
 				put("message","TAF is not valid").toString();
-				return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(finalJson);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(finalJson);
 			}
 		} catch (ProcessingException e3) {
 			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
@@ -83,7 +83,7 @@ public class TafServices {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 		}
 	
 		try {
@@ -130,7 +130,7 @@ public class TafServices {
 							put("message","taf "+taf.metadata.getUuid()+" stored").
 							put("uuid",taf.metadata.getUuid()).toString();
 					Debug.errprintln(tafValidationReport.toString());
-					return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(json);
+					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 				} catch (JSONException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
