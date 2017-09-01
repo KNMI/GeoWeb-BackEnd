@@ -21,6 +21,8 @@ import java.util.Comparator;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.core.io.ClassPathResource;
+
 
 public class Tools {
 
@@ -429,4 +431,27 @@ public class Tools {
 		reader.close();
 		return out.toString(); 
 	}
+
+	public static String readResource(String name) {
+
+		StringBuilder result = new StringBuilder("");
+		ClassPathResource resource = new ClassPathResource(name);
+
+		try (InputStream inputStream = resource.getInputStream()) {
+
+			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+			String line;
+
+			while ((line = bufferedReader.readLine()) != null) {
+				result.append(line);
+			}
+			inputStream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return result.toString();
+	}
+
+
+
 }

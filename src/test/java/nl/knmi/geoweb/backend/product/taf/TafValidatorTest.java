@@ -19,6 +19,7 @@ public class TafValidatorTest {
 	@Test
 	public void testValidateOK () throws Exception {
 		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_valid.json");
+		
 		JSONObject tafAsJSON = new JSONObject(taf);
 		JsonNode report = TafValidator.validate(tafAsJSON.toString());
 		assertThat(report.get("succeeded").asBoolean(), is(true));
