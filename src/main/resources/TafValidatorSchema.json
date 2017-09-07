@@ -22,7 +22,7 @@
             "type": "number",
             "minimum": 0,
             "maximum": 999,
-            "multipleOf": 30,
+            "multipleOf": 30, 
             "$geoweb::messages": {
                 "minimum": "Vertical visibility must be greater than 0 meters",
                 "maximum": "Vertical visibility must be less than 1000 meters",

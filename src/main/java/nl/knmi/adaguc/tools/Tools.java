@@ -14,6 +14,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -452,6 +454,25 @@ public class Tools {
 		return result.toString();
 	}
 
-
-
+	public static void writeResource(String name, String content) {
+		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+		URL url = classLoader.getResource("TafValidatorSchema.json");
+		try {
+			System.out.println(url);
+			File file = new File(url.toURI().getPath());
+			FileOutputStream fos = new FileOutputStream(file);
+			fos.write(content.getBytes());
+			fos.flush();
+			fos.close();
+		} catch (URISyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

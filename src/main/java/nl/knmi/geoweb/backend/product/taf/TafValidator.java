@@ -33,8 +33,9 @@ import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.validation.ValidationUtils;
 
 public class TafValidator {
-
+	static TafSchemaStore schemaStore;
 	public static JsonNode validate(Taf taf) throws IOException, ProcessingException, JSONException {
+		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
 		return validate(taf.toJSON());
 	}
 
@@ -234,26 +235,24 @@ public class TafValidator {
 
 		return messagesMap;
 	}
+	
+	public static boolean validateSchema(JsonNode schema) throws IOException, ProcessingException {
+		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
+		removeGeowebPrefixedFields(schema);
+		String schemaschemaString = schemaStore.getSchemaSchema();
+		ObjectMapper om = new ObjectMapper();
+		final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+		final JsonSchema schemaschema = factory.getJsonSchema(om.readTree(schemaschemaString));
+		ProcessingReport validReport = schemaschema.validate(schema);
+		
+		return validReport.isSuccess();
+	}
 
 	public static JsonNode validate(String tafStr) throws  ProcessingException, JSONException, IOException {
 		// Locate the schema file
-
-		String myEnv = System.getenv("HOME");
-		String schemaFile = null;
-		//		try {
-		//			//schemaFile = Tools.getResourceFromClassPath(TafValidator.class, "TafValidatorSchema.json");
-		schemaFile = Tools.readResource("TafValidatorSchema.json");
+		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
+		String schemaFile = schemaStore.getLatestTafSchema();
 		Debug.println("Succesfully read schema from resource");
-		//		} catch (IOException e1) {
-		//			String schemaFileLocation = myEnv + "/TafValidatorSchema.json";
-		//			try {
-		//				schemaFile = Tools.readFile(schemaFileLocation);
-		//			} catch (IOException e) {
-		//				Debug.errprintln("Unable to read schema file " + schemaFileLocation);
-		//				throw e;
-		//			}
-		//		}
-		//		// Convert the TAF and the validation schema to JSON objects
 		JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
 		JsonNode schemaNode = ValidationUtils.getJsonNode(schemaFile);
 
