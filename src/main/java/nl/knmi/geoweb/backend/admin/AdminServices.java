@@ -7,7 +7,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONObject;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -18,14 +21,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.HTTPTools;
 import nl.knmi.adaguc.tools.JSONResponse;
+import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 
 @RestController
 @RequestMapping(path={"/admin", "/store"}, method=RequestMethod.GET)
 public class AdminServices {
 	static AdminStore store = null;
-
+	static TafSchemaStore schemaStore = null;
 	AdminServices () throws IOException {
 		store = new AdminStore("/tmp/admin");
+		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
 	}
 	//http://bhw485.knmi.nl:8090/admin/read?type=locations&name=locations
 
@@ -51,6 +57,31 @@ public class AdminServices {
 		} catch (Exception e1) {
 		}
 	}
+	
+	@RequestMapping(path="/validation/schema/{schemaId}", method=RequestMethod.GET, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> getSchemaById(@PathVariable String schemaId) throws IOException {
+		if("taf".equals(schemaId.toLowerCase())) {
+			String schema = schemaStore.getLatestTafSchema();
+			return ResponseEntity.status(HttpStatus.OK).body(schema);
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No or wrong ID given");
+	}
+	
+	@RequestMapping(path="/validation/schema/{schemaId}", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> setSchemaContentById(@PathVariable String schemaId, @RequestBody String content) throws JsonProcessingException, IOException {
+		System.out.println(schemaId + ": " + content);
+		if("taf".equals(schemaId.toLowerCase())) {
+			try {
+				schemaStore.storeTafSchema(content);
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			
+			return ResponseEntity.status(HttpStatus.OK).body(null);
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No or wrong ID given");
+	}
+
 
 	@RequestMapping(path="/read", method=RequestMethod.GET,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void readConfigurationItem(HttpServletRequest req, HttpServletResponse response) throws JsonProcessingException {

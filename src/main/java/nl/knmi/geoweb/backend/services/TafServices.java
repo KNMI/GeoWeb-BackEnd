@@ -31,6 +31,7 @@ import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
+import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 
@@ -39,7 +40,7 @@ import nl.knmi.geoweb.backend.product.taf.TafValidator;
 public class TafServices {
 
 	static TafStore store = null;
-
+	static TafSchemaStore schemaStore = null;
 	TafServices () throws IOException {
 		store = new TafStore("/tmp/tafs");
 	}
@@ -69,6 +70,7 @@ public class TafServices {
 			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
 				String finalJson = new JSONObject().
+				put("succeeded", false).
 				put("errors", jsonValidation.toString()).
 				put("message","TAF is not valid").toString();
 				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(finalJson);
@@ -127,8 +129,10 @@ public class TafServices {
 				try {
 					String json = new JSONObject().
 							put("validationreport", tafValidationReport.toString()).
+							put("succeeded", true).
 							put("message","taf "+taf.metadata.getUuid()+" stored").
 							put("uuid",taf.metadata.getUuid()).toString();
+					
 					Debug.errprintln(tafValidationReport.toString());
 					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 				} catch (JSONException e) {
@@ -292,6 +296,4 @@ public class TafServices {
 	public String publishTaf(String uuid) throws JsonParseException, JsonMappingException, IOException {
 		return "taf "+store.getByUuid(uuid)+" published";
 	}
-
-
 }
