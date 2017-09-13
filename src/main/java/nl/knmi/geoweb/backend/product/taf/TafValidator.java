@@ -34,8 +34,10 @@ import nl.knmi.geoweb.backend.validation.ValidationUtils;
 
 public class TafValidator {
 	static TafSchemaStore schemaStore;
-	public static JsonNode validate(Taf taf) throws IOException, ProcessingException, JSONException {
+	public TafValidator () throws IOException {
 		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
+	}
+	public JsonNode validate(Taf taf) throws IOException, ProcessingException, JSONException {
 		return validate(taf.toJSON());
 	}
 
@@ -236,26 +238,25 @@ public class TafValidator {
 		return messagesMap;
 	}
 	
-	public static boolean validateSchema(JsonNode schema) throws IOException, ProcessingException {
-		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
-		removeGeowebPrefixedFields(schema);
+	public boolean validateSchema(JsonNode schema) throws IOException, ProcessingException {
+		JsonNode cpy = schema.deepCopy();
+		removeGeowebPrefixedFields(cpy);
 		String schemaschemaString = schemaStore.getSchemaSchema();
 		ObjectMapper om = new ObjectMapper();
 		final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
 		final JsonSchema schemaschema = factory.getJsonSchema(om.readTree(schemaschemaString));
-		ProcessingReport validReport = schemaschema.validate(schema);
+		ProcessingReport validReport = schemaschema.validate(cpy);
 		
 		return validReport.isSuccess();
 	}
 
-	public static JsonNode validate(String tafStr) throws  ProcessingException, JSONException, IOException {
+	public JsonNode validate(String tafStr) throws  ProcessingException, JSONException, IOException {
 		// Locate the schema file
-		schemaStore = new TafSchemaStore("/tmp/tafs/schemas");
 		String schemaFile = schemaStore.getLatestTafSchema();
 		Debug.println("Succesfully read schema from resource");
 		JsonNode jsonNode = ValidationUtils.getJsonNode(tafStr);
 		JsonNode schemaNode = ValidationUtils.getJsonNode(schemaFile);
-
+		System.out.println(schemaFile);
 		// This extracts the custom error messages in the JSONSchema and removes them
 		// This is necessary because otherwise the schema is invalid and thus always needs to happen.
 		// The messages map is a mapping from a pointer in the JSONSchema to another map
@@ -276,7 +277,6 @@ public class TafValidator {
 		if(validationReport != null && !validationReport.isSuccess()) {
 			// Try to find all possible errors and map them to the human-readable variants using the messages map
 			Map<String, Set<String>> errorMessages = convertReportInHumanReadableErrors(validationReport, messagesMap);
-
 			String json = new ObjectMapper().writeValueAsString(errorMessages);
 			JsonNode finalJson = ValidationUtils.getJsonNode(json);
 			((ObjectNode)finalJson).put("succeeded", "false");
