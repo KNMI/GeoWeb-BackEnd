@@ -46,6 +46,32 @@ public class TafServices {
 	}
 	boolean enableDebug = true;
 
+	
+	@RequestMapping(path="/tafs/verify", method=RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+			)
+	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException {
+		tafStr = URLDecoder.decode(tafStr,"UTF8");
+		try {
+			JsonNode jsonValidation = new TafValidator().validate(tafStr);
+			if(jsonValidation.get("succeeded").asBoolean() == false){
+				Debug.errprintln("TAF validation failed");
+				String finalJson = new JSONObject().
+				put("succeeded", false).
+				put("errors", jsonValidation.toString()).
+				put("message","TAF is not valid").toString();
+				return ResponseEntity.ok(finalJson);
+			} else {
+				String json = new JSONObject().put("succeeded", true).put("message","taf verified").toString();
+				return ResponseEntity.ok(json);
+			}
+		} catch (ProcessingException e) {
+			// TODO Auto-generated catch block
+			String json = new JSONObject().
+					put("message","Unable to validate taf").toString();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+		}
+	}
 	/**
 	 * POST a TAF to the product store
 	 * @param tafStr
@@ -66,7 +92,7 @@ public class TafServices {
 		if(enableDebug)Debug.println("TAF from String: " + tafStr);
 		try {
 			if(enableDebug)Debug.println("start taf validation");
-			JsonNode jsonValidation = TafValidator.validate(tafStr);
+			JsonNode jsonValidation = new TafValidator().validate(tafStr);
 			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
 				String finalJson = new JSONObject().
@@ -123,7 +149,7 @@ public class TafServices {
 
 		try {
 			// We enforce this to check our TAF code, should always validate
-			JsonNode tafValidationReport = TafValidator.validate(taf);
+			JsonNode tafValidationReport = new TafValidator().validate(taf);
 			if(tafValidationReport.get("succeeded").asBoolean() == false){
 				Debug.errprintln(tafValidationReport.toString());
 				try {
