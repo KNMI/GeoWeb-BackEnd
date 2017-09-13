@@ -21,14 +21,14 @@ public class TafValidatorTest {
 		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_valid.json");
 		
 		JSONObject tafAsJSON = new JSONObject(taf);
-		JsonNode report = TafValidator.validate(tafAsJSON.toString());
+		JsonNode report = new TafValidator().validate(tafAsJSON.toString());
 		assertThat(report.get("succeeded").asBoolean(), is(true));
 	}
 	@Test
 	public void testValidateFails () throws IOException, JSONException, ProcessingException  {
 		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_invalid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
-		JsonNode report = TafValidator.validate(tafAsJSON.toString());
+		JsonNode report = new TafValidator().validate(tafAsJSON.toString());
 		assertThat(report.get("succeeded").asBoolean(), is(false));
 	}
 	
