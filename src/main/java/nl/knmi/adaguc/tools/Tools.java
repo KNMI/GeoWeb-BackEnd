@@ -434,7 +434,7 @@ public class Tools {
 		return out.toString(); 
 	}
 
-	public static String readResource(String name) {
+	public static String _readResource(String name) {
 
 		StringBuilder result = new StringBuilder("");
 		ClassPathResource resource = new ClassPathResource(name);
@@ -454,7 +454,7 @@ public class Tools {
 		return result.toString();
 	}
 
-	public static void writeResource(String name, String content) {
+	public static void _writeResource(String name, String content) {
 		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 		URL url = classLoader.getResource("TafValidatorSchema.json");
 		try {
