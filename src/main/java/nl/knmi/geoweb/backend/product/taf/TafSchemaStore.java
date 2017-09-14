@@ -46,7 +46,7 @@ public class TafSchemaStore {
 			s = Tools.readFile(this.directory + "/taf_jsonschema_schema.json");
 		} catch (IOException e) {
 			Debug.println("taf_jsonschema_schema.json missing: writing to store from resource");
-			s = Tools.getResourceFromClassPath(TafValidatorTest.class, "taf_jsonschema_schema.json");
+			s = Tools.readResource("taf_jsonschema_schema.json");
 			Tools.writeFile(this.directory + "/taf_jsonschema_schema.json", s);
 		}
 		return s;
@@ -113,7 +113,7 @@ public class TafSchemaStore {
 		} else {
 			Debug.errprintln("No taf schemas found, copying one from resources dir");
 			Debug.println("A taf_schema_1505310219.json missing: writing to store from resource");
-			String s = Tools.getResourceFromClassPath(TafValidatorTest.class, "taf_schema_1505310219.json");
+			String s = Tools.readResource("taf_schema_1505310219.json");
 			Tools.writeFile(this.directory + "/taf_schema_1505310219.json", s);
 			return getLatestTafSchema();
 		}
