@@ -2,6 +2,7 @@ GeoWeb-BackEnd
 =====
 
 [![Build Status](https://api.travis-ci.org/KNMI/GeoWeb-BackEnd.svg?branch=master)](https://api.travis-ci.org/KNMI/GeoWeb-BackEnd)
+[![Download](https://jitpack.io/v/KNMI/GeoWeb-BackEnd)](https://jitpack.io/#KNMI/GeoWeb-BackEnd)
 
 # GeoWeb-BackEnd
 Back end for GeoWeb
