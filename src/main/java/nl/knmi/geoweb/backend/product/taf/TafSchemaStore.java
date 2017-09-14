@@ -41,8 +41,14 @@ public class TafSchemaStore {
 	}
 	
 	public String getSchemaSchema() throws IOException {
-		String s = Tools.readFile(this.directory + "/jsonschema_schema.json");
-		System.out.println(s);
+		String s = null;
+		try {
+			s = Tools.readFile(this.directory + "/taf_jsonschema_schema.json");
+		} catch (IOException e) {
+			Debug.println("taf_jsonschema_schema.json missing: writing to store from resource");
+			s = Tools.getResourceFromClassPath(TafValidatorTest.class, "taf_jsonschema_schema.json");
+			Tools.writeFile(this.directory + "/taf_jsonschema_schema.json", s);
+		}
 		return s;
 	}
 
@@ -99,13 +105,18 @@ public class TafSchemaStore {
 		
 		// Timestamp is in the file so sort files according to this timestamp
 		// Oldest are first so pick the final element in the array
-		if (files!=null) {
+		if (files!=null && files.length > 0) {
 			Arrays.sort(files, (a, b) -> getTimestamp(a.getName()).compareTo(getTimestamp(b.getName())));
 			File latest = files[files.length - 1];
 			byte[] bytes = Files.readAllBytes(latest.toPath());
 			return new String(bytes, "utf-8");
+		} else {
+			Debug.errprintln("No taf schemas found, copying one from resources dir");
+			Debug.println("A taf_schema_1505310219.json missing: writing to store from resource");
+			String s = Tools.getResourceFromClassPath(TafValidatorTest.class, "taf_schema_1505310219.json");
+			Tools.writeFile(this.directory + "/taf_schema_1505310219.json", s);
+			return getLatestTafSchema();
 		}
-		return null;
 
 	}
 }
