@@ -1,3 +1,8 @@
+GeoWeb-BackEnd
+=====
+
+[![Build Status](https://api.travis-ci.org/KNMI/GeoWeb-BackEnd.svg?branch=master)](https://api.travis-ci.org/KNMI/GeoWeb-BackEnd)
+
 # GeoWeb-BackEnd
 Back end for GeoWeb
 
