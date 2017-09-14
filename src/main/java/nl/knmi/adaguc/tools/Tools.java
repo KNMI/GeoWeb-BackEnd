@@ -404,37 +404,8 @@ public class Tools {
 	 * @throws IOException 
 	 * @throws Exception
 	 */
-	public static String getResourceFromClassPath (@SuppressWarnings("rawtypes") Class c, String name) throws IOException{
-		String path = c.getProtectionDomain().getCodeSource().getLocation().getPath();
-		ClassLoader loader = Thread.currentThread().getContextClassLoader();
-		String fileName = path + "/" + name;
-		// InputStream in = null;
-		InputStream in = loader.getResourceAsStream(name);
-		if (in == null) {
-			String msg = "ERROR, unable to find resource with name " + name + " under class " + c.getName();
-			// 
-			Debug.errprintln(msg);
-			throw new IOException(msg);
-		}
-		try {
-			in = new FileInputStream(fileName);
-		} catch (FileNotFoundException e) {
-			String msg = "ERROR, unable to find resource with name " + fileName + " under class " + c.getName();
-			Debug.errprintln(msg);
-			throw new IOException(msg);
-		}
 
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-		StringBuilder out = new StringBuilder();
-		String line;
-		while ((line = reader.readLine()) != null) {
-			out.append(line);
-		}
-		reader.close();
-		return out.toString(); 
-	}
-
-	public static String _readResource(String name) {
+	public static String readResource(String name) {
 
 		StringBuilder result = new StringBuilder("");
 		ClassPathResource resource = new ClassPathResource(name);
@@ -454,25 +425,5 @@ public class Tools {
 		return result.toString();
 	}
 
-	public static void _writeResource(String name, String content) {
-		ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-		URL url = classLoader.getResource("TafValidatorSchema.json");
-		try {
-			System.out.println(url);
-			File file = new File(url.toURI().getPath());
-			FileOutputStream fos = new FileOutputStream(file);
-			fos.write(content.getBytes());
-			fos.flush();
-			fos.close();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+
 }

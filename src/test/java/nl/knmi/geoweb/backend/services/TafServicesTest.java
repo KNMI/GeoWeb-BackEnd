@@ -51,7 +51,7 @@ public class TafServicesTest {
     }
 
 	private String getValidTaf() throws Exception  {
-		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_valid.json");
+		String taf = Tools.readResource("Taf_valid.json");
 		return taf;
 	}
 	

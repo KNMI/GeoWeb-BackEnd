@@ -18,7 +18,7 @@ import nl.knmi.adaguc.tools.Tools;
 public class TafValidatorTest {
 	@Test
 	public void testValidateOK () throws Exception {
-		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "Taf_valid.json");
+		String taf = Tools.readResource( "Taf_valid.json");
 		
 		JSONObject tafAsJSON = new JSONObject(taf);
 		JsonNode report = new TafValidator().validate(tafAsJSON.toString());
@@ -26,7 +26,7 @@ public class TafValidatorTest {
 	}
 	@Test
 	public void testValidateFails () throws IOException, JSONException, ProcessingException  {
-		String taf = Tools.getResourceFromClassPath(TafValidatorTest.class, "./Taf_invalid.json");
+		String taf = Tools.readResource( "./Taf_invalid.json");
 		JSONObject tafAsJSON = new JSONObject(taf);
 		JsonNode report = new TafValidator().validate(tafAsJSON.toString());
 		assertThat(report.get("succeeded").asBoolean(), is(false));
