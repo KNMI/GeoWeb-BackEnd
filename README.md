@@ -26,5 +26,9 @@ For creating a new package:
 3) in directory target the file ./target/demo-${VERSION}-SNAPSHOT.jar is created.
 4) You can for example start this with java -jar demo-${VERSION}-SNAPSHOT.jar
 
+Creating a docker image:
+
+1) mvn install dockerfile:build
+
 
 
