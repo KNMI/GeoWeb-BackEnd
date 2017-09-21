@@ -1,23 +1,41 @@
 package nl.knmi.geoweb.backend;
 
-import java.util.TimeZone;
-
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
+import nl.knmi.adaguc.tools.Debug;
 @SpringBootApplication
-public class GeoWebBackEndApplication {
+@RestController
+@EnableAutoConfiguration
+public class GeoWebBackEndApplication extends SpringBootServletInitializer {
+	
+	@Value("${info.version}")
+	private String infoVersion;
+
+	@RequestMapping(path="/")
+	String home() {
+		Debug.println(infoVersion);
+		return "GeoWeb Backend version [" + infoVersion + "]";
+	}
 
 	public static void main(String[] args) {
-		SpringApplication.run(GeoWebBackEndApplication.class, args);
+		configureApplication(new SpringApplicationBuilder()).run(args);
 	}
-	
-	
+
+	@Override
+	protected SpringApplicationBuilder configure(SpringApplicationBuilder application)  {
+		Debug.println(infoVersion);
+		return application.sources(GeoWebBackEndApplication.class).properties();
+	}
+
+	private static SpringApplicationBuilder configureApplication(SpringApplicationBuilder builder){
+		return builder.sources(GeoWebBackEndApplication.class).bannerMode(Banner.Mode.OFF);
+	}
 }

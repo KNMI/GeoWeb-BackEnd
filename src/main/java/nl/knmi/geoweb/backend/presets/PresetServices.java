@@ -28,23 +28,23 @@ import nl.knmi.geoweb.backend.usermanagement.UserStore;
 @RequestMapping("/preset")
 public class PresetServices {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	static PresetStore store = null;
+	PresetStore presetStore;
 
-	PresetServices () throws IOException {
-		store = new PresetStore("/tmp/presets");
+	PresetServices (final PresetStore presetStore) throws IOException {
+		this.presetStore = presetStore;
 	}
 	@RequestMapping(path="/getpresets")
 	public ResponseEntity<String> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
-		List<Preset>presets=store.readSystemPresets();
+		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
 			UserStore userStore=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=userStore.getUserRoles(user);
 			if (roles==null) roles=new String[]{"USER"};
-			List<Preset>userPresets=store.readUserPresets(user);
+			List<Preset>userPresets=presetStore.readUserPresets(user);
 			presets.addAll(userPresets);
 			for (String role: roles) {
-				List<Preset>rolePresets=store.readRolePresets(role);
+				List<Preset>rolePresets=presetStore.readRolePresets(role);
 				presets.addAll(rolePresets);
 			}
 		}
@@ -55,16 +55,16 @@ public class PresetServices {
 
 	@RequestMapping(path="/getpreset")
 	public ResponseEntity<String> getPreset(@RequestParam("name")String name, @RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
-		List<Preset>presets=store.readSystemPresets();
+		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
 			UserStore userStore=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=userStore.getUserRoles(user);
 			if (roles==null) roles=new String[]{"USER"};
-			List<Preset>userPresets=store.readUserPresets(user);
+			List<Preset>userPresets=presetStore.readUserPresets(user);
 			presets.addAll(userPresets);
 			for (String role: roles) {
-				List<Preset>rolePresets=store.readRolePresets(role);
+				List<Preset>rolePresets=presetStore.readRolePresets(role);
 				presets.addAll(rolePresets);
 			}
 		}
@@ -79,11 +79,11 @@ public class PresetServices {
 
 	@RequestMapping(path="/putsystempreset", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> storeSystemPreset(@RequestParam("name")String name, @RequestBody String preset) {
-		Preset pr = store.loadJsonPreset(preset);
+		Preset pr = presetStore.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
 			try {
-				store.storeSystemPreset(pr);
+				presetStore.storeSystemPreset(pr);
 				return ResponseEntity.status(HttpStatus.OK).body("{ \"test\": \"OK\"}");				
 
 			} catch (IOException e) {
@@ -96,12 +96,12 @@ public class PresetServices {
 
 	@RequestMapping(path="/putrolespreset", method=RequestMethod.POST)
 	public ResponseEntity<String> storeRolesPreset(@RequestParam("name")String name, @RequestParam("roles")String roles, @RequestBody String preset, HttpServletRequest req) {
-		Preset pr = store.loadJsonPreset(preset);
+		Preset pr = presetStore.loadJsonPreset(preset);
 		if (pr!=null) {
 			pr.setName(name);
 
 			try {
-				store.storeRolePreset(Arrays.asList(roles.split(",")), pr);
+				presetStore.storeRolePreset(Arrays.asList(roles.split(",")), pr);
 				return ResponseEntity.status(HttpStatus.OK).body("Role preset "+name+" stored");				
 
 			} catch (IOException e) {
@@ -114,14 +114,14 @@ public class PresetServices {
 
 	@RequestMapping(path="/putuserpreset", method=RequestMethod.POST)
 	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestBody String preset, HttpServletRequest req) {
-		Preset pr = store.loadJsonPreset(preset);
+		Preset pr = presetStore.loadJsonPreset(preset);
 
 		if (pr!=null) {
 			pr.setName(name);
 
 			String user=UserLogin.getUserFromRequest(req);
 			try {
-				store.storeUserPreset(user, pr);
+				presetStore.storeUserPreset(user, pr);
 				return ResponseEntity.status(HttpStatus.OK).body("User preset "+name+" stored");				
 
 			} catch (IOException e) {

@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -18,9 +22,22 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 
+@Component
 public class TafStore {
-	private String directory;
-	public TafStore(String dir) throws IOException {
+
+	private String directory = null;
+	
+	static boolean isCreated = false;
+	
+	TafStore (@Value(value = "${productstorelocation}") String productstorelocation) throws Exception {
+		if(productstorelocation == null) {
+			throw new Exception("productstorelocation property is null");
+		}
+		if(isCreated == true) {
+			throw new Exception("TafStore is already created");
+		}
+		isCreated = true;
+		String dir = productstorelocation + "/tafs/";
 		Debug.println("TAF STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
@@ -36,6 +53,7 @@ public class TafStore {
 	}
 
 	public void storeTaf(Taf taf) throws JsonProcessingException, IOException {
+		Debug.println("Store taf " + this.directory);
 		String fn=String.format("%s/taf_%s.json", this.directory, taf.metadata.getUuid());
 		Tools.writeFile(fn, taf.toJSON());
 	}
@@ -43,6 +61,7 @@ public class TafStore {
 
 
 	public Taf[] getTafs(boolean selectActive, TAFReportPublishedConcept selectStatus, String uuid, String location) throws JsonParseException, JsonMappingException, IOException {
+		Debug.println("directory:"+directory);
 		Comparator<Taf> comp = new Comparator<Taf>() {
 			public int compare(Taf lhs, Taf rhs) {
 				try{
@@ -117,5 +136,9 @@ public class TafStore {
 		String fn=String.format("%s/taf_%s.json", this.directory, uuid);
 		return Tools.rm(fn);
 
+	}
+
+	public String getLocation() {
+		return directory;
 	}
 }

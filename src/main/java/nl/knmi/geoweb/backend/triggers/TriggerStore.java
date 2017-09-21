@@ -17,6 +17,8 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -28,12 +30,15 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @Getter
+@Component
 public class TriggerStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-	String dir;
+	private String directory;
 
-	public TriggerStore(String dir) throws IOException {
+	public TriggerStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+		String dir = productstorelocation + "/triggers";
+		Debug.println("TRIGGER STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
@@ -43,13 +48,13 @@ public class TriggerStore {
 			Debug.errprintln("Trigger directory location is not a directory");
 			throw new NotDirectoryException("Trigger directory location is not a directory");
 		}
-		this.dir=dir;
+		this.directory=dir;
 	}
 
 	public List<Trigger> getLastTriggers(Date startDate, int duration) {
 		List<Trigger> triggers=new ArrayList<Trigger>();
 		Date endDate=new Date(startDate.getTime()+duration*1000);
-		try (DirectoryStream<Path> files = Files.newDirectoryStream(Paths.get(dir),
+		try (DirectoryStream<Path> files = Files.newDirectoryStream(Paths.get(directory),
 				new DirectoryStream.Filter<Path>() {
 			@Override
 			public boolean accept(Path entry) throws IOException {
@@ -74,7 +79,7 @@ public class TriggerStore {
 	}
 
 	public void storeTrigger(Trigger trigger) throws FileNotFoundException {
-		String fn=this.dir+"/"+"trigger_"+UUID.randomUUID()+".json";
+		String fn=this.directory+"/"+"trigger_"+UUID.randomUUID()+".json";
 		ObjectMapper om =new ObjectMapper();
 		String json="";
 		try {

@@ -30,10 +30,10 @@ import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 @RequestMapping("/sigmet")
 public class SigmetServices {
 
-	static SigmetStore store = null;
+	SigmetStore sigmetStore = null;
 
-	SigmetServices () throws IOException {
-		store = new SigmetStore("/tmp/sigmets/");
+	SigmetServices (final SigmetStore sigmetStore) throws IOException {
+		this.sigmetStore = sigmetStore;
 	}
 	@RequestMapping(
 			path = "/storesigmet", 
@@ -55,7 +55,7 @@ public class SigmetServices {
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setIssuedate(new Date());
 		try{
-			store.storeSigmet(sm);
+			sigmetStore.storeSigmet(sm);
 			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
@@ -73,12 +73,12 @@ public class SigmetServices {
 
 	@RequestMapping(path="/getsigmet")
 	public Sigmet getSigmet(@RequestParam(value="uuid", required=true) String uuid) {
-		return store.getByUuid(uuid);
+		return sigmetStore.getByUuid(uuid);
 	}
 
 	@RequestMapping("/publishsigmet")
 	public String publishSigmet(String uuid) {
-		return "sigmet "+store.getByUuid(uuid)+" published";
+		return "sigmet "+sigmetStore.getByUuid(uuid)+" published";
 	}
 	
 	@RequestMapping(path="/getsigmetparameters")
@@ -150,7 +150,7 @@ public class SigmetServices {
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getSigmetList");
 		try{
-		  Sigmet[] sigmets=store.getSigmets(active, status);
+		  Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
 		  ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.ok(mapper.writeValueAsString(new SigmetList(sigmets,page,count)));
 		}catch(Exception e){

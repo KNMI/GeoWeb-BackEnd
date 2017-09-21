@@ -284,38 +284,38 @@ public class Sigmet {
 		return om.writeValueAsString(this);
 	}
 
-	public static void main(String args[]) throws IOException {
-		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", "abcd");
-		sm.setPhenomenon(Phenomenon.getPhenomenon("OBSC_TS"));
-		sm.setValiddate(new Date(117,2,13,16,0));
-		Debug.println(sm.getValiddate().toString());
-		sm.setChange(SigmetChange.NC);
-		sm.setGeoFromString(testGeoJson);
-		Debug.println(sm.getPhenomenon().toString());
-		
-		SigmetStore store=new SigmetStore("/tmp");
-//		store.storeSigmet(sm);
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		// DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-		// objectMapper.setDateFormat(df);
-		try{
-			String v = objectMapper.writeValueAsString(sm);
-			JSONObject j = (JSONObject) new JSONTokener(v).nextValue();
-			Debug.println(j.get("issuedate").toString());
-		}catch(JsonProcessingException e){
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-//		System.err.println(sm);
+//	public static void main(String args[]) throws IOException {
+//		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", "abcd");
+//		sm.setPhenomenon(Phenomenon.getPhenomenon("OBSC_TS"));
+//		sm.setValiddate(new Date(117,2,13,16,0));
+//		Debug.println(sm.getValiddate().toString());
+//		sm.setChange(SigmetChange.NC);
+//		sm.setGeoFromString(testGeoJson);
+//		Debug.println(sm.getPhenomenon().toString());
 //		
-//		for (int i=0; i<1; i++) {
-//			sm=Sigmet.getRandomSigmet();
-//			store.storeSigmet(sm);
-//			System.err.println(i+": "+sm);
+//		SigmetStore store=new SigmetStore("/tmp");
+////		store.storeSigmet(sm);
+//		
+//		ObjectMapper objectMapper = new ObjectMapper();
+//		// DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+//		// objectMapper.setDateFormat(df);
+//		try{
+//			String v = objectMapper.writeValueAsString(sm);
+//			JSONObject j = (JSONObject) new JSONTokener(v).nextValue();
+//			Debug.println(j.get("issuedate").toString());
+//		}catch(JsonProcessingException e){
+//			e.printStackTrace();
+//		} catch (JSONException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
 //		}
-	}
+//		
+////		System.err.println(sm);
+////		
+////		for (int i=0; i<1; i++) {
+////			sm=Sigmet.getRandomSigmet();
+////			store.storeSigmet(sm);
+////			System.err.println(i+": "+sm);
+////		}
+//	}
 }

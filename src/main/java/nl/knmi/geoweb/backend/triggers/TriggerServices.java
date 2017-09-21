@@ -20,15 +20,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/triggers") 
 public class TriggerServices {
-	static TriggerStore store=null;	
-	TriggerServices () throws IOException {
-		store = new TriggerStore("/tmp/triggers");
+	TriggerStore triggerStore;	
+	
+	TriggerServices (final TriggerStore triggerStore) throws IOException {
+		this.triggerStore = triggerStore;
 	}
 	
 	@RequestMapping("/gettriggers")
 	public List<Trigger> getTriggers(@RequestParam("startdate")@DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate, 
 			                  @RequestParam("duration")Integer duration) {
-		List<Trigger>triggers=store.getLastTriggers(startDate, duration);
+		List<Trigger>triggers=triggerStore.getLastTriggers(startDate, duration);
 		for (Trigger trigger: triggers) {
 			List<String>presets=new ArrayList<String>();
 			for (int i=1; i<=3; i++) {
@@ -43,7 +44,7 @@ public class TriggerServices {
     public ResponseEntity<String> addTrigger(@RequestBody Trigger.TriggerTransport transport) {
     	Trigger trig=new Trigger(transport);
     	try {
-			store.storeTrigger(trig);
+			triggerStore.storeTrigger(trig);
 	    	return ResponseEntity.status(HttpStatus.OK).body("OK");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
