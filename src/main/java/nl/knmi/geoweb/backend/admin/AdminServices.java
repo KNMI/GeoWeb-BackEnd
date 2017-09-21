@@ -165,27 +165,23 @@ public class AdminServices {
 
 	@RequestMapping(path="/read", method=RequestMethod.GET,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void readConfigurationItem(HttpServletRequest req, HttpServletResponse response) throws JsonProcessingException {
-		Debug.println("admin/read");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			String type = HTTPTools.getHTTPParam(req, "type");
 			String name = HTTPTools.getHTTPParam(req, "name");
 			JSONObject result = new JSONObject();
-			Debug.println("type:" +type);
-			Debug.println("name:" +name);
+			Debug.println("admin/read type" + type + " and name " + name);
+			
 			String payload = adminStore.read(type,name);
 			result.put("message", "ok");
 			result.put("payload", payload);
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
-			Debug.println("Failed");
+			Debug.errprintln("Failed to read " + e.getMessage());
 			jsonResponse.setException("read failed",e);
 		}
 		
-		Debug.println("printing");
-		
 		try {
-			Debug.println("printing" + jsonResponse.getMessage());
 			jsonResponse.print(response);
 		} catch (Exception e1) {
 		}
