@@ -101,6 +101,7 @@ public class TafServicesTest {
         assertThat(jsonResult.has("ntafs"), is(true));
         assertThat(jsonResult.has("tafs"), is(true));
         int new_tafs = jsonResult.get("ntafs").asInt();
+        Debug.println("" + new_tafs + " === " + tafs);
         assert(new_tafs == tafs + 1);
 	}
 	

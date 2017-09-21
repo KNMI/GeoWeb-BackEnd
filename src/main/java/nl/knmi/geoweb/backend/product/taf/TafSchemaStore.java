@@ -5,12 +5,12 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NotDirectoryException;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -21,11 +21,14 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
-import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 
+@Component
 public class TafSchemaStore {
-	private String directory;
-	public TafSchemaStore(String dir) throws IOException {
+	private String directory = null;
+	
+	TafSchemaStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+	
+		String dir = productstorelocation + "/tafs/schemas";
 		Debug.println("TAF SCHEMA STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
@@ -55,7 +58,7 @@ public class TafSchemaStore {
 	public void storeTafSchema(String schema) throws JsonProcessingException, IOException, ProcessingException {
 		ObjectMapper mapper = new ObjectMapper();
 		JsonNode asJson = mapper.readTree(schema);
-		if (new TafValidator().validateSchema(asJson)) {
+		if (new TafValidator(this).validateSchema(asJson)) {
 			long unixTime = System.currentTimeMillis() / 1000L;
 			String fn=String.format("%s/taf_schema_%s.json", this.directory, unixTime);
 			Tools.writeFile(fn, asJson.toString());
@@ -119,4 +122,6 @@ public class TafSchemaStore {
 		}
 
 	}
+
+
 }

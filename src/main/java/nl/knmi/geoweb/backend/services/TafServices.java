@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
@@ -36,15 +35,21 @@ import nl.knmi.geoweb.backend.product.taf.TafStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 
 @RestController
-
 public class TafServices {
-
-	static TafStore store = null;
+	
+	TafStore tafStore;
+	TafSchemaStore tafSchemaStore;
+	TafValidator tafValidator;
+	
+	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator) throws Exception {
+		this.tafStore = tafStore;
+		this.tafSchemaStore = tafSchemaStore;
+		this.tafValidator = tafValidator;
+	}	
+	
 	static TafSchemaStore schemaStore = null;
-	TafServices () throws IOException {
-		store = new TafStore("/tmp/tafs");
-	}
-	boolean enableDebug = true;
+	
+	boolean enableDebug = false;
 
 	
 	@RequestMapping(path="/tafs/verify", method=RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
@@ -53,7 +58,7 @@ public class TafServices {
 	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException {
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
 		try {
-			JsonNode jsonValidation = new TafValidator().validate(tafStr);
+			JsonNode jsonValidation = tafValidator.validate(tafStr);
 			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
 				String finalJson = new JSONObject().
@@ -92,7 +97,7 @@ public class TafServices {
 		if(enableDebug)Debug.println("TAF from String: " + tafStr);
 		try {
 			if(enableDebug)Debug.println("start taf validation");
-			JsonNode jsonValidation = new TafValidator().validate(tafStr);
+			JsonNode jsonValidation = tafValidator.validate(tafStr);
 			if(jsonValidation.get("succeeded").asBoolean() == false){
 				Debug.errprintln("TAF validation failed");
 				String finalJson = new JSONObject().
@@ -137,7 +142,7 @@ public class TafServices {
 		if(!tree1.equals(tree2)) {
 			throw new IllegalArgumentException("TAF JSON is different from origional JSON");
 		} else {
-			Debug.println("Incoming TAF string is equal to serialized and deserialized TAF string");
+			Debug.println("OK: Incoming TAF string is equal to serialized and deserialized TAF string");
 		}
 		if(taf.metadata.getUuid() != null){
 			// TODO Check if existing TAF in store is not in published state
@@ -149,7 +154,7 @@ public class TafServices {
 
 		try {
 			// We enforce this to check our TAF code, should always validate
-			JsonNode tafValidationReport = new TafValidator().validate(taf);
+			JsonNode tafValidationReport = tafValidator.validate(taf);
 			if(tafValidationReport.get("succeeded").asBoolean() == false){
 				Debug.errprintln(tafValidationReport.toString());
 				try {
@@ -173,7 +178,7 @@ public class TafServices {
 		}
 		
 		try{
-			store.storeTaf(taf);
+			tafStore.storeTaf(taf);
 			String json = new JSONObject().put("succeeded", "true").put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
@@ -254,7 +259,7 @@ public class TafServices {
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getTafList");
 		try{
-			Taf[] tafs=store.getTafs(active, status,uuid,location);
+			Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
 			ObjectMapper mapper = Taf.getObjectMapperBean();
 			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(tafs,page,count)));
 		}catch(Exception e){
@@ -280,7 +285,7 @@ public class TafServices {
 			method = RequestMethod.DELETE,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> deleteTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-		Taf taf = store.getByUuid(uuid);
+		Taf taf = tafStore.getByUuid(uuid);
 		if (taf == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
 		}
@@ -288,7 +293,7 @@ public class TafServices {
 		if (tafIsInConcept == false) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
 		}
-		boolean ret = store.deleteTafByUuid(uuid);
+		boolean ret = tafStore.deleteTafByUuid(uuid);
 		if(ret) {
 			return ResponseEntity.ok(String.format("deleted %s", uuid));
 		} else {
@@ -301,25 +306,25 @@ public class TafServices {
 			method = RequestMethod.GET,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Taf getTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return store.getByUuid(uuid);
+		return tafStore.getByUuid(uuid);
 	}
 	
 	@RequestMapping(path="/tafs/{uuid}",
 			method = RequestMethod.GET,
 			produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getTacById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return store.getByUuid(uuid).toTAC();
+		return tafStore.getByUuid(uuid).toTAC();
 	}
 	
 	
 	/* Deprecated */
 	@RequestMapping(path="/gettaf")
 	public Taf getTaf(@RequestParam(value="uuid", required=true) String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return store.getByUuid(uuid);
+		return tafStore.getByUuid(uuid);
 	}
 
 	@RequestMapping("/publishtaf")
 	public String publishTaf(String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return "taf "+store.getByUuid(uuid)+" published";
+		return "taf "+tafStore.getByUuid(uuid)+" published";
 	}
 }

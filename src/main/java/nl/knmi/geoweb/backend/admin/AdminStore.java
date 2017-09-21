@@ -11,21 +11,25 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @Getter
+@Component
 public class AdminStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	private String dir;
+	private String dir = null;
 	private String roleDir;
 	private String userDir;
 
-	public AdminStore() {}
-
-	public AdminStore(String dir) throws IOException {
+	
+	
+	AdminStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+		String dir = productstorelocation+"/admin";
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
@@ -38,12 +42,14 @@ public class AdminStore {
 		this.dir=dir;
 	}
 
+
+
 	public void create(String type, String name, String payload) throws IOException {
 		String itemdir = dir+"/"+type+"/";
 		Tools.mksubdirs(itemdir);
 		Tools.writeFile(itemdir + name+".dat", payload);
 	}
-	
+
 	public void edit(String type, int id, String payload) throws IOException {
 		String itemdir = dir+"/"+type+"/";
 		File dir=new File(itemdir);
@@ -62,7 +68,7 @@ public class AdminStore {
 			Tools.writeFile(theFile.getPath(), payload);
 		}
 	}
-	
+
 	public void deleteByIndex(String type, int id) throws IOException {
 		String itemdir = dir+"/"+type+"/";
 		File dir=new File(itemdir);
@@ -80,7 +86,7 @@ public class AdminStore {
 			Tools.rmfile(theFile.getPath());
 		}
 	}
-	
+
 	public String read(String type, String name) throws IOException{
 		String itemdir = dir+"/"+type+"/";
 		return Tools.readFile(itemdir + name+".dat");
@@ -106,12 +112,12 @@ public class AdminStore {
 				byte[] tafBytes = Files.readAllBytes(f.toPath());
 				tafs.add(new String(tafBytes, "utf-8"));
 			}
-			
+
 			return tafs;
 		}
 		return null;
 	}
-	
+
 	public void createSubseq(String type, String name, String payload) throws IOException {
 		String itemdir = dir+"/"+type+"/";
 		Tools.mksubdirs(itemdir);

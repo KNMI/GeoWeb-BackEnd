@@ -9,6 +9,9 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
@@ -16,9 +19,13 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 
+@Component
 public class SigmetStore {
+	
 	private String directory;
-	public SigmetStore(String dir) throws IOException {
+	
+	public SigmetStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+		String dir = productstorelocation + "/sigmets";
 		Debug.println("SIGMET STORE at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
