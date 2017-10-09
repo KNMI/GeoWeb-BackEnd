@@ -5,7 +5,7 @@
 
 	<groupId>nl.knmi.geoweb</groupId>
 	<artifactId>geoweb-backend</artifactId>
-	<version>0.13.0-SNAPSHOT</version>
+	<version>0.14.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>GeoWeb-BackEnd</name>
@@ -18,8 +18,6 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
-	
-    
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -27,13 +25,13 @@
 	</properties>
 
 	<dependencies>
-	<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
-<dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-    <scope>provided</scope>
-</dependency>
-	
+		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -54,10 +52,8 @@
 			<artifactId>spring-boot-devtools</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- <dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>-->
+		<!-- <dependency> <groupId>org.springframework.boot</groupId> <artifactId>spring-boot-starter-actuator</artifactId> 
+			</dependency> -->
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
@@ -78,14 +74,16 @@
 		</dependency>
 
 
-
-
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
-
+		<dependency>
+			<groupId>nl.knmi.geoweb.iwxxm</groupId>
+			<artifactId>geoweb-aviation-messageconverter</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
 		<dependency>
 			<groupId>com.github.java-json-tools</groupId>
@@ -94,54 +92,51 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>com.github.maartenplieger</groupId>
-		    <artifactId>nl.knmi.adaguc.tools</artifactId>
-		    <version>1.0.1</version>
+			<groupId>com.github.maartenplieger</groupId>
+			<artifactId>nl.knmi.adaguc.tools</artifactId>
+			<version>1.0.1</version>
 		</dependency>
-		<!-- <dependency>
-		    <groupId>com.github.maartenplieger</groupId>
-		    <artifactId>nl.knmi.adaguc.config</artifactId>
-		    <version>1.0.1</version>
-		</dependency>-->
+		<!-- <dependency> <groupId>com.github.maartenplieger</groupId> <artifactId>nl.knmi.adaguc.config</artifactId> 
+			<version>1.0.1</version> </dependency> -->
 
 	</dependencies>
 
 	<build>
-	<resources>
-        <resource>
-            <filtering>true</filtering>
-            <directory>src/main/resources</directory>
-            <includes>
-                <include>application.properties</include>
-            </includes>
-        </resource>
-    </resources>
+		<resources>
+			<resource>
+				<filtering>true</filtering>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>application.properties</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-resources-plugin</artifactId>
-    <version>2.7</version>
-    <configuration>
-        <delimiters>
-            <delimiter>@</delimiter>
-        </delimiters>
-        <useDefaultDelimiters>false</useDefaultDelimiters>
-    </configuration>
-</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.7</version>
+				<configuration>
+					<delimiters>
+						<delimiter>@</delimiter>
+					</delimiters>
+					<useDefaultDelimiters>false</useDefaultDelimiters>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 
 	<repositories>
-	
+
 		<repository>
-		    <id>jitpack.io</id>
-		    <url>https://jitpack.io</url>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
 		</repository>
-	
+
 		<repository>
 			<id>spring-snapshots</id>
 			<name>Spring Snapshots</name>
@@ -177,5 +172,5 @@
 			</snapshots>
 		</pluginRepository>
 	</pluginRepositories>
-	
+
 </project>

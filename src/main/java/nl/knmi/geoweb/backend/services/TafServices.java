@@ -28,10 +28,10 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
-import nl.knmi.geoweb.backend.product.taf.TafStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 
 @RestController
