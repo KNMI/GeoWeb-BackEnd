@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
+import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 
 @RestController
 public class TafServices {
@@ -40,6 +42,9 @@ public class TafServices {
 	TafStore tafStore;
 	TafSchemaStore tafSchemaStore;
 	TafValidator tafValidator;
+	
+	@Autowired
+	private TafConverter tafConverter;
 	
 	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator) throws Exception {
 		this.tafStore = tafStore;
@@ -316,6 +321,13 @@ public class TafServices {
 		return tafStore.getByUuid(uuid).toTAC();
 	}
 	
+	@RequestMapping(path="/tafs/{uuid}",
+			method = RequestMethod.GET,
+			produces = MediaType.APPLICATION_XML_VALUE)
+	public String getIWXXM21ById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Taf taf=tafStore.getByUuid(uuid);
+		return tafConverter.ToIWXXM_2_1(taf);
+	}
 	
 	/* Deprecated */
 	@RequestMapping(path="/gettaf")
