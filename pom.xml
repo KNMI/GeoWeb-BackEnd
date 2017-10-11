@@ -80,8 +80,8 @@
 		</dependency>
 		
 		<dependency>
- 			<groupId>com.github.ernstdevreede</groupId>
-<!--             <groupId>nl.knmi.geoweb.iwxxm</groupId>  -->
+<!-- 			<groupId>com.github.ernstdevreede</groupId> -->
+             <groupId>nl.knmi.geoweb.iwxxm</groupId> 
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
 			<version>1.0.3</version>
 			<scope>compile</scope>
