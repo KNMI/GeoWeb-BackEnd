@@ -15,7 +15,7 @@ public class TAFtoTACMaps {
 		descriptorMap = new HashMap<String, String>();
 		phenomenaMap = new HashMap<String, String>();
 		
-		qualifierMap.put("moderate", "+");
+		qualifierMap.put("moderate", "-");
 		qualifierMap.put("heavy", "+");
 
 		descriptorMap.put("shallow", "MI");
