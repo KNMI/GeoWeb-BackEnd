@@ -1,4 +1,4 @@
-package nl.knmi.geoweb.backend.product.taf;
+package nl.knmi.geoweb.backend.datastore;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 
 @Component
