@@ -83,7 +83,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.0.4</version>
+			<version>1.0.5</version>
 			<scope>compile</scope>
 		</dependency>
 
