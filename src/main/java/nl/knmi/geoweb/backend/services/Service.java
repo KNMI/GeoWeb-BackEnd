@@ -40,4 +40,7 @@ public class Service {
 	public Service(String name, String title, String service, ServiceGoal goal, String[]roles){
 		this(name, title, service, ServiceType.WMS, goal, roles);
 	}
+	
+	public Service(){
+	}
 }

@@ -1,0 +1,74 @@
+[
+{
+  "name":"RADAR",
+  "title":"RADAR",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=RADAR",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"SAT",
+  "title":"SAT",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=SAT",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"HARM_N25",
+  "title":"HARM_N25",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=HARM_N25",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"OBS",
+  "title":"OBS",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=OBS",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"LGT",
+  "title":"LGT",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=LGT",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"NOWCASTMIX",
+  "title":"NOWCASTMIX",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=NOWCASTMIX",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["MET"]
+},
+{
+  "name":"OVL",
+  "title":"OVL_EXT",
+  "service":"http://birdexp07.knmi.nl:8081/adaguc-services/adagucserver?DATASET=OVL",
+  "type": "WMS",
+  "goal": "OVERLAY",
+  "roles": ["USER","MET"]
+},
+{
+  "name":"HARM_N25_EXT",
+  "title":"HARM_N25_EXT",
+  "service":"http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi?",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["USER"]
+},
+{
+  "name":"RADAR_EXT",
+  "title":"RADAR_EXT",
+  "service":"http://geoservices.knmi.nl/cgi-bin/RADNL_OPER_R___25PCPRR_L3.cgi?",
+  "type": "WMS",
+  "goal": "LAYER",
+  "roles": ["USER"]
+}
+]
