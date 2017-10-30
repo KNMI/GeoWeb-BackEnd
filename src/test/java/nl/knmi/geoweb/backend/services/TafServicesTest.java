@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
-import nl.knmi.geoweb.backend.product.taf.TafValidatorTest;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest

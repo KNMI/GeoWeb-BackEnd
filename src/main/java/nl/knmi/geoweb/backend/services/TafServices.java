@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +29,12 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
-import nl.knmi.geoweb.backend.product.taf.TafStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
+import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 
 @RestController
 public class TafServices {
@@ -40,6 +42,9 @@ public class TafServices {
 	TafStore tafStore;
 	TafSchemaStore tafSchemaStore;
 	TafValidator tafValidator;
+	
+	@Autowired
+	private TafConverter tafConverter;
 	
 	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator) throws Exception {
 		this.tafStore = tafStore;
@@ -60,7 +65,7 @@ public class TafServices {
 		try {
 			JsonNode jsonValidation = tafValidator.validate(tafStr);
 			if(jsonValidation.get("succeeded").asBoolean() == false){
-				Debug.errprintln("TAF validation failed");
+				Debug.errprintln("/tafs/verify: TAF validation failed");
 				String finalJson = new JSONObject().
 				put("succeeded", false).
 				put("errors", jsonValidation.toString()).
@@ -94,30 +99,30 @@ public class TafServices {
 		Debug.println("storetaf");
 		Taf taf = null;
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
-		if(enableDebug)Debug.println("TAF from String: " + tafStr);
-		try {
-			if(enableDebug)Debug.println("start taf validation");
-			JsonNode jsonValidation = tafValidator.validate(tafStr);
-			if(jsonValidation.get("succeeded").asBoolean() == false){
-				Debug.errprintln("TAF validation failed");
-				String finalJson = new JSONObject().
-				put("succeeded", false).
-				put("errors", jsonValidation.toString()).
-				put("message","TAF is not valid").toString();
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(finalJson);
-			}
-		} catch (ProcessingException e3) {
-			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
-			e3.printStackTrace();
-			String json = null;
-			try {
-				json = new JSONObject().
-						put("message","Unable to validate taf").toString();
-			} catch (JSONException e) {
-				e.printStackTrace();
-			}
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
-		}
+//		if(enableDebug)Debug.println("TAF from String: " + tafStr);
+//		try {
+//			if(enableDebug)Debug.println("start taf validation");
+//			JsonNode jsonValidation = tafValidator.validate(tafStr);
+//			if(jsonValidation.get("succeeded").asBoolean() == false){
+//				Debug.errprintln("TAF validation failed");
+//				String finalJson = new JSONObject().
+//				put("succeeded", false).
+//				put("errors", jsonValidation.toString()).
+//				put("message","TAF is not valid").toString();
+//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(finalJson);
+//			}
+//		} catch (ProcessingException e3) {
+//			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
+//			e3.printStackTrace();
+//			String json = null;
+//			try {
+//				json = new JSONObject().
+//						put("message","Unable to validate taf").toString();
+//			} catch (JSONException e) {
+//				e.printStackTrace();
+//			}
+//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+//		}
 	
 		try {
 			ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -152,34 +157,38 @@ public class TafServices {
 		}
 		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
 
-		try {
-			// We enforce this to check our TAF code, should always validate
-			JsonNode tafValidationReport = tafValidator.validate(taf);
-			if(tafValidationReport.get("succeeded").asBoolean() == false){
-				Debug.errprintln(tafValidationReport.toString());
-				try {
-					String json = new JSONObject().
-							put("validationreport", tafValidationReport.toString()).
-							put("succeeded", true).
-							put("message","taf "+taf.metadata.getUuid()+" stored").
-							put("uuid",taf.metadata.getUuid()).toString();
-					
+		if (taf.metadata.getStatus() != TAFReportPublishedConcept.concept ){
+			try {
+				// We enforce this to check our TAF code, should always validate <-- But not for saving concept tafs.
+				JsonNode tafValidationReport = tafValidator.validate(taf);
+				if(tafValidationReport.get("succeeded").asBoolean() == false){
 					Debug.errprintln(tafValidationReport.toString());
-					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
-				} catch (JSONException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					try {
+						String json = new JSONObject().
+								put("validationreport", tafValidationReport.toString()).
+								put("succeeded", false).
+								put("message","Saving TAF has failed: Unable to validate.").
+								put("uuid",taf.metadata.getUuid()).toString();
+						
+						Debug.errprintln(tafValidationReport.toString());
+						return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
+				
+			} catch (ProcessingException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
 			}
-			
-		} catch (ProcessingException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
 		}
 		
 		try{
 			tafStore.storeTaf(taf);
-			String json = new JSONObject().put("succeeded", "true").put("message","taf "+taf.metadata.getUuid()+" stored").put("uuid",taf.metadata.getUuid()).toString();
+			String tacString = "<Unable to generate TAC>";
+			tacString = taf.toTAC();
+			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 			try {
@@ -316,6 +325,13 @@ public class TafServices {
 		return tafStore.getByUuid(uuid).toTAC();
 	}
 	
+	@RequestMapping(path="/tafs/{uuid}",
+			method = RequestMethod.GET,
+			produces = MediaType.APPLICATION_XML_VALUE)
+	public String getIWXXM21ById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Taf taf=tafStore.getByUuid(uuid);
+		return tafConverter.ToIWXXM_2_1(taf);
+	}
 	
 	/* Deprecated */
 	@RequestMapping(path="/gettaf")
