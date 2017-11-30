@@ -1,0 +1,143 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+	"definitions": {
+        "changegroup": {
+            "oneOf": [{
+                "additionalProperties": true,
+                "required": ["changegroupsAscending", "cloudsAscending", "changegroupOverlaps"],
+                "properties": {
+                    "forecast": {"$ref": "#/definitions/forecast"},
+                    "cloudsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+                    "changegroupsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+                    "changegroupOverlaps": {
+                        "type": "boolean",
+                        "enum": [false]
+                    }
+                }  
+            }, {
+                "additionalProperties": true,
+                "required": ["changegroupsAscending", "cloudsAscending", "changegroupOverlaps", "changeType", "changeDurationInHours"],
+                "properties": {
+                    "forecast": {"$ref": "#/definitions/forecast"},
+
+                    "cloudsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+                    "changegroupsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+
+                    "changegroupOverlaps": {
+                        "type": "boolean",
+                        "enum": [false]
+                    },
+                    "changeType": {
+                        "type": "string", 
+                        "enum": ["BECMG"]
+                    },
+                    "changeDurationInHours": {
+                        "type": "integer", 
+                        "minimum": 1,
+                        "maximum": 4
+                    }
+                }
+            }, {
+                "additionalProperties": true,
+                "required": ["changegroupsAscending", "cloudsAscending", "changegroupOverlaps", "changeDurationInHours"],
+                "properties": {
+                    "forecast": {"$ref": "#/definitions/forecast"},
+
+                    "cloudsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+                    "changegroupsAscending": {
+                        "type": "boolean",
+                        "enum": [true]
+                    },
+
+                    "changegroupOverlaps": {
+                        "type": "boolean",
+                        "enum": [false]
+                    },
+                    "changeDurationInHours": {
+                        "type": "integer", 
+                        "minimum": 1,
+                        "maximum": 30
+                    }
+                }
+            }
+            ]
+        },
+		"forecast": {
+    		"type": "object",
+    		"properties": {
+    			"wind": {
+    				"type": "object",
+                    "oneOf": [{
+        				"properties": {
+        					"gustFastEnough": {
+        						"type": "boolean",
+        						"enum": [true]
+        					},
+                            "gusts": {
+                                "type": "integer"
+                            },
+                            "speed": {
+                                "type": "integer"
+                            },
+                            "direction": {
+                                "type": "integer"
+                            },
+                            "unit": {
+                                "type": "string"
+                            }
+        				},
+        				"additionalProperties": false,
+        				"required": ["gustFastEnough", "gusts"]
+                    }, {
+                        "properties": {
+                            "gustFastEnough": {
+                                "type": "boolean",
+                                "enum": [true]
+                            },
+                            "speed": {
+                                "type": "integer"
+                            },
+                            "direction": {
+                                "type": "integer"
+                            },
+                            "unit": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }]
+                }
+    		},
+            "additionalProperties": true,
+            "required": ["wind"]
+    	}
+	},
+    "type": "object",
+    "properties":
+    {
+    	"forecast": {"$ref": "#/definitions/forecast"},
+        "changegroups": {
+            "type": "array",
+            "minItems": 0,
+            "maxItems": 5,
+            "items": [{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"},{"$ref": "#/definitions/changegroup"}],
+            "additionalProperties": false
+        }
+	}
+}
