@@ -1,7 +1,6 @@
 package nl.knmi.geoweb.backend.presets;
 
 import java.io.IOException;
-import java.nio.file.NotDirectoryException;
 import java.util.Arrays;
 import java.util.List;
 
