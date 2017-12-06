@@ -2,6 +2,7 @@ package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
@@ -60,7 +61,7 @@ public class TafServices {
 	@RequestMapping(path="/tafs/verify", method=RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE
 			)
-	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException {
+	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
 		try {
 			JsonNode jsonValidation = tafValidator.validate(tafStr);
@@ -76,6 +77,7 @@ public class TafServices {
 				return ResponseEntity.ok(json);
 			}
 		} catch (ProcessingException e) {
+			Debug.printStackTrace(e);
 			// TODO Auto-generated catch block
 			String json = new JSONObject().
 					put("message","Unable to validate taf").toString();
@@ -88,6 +90,7 @@ public class TafServices {
 	 * @return
 	 * @throws IOException
 	 * @throws JSONException 
+	 * @throws ParseException 
 	 */
 	@RequestMapping(
 			path = "/tafs", 
@@ -95,7 +98,7 @@ public class TafServices {
 			consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE
 			)
-	public ResponseEntity<String> storeTAF(@RequestBody String  tafStr) throws IOException, JSONException {
+	public ResponseEntity<String> storeTAF(@RequestBody String  tafStr) throws IOException, JSONException, ParseException {
 		Debug.println("storetaf");
 		Taf taf = null;
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
