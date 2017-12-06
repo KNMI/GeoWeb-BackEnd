@@ -14,6 +14,10 @@ public class PresetItem {
 	public static AreaPreset createAreaPreset(float top, float bottom, String crs) {
 		return new AreaPreset(top, bottom, crs);
 	}
+	
+	public static AreaPreset createAreaPreset(float top, float bottom, float left, float right, String crs) {
+		return new AreaPreset(top, bottom, left, right, crs);
+	}
 
 	public static DisplayPreset createDisplayPreset(String type, int npanels){
 		return new DisplayPreset(type, npanels);
