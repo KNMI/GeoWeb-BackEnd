@@ -63,18 +63,17 @@ public class AdminServices {
 			e.printStackTrace();
 			jsonResponse.setException("Failed to read payload", e);
 		}
-		
 		String version = json_payload.at("/config/version").asText();
-		String desc_short = json_payload.at("/descriptions/short").asText();
-		String desc_long = json_payload.at("/descriptions/long").asText();
-
-		String whom = json_payload.at("/descriptions/name").asText();
+		String desc_short = json_payload.at("/descriptions/problemSummary").asText();
+		String desc_long = json_payload.at("/descriptions/problemDescription").asText();
+		String role = json_payload.at("/descriptions/role").asText();
+		String whom = json_payload.at("/descriptions/feedbackName").asText();
 		
 		String subject;
 		if (whom != null && whom.length() > 0) {
-			subject = "Geoweb " + version + " feedback van " + whom + ": " + desc_short;
+			subject = "[" + role + "] Geoweb " + version + " feedback van " + whom + ": " + desc_short;
 		} else { 
-			subject = "Geoweb " + version + " feedback: " + desc_short;
+			subject = "[" + role + "] Geoweb " + version + " feedback: " + desc_short;
 		}
 		
 		String content = "Hallo Geowebbers,\n\nEr is feedback binnengekomen van " + (whom != null && whom.length() > 0 ? whom : "anonymous👤") + ".\nHet probleem was \"" + desc_long + "\".\n\nGroetjes,\nDe Geoweb feedback verzamlaar.";

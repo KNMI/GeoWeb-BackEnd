@@ -36,9 +36,8 @@ import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
-import nl.knmi.geoweb.backend.product.taf.TafValidator.ValidationResult;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
-
+import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 @RestController
 public class TafServices {
 	
@@ -66,7 +65,7 @@ public class TafServices {
 	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
 		try {
-			ValidationResult jsonValidation = tafValidator.validate(tafStr);
+			TafValidationResult jsonValidation = tafValidator.validate(tafStr);
 			if(jsonValidation.isSucceeded() == false){
 				ObjectNode errors = jsonValidation.getErrors();
 				Debug.errprintln("/tafs/verify: TAF validation failed");
@@ -166,7 +165,7 @@ public class TafServices {
 		if (taf.metadata.getStatus() != TAFReportPublishedConcept.concept ){
 			try {
 				// We enforce this to check our TAF code, should always validate <-- But not for saving concept tafs.
-				ValidationResult tafValidationReport = tafValidator.validate(taf);
+				TafValidationResult tafValidationReport = tafValidator.validate(taf);
 				if(tafValidationReport.isSucceeded() == false){
 					Debug.errprintln(tafValidationReport.toString());
 					try {
