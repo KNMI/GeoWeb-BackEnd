@@ -83,7 +83,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.0.12</version>
+			<version>1.0.14</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
@@ -92,7 +92,15 @@
 			<artifactId>json-schema-validator</artifactId>
 			<version>2.2.8</version>
 		</dependency>
-
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+		</dependency>
+	    <dependency>
+	        <groupId>com.sun.mail</groupId>
+	        <artifactId>smtp</artifactId>
+	        <version>1.4.5</version>
+	    </dependency>
 		<dependency>
 			<groupId>com.github.maartenplieger</groupId>
 			<artifactId>nl.knmi.adaguc.tools</artifactId>

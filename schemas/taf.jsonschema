@@ -229,7 +229,7 @@
                 "properties": {
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
-                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                        { "type": "integer", "minimum": 0, "maximum": 360, "multipleOf": 10 }
                       ]},
                     "speed": { "type": "integer", "minimum": 3, "maximum": 99 },
                     "unit": { "type": "string", "enum": ["KT"] },
@@ -244,7 +244,7 @@
                 "properties": {
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
-                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                        { "type": "integer", "minimum": 0, "maximum": 360, "multipleOf": 10  }
                       ]},
                     "speed": { "type": "string", "enum": ["P99"] },
                     "unit": { "type": "string", "enum": ["KT"] },
@@ -255,7 +255,7 @@
                 "properties": {
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
-                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                        { "type": "integer", "minimum": 0, "maximum": 360, "multipleOf": 10  }
                       ]},
                     "speed": { "type": "string", "enum": ["P49"] },
                     "unit": { "type": "string", "enum": ["MPS"] },
@@ -267,7 +267,7 @@
                 "properties": {
                     "direction": {"oneOf": [
                         { "type": "string", "enum": ["VRB"] },
-                        { "type": "integer", "minimum": 0, "maximum": 360 }
+                        { "type": "integer", "minimum": 0, "maximum": 360, "multipleOf": 10  }
                       ]},
                     "speed": { "type": "integer", "minimum": 2, "maximum": 49 },
                     "unit": { "type": "string", "enum": ["MPS"] },
