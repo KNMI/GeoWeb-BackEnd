@@ -54,7 +54,7 @@ public class ServiceRegistry {
 	}
 
 	public List<Service> getWMSServicesForRole(String role) {
-		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
+		/* if (services==null) */ this.getServices(); //TODO cache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS) && srv.getGoal().equals(ServiceGoal.LAYER)){
@@ -70,7 +70,7 @@ public class ServiceRegistry {
 	}
 	
 	public List<Service> getWMSOverlayServicesForRole(String role) {
-		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
+		/* if (services==null) */ this.getServices(); //TODO cache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS)&&srv.getGoal().equals(ServiceGoal.OVERLAY)){
