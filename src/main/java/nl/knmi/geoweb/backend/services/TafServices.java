@@ -34,6 +34,7 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
@@ -128,11 +129,11 @@ public class TafServices {
 //			}
 //			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 //		}
-	
+		ObjectMapper objectMapper = null;
 		try {
-			ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+			objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 			taf = objectMapper.readValue(tafStr, Taf.class);
-		} catch (IOException e2) {
+		} catch (Exception e2) {
 			Debug.errprintln("Error parsing taf ["+tafStr+"]");
 			Debug.printStackTrace(e2);
 			try {
@@ -145,10 +146,10 @@ public class TafServices {
 		}
 		if(enableDebug)Debug.println("TAF from Object: " + taf.toJSON());
 		// Assert that the JSONs are equal regardless of order
-		final ObjectMapper JSONMapper = new ObjectMapper();
+//		final ObjectMapper JSONMapper = new ObjectMapper();
 
-		final JsonNode tree1 = JSONMapper.readTree(tafStr);
-		final JsonNode tree2 = JSONMapper.readTree(taf.toJSON());
+		final JsonNode tree1 = objectMapper.readTree(tafStr);
+		final JsonNode tree2 = objectMapper.readTree(taf.toJSON());
 		if(!tree1.equals(tree2)) {
 			throw new IllegalArgumentException("TAF JSON is different from origional JSON");
 		} else {
@@ -159,6 +160,13 @@ public class TafServices {
 			Debug.println("Overwriting TAF with uuid ["+taf.metadata.getUuid()+"]");
 		} else {
 			taf.metadata.setUuid(UUID.randomUUID().toString());
+		}
+		if (taf.metadata.getType() == null) {
+			taf.metadata.setType(TAFReportType.normal);
+		}
+		
+		if (taf.metadata.getStatus() == null) {
+			taf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		}
 		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
 
@@ -196,6 +204,7 @@ public class TafServices {
 			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
+		    e.printStackTrace();
 			try {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());
