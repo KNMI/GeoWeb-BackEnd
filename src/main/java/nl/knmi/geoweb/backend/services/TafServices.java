@@ -146,8 +146,6 @@ public class TafServices {
 		}
 		if(enableDebug)Debug.println("TAF from Object: " + taf.toJSON());
 		// Assert that the JSONs are equal regardless of order
-//		final ObjectMapper JSONMapper = new ObjectMapper();
-
 		final JsonNode tree1 = objectMapper.readTree(tafStr);
 		final JsonNode tree2 = objectMapper.readTree(taf.toJSON());
 		if(!tree1.equals(tree2)) {
