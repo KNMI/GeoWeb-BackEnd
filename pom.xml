@@ -83,7 +83,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.0.19</version>
+			<version>1.0.20</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
