@@ -2,7 +2,6 @@ package nl.knmi.geoweb.backend.triggers;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.NotDirectoryException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;

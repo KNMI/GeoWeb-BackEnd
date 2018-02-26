@@ -28,8 +28,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import lombok.Getter;
-
 
 public class MyXMLParser {
 	public static PrintStream Debug=System.err;
