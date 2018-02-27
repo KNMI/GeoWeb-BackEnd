@@ -11,6 +11,7 @@ import javax.mail.internet.MimeMessage;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -237,7 +238,7 @@ public class AdminServices {
 
 			String payload = adminStore.read(type,name);
 			result.put("message", "ok");
-			result.put("payload", payload);
+			result.put("payload", new JSONArray(payload));
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
 			Debug.errprintln("Failed to read " + e.getMessage());
