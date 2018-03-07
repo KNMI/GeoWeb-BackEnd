@@ -189,6 +189,19 @@ public class TafServices {
 					}
 				}
 				
+				// Search for a taf with the previousUuid
+				if (taf.metadata.getPreviousUuid() != null) {
+					Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+					if (previousTaf != null) {
+						previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
+						tafStore.storeTaf(previousTaf);
+					}
+				}
+				
+				if (taf.metadata.getType() == TAFReportType.amendment) {
+					taf.metadata.setValidityStart(OffsetDateTime.now());
+				}
+				
 			} catch (ProcessingException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
