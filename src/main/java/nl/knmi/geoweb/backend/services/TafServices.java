@@ -218,7 +218,10 @@ public class TafServices {
 			System.out.println("TAC: " + tacString);
 			// Publish it
 			if (taf.metadata.getStatus() == TAFReportPublishedConcept.published){
-				this.publishTafStore.export(taf);
+				if (taf.metadata.getBaseTime() == null) {
+					taf.metadata.setBaseTime(taf.metadata.getValidityStart());
+				}
+				this.publishTafStore.export(taf, tafConverter);
 			}
 			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
@@ -301,7 +304,24 @@ public class TafServices {
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getTafList");
 		try{
-			Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
+			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
+//			System.out.println(tafs.length);
+//			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
+//					// The TAF is still valid....
+//					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
+//						   // And there is no other taf...
+//					       Arrays.stream(tafs).noneMatch(
+//					    		   otherTaf -> !otherTaf.equals(taf) &&
+//							       // For this location 
+//							       otherTaf.metadata.getLocation().equals(taf.metadata.getLocation())
+//							       // Such that the other TAF has a validity start later than *this* TAF...
+////		                           otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
+//		                           // And the other TAF is already in its validity window
+////		                           otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now())
+//					)).toArray(Taf[]::new);
+//					       
+//			System.out.println(filteredTafs.length);
+
 			ObjectMapper mapper = Taf.getObjectMapperBean();
 			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(tafs,page,count)));
 		}catch(Exception e){

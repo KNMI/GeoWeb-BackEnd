@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.IExportable;
+import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
+import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebConverter;
 
 @Component
 public class ProductExporter {
@@ -30,8 +32,8 @@ public class ProductExporter {
 		}
 	}
 
-	public void export(IExportable product) {
+	public void export(IExportable product, TafConverter converter) {
 		// TODO Auto-generated method stub
-		product.export(path);
+		product.export(path, converter);
 	}
 }
