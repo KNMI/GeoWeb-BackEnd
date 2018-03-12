@@ -26,7 +26,7 @@ import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 public class TafStore {
 
 	private String directory = null;
-	
+		
 	static boolean isCreated = false;
 	
 	TafStore (@Value(value = "${productstorelocation}") String productstorelocation) throws Exception {

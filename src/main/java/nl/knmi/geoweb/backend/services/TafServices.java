@@ -31,6 +31,7 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
@@ -43,16 +44,18 @@ import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 public class TafServices {
 	
 	TafStore tafStore;
+	ProductExporter publishTafStore;
 	TafSchemaStore tafSchemaStore;
 	TafValidator tafValidator;
 	
 	@Autowired
 	private TafConverter tafConverter;
 	
-	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator) throws Exception {
+	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator, final ProductExporter publishTafStore) throws Exception {
 		this.tafStore = tafStore;
 		this.tafSchemaStore = tafSchemaStore;
 		this.tafValidator = tafValidator;
+		this.publishTafStore = publishTafStore;
 	}	
 	
 	static TafSchemaStore schemaStore = null;
@@ -212,6 +215,11 @@ public class TafServices {
 			tafStore.storeTaf(taf);
 			String tacString = "<Unable to generate TAC>";
 			tacString = taf.toTAC();
+			System.out.println("TAC: " + tacString);
+			// Publish it
+			if (taf.metadata.getStatus() == TAFReportPublishedConcept.published){
+				this.publishTafStore.export(taf);
+			}
 			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
