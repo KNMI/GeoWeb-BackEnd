@@ -31,6 +31,7 @@ import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
@@ -43,16 +44,18 @@ import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 public class TafServices {
 	
 	TafStore tafStore;
+	ProductExporter publishTafStore;
 	TafSchemaStore tafSchemaStore;
 	TafValidator tafValidator;
 	
 	@Autowired
 	private TafConverter tafConverter;
 	
-	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator) throws Exception {
+	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator, final ProductExporter publishTafStore) throws Exception {
 		this.tafStore = tafStore;
 		this.tafSchemaStore = tafSchemaStore;
 		this.tafValidator = tafValidator;
+		this.publishTafStore = publishTafStore;
 	}	
 	
 	static TafSchemaStore schemaStore = null;
@@ -189,6 +192,19 @@ public class TafServices {
 					}
 				}
 				
+				// Search for a taf with the previousUuid
+				if (taf.metadata.getPreviousUuid() != null) {
+					Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+					if (previousTaf != null) {
+						previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
+						tafStore.storeTaf(previousTaf);
+					}
+				}
+				
+				if (taf.metadata.getType() == TAFReportType.amendment) {
+					taf.metadata.setValidityStart(OffsetDateTime.now());
+				}
+				
 			} catch (ProcessingException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
@@ -199,6 +215,14 @@ public class TafServices {
 			tafStore.storeTaf(taf);
 			String tacString = "<Unable to generate TAC>";
 			tacString = taf.toTAC();
+			System.out.println("TAC: " + tacString);
+			// Publish it
+			if (taf.metadata.getStatus() == TAFReportPublishedConcept.published){
+				if (taf.metadata.getBaseTime() == null) {
+					taf.metadata.setBaseTime(taf.metadata.getValidityStart());
+				}
+				this.publishTafStore.export(taf, tafConverter);
+			}
 			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
@@ -280,7 +304,24 @@ public class TafServices {
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getTafList");
 		try{
-			Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
+			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
+//			System.out.println(tafs.length);
+//			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
+//					// The TAF is still valid....
+//					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
+//						   // And there is no other taf...
+//					       Arrays.stream(tafs).noneMatch(
+//					    		   otherTaf -> !otherTaf.equals(taf) &&
+//							       // For this location 
+//							       otherTaf.metadata.getLocation().equals(taf.metadata.getLocation())
+//							       // Such that the other TAF has a validity start later than *this* TAF...
+////		                           otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
+//		                           // And the other TAF is already in its validity window
+////		                           otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now())
+//					)).toArray(Taf[]::new);
+//					       
+//			System.out.println(filteredTafs.length);
+
 			ObjectMapper mapper = Taf.getObjectMapperBean();
 			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(tafs,page,count)));
 		}catch(Exception e){
