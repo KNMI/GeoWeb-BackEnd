@@ -9,6 +9,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+
 import javax.annotation.Resource;
 
 import org.junit.Before;
@@ -23,6 +28,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -51,7 +57,17 @@ public class TafServicesTest {
 
 	private String getValidTaf() throws Exception  {
 		String taf = Tools.readResource("Taf_valid.json");
-		return taf;
+		ObjectMapper mapper = new ObjectMapper();
+		ObjectNode tafJson = (ObjectNode)mapper.readTree(taf);
+
+		OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
+		ObjectNode metadataNode = (ObjectNode)tafJson.findParent("validityStart");
+		metadataNode.put("issueTime", now.minusHours(2).format(DateTimeFormatter.ISO_INSTANT));
+		metadataNode.put("validityStart", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
+		metadataNode.put("validityEnd", now.plusHours(29).format(DateTimeFormatter.ISO_INSTANT));
+		metadataNode.put("baseTime", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
+		tafJson.set("metadata", (JsonNode)metadataNode);
+		return tafJson.toString();
 	}
 	
 	private String addTaf() throws Exception {

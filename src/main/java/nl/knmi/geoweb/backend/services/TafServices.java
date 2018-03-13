@@ -84,7 +84,6 @@ public class TafServices {
 				ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 				Taf taf = objectMapper.readValue(tafStr, Taf.class);
 				Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
-				System.out.println(taf.metadata.getStatus());
 				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published &&
 					Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
 							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()))) {
@@ -230,7 +229,6 @@ public class TafServices {
 			tafStore.storeTaf(taf);
 			String tacString = "<Unable to generate TAC>";
 			tacString = taf.toTAC();
-			System.out.println("TAC: " + tacString);
 			// Publish it
 			if (taf.metadata.getStatus() == TAFReportPublishedConcept.published){
 				if (taf.metadata.getBaseTime() == null) {
@@ -320,7 +318,6 @@ public class TafServices {
 		Debug.println("getTafList");
 		try{
 			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
-			System.out.println(tafs.length);
 			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
 					// The TAF is still valid....
 					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
@@ -335,8 +332,6 @@ public class TafServices {
 		                           otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now()))
 					)).toArray(Taf[]::new);
 					       
-			System.out.println(filteredTafs.length);
-
 			ObjectMapper mapper = Taf.getObjectMapperBean();
 			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(filteredTafs,page,count)));
 		}catch(Exception e){
