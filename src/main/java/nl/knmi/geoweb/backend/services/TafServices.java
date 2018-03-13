@@ -33,6 +33,7 @@ import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.datastore.TafStore;
+import nl.knmi.geoweb.backend.product.taf.TAFtoTACMaps;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
@@ -79,7 +80,21 @@ public class TafServices {
 				.put("message","TAF is not valid").toString();
 				return ResponseEntity.ok(finalJson);
 			} else {
-				String json = new JSONObject().put("succeeded", true).put("message","taf verified").toString();
+				// If there is already a taf published for this location and airport
+				ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+				Taf taf = objectMapper.readValue(tafStr, Taf.class);
+				Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
+				System.out.println(taf.metadata.getStatus());
+				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published &&
+					Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
+							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()))) {
+					String finalJson = new JSONObject()
+							.put("succeeded", false)
+							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
+							return ResponseEntity.ok(finalJson);
+				}
+							                                   
+				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").toString();
 				return ResponseEntity.ok(json);
 			}
 		} catch (ProcessingException e) {
@@ -305,25 +320,25 @@ public class TafServices {
 		Debug.println("getTafList");
 		try{
 			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
-//			System.out.println(tafs.length);
-//			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
-//					// The TAF is still valid....
-//					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
-//						   // And there is no other taf...
-//					       Arrays.stream(tafs).noneMatch(
-//					    		   otherTaf -> !otherTaf.equals(taf) &&
-//							       // For this location 
-//							       otherTaf.metadata.getLocation().equals(taf.metadata.getLocation())
-//							       // Such that the other TAF has a validity start later than *this* TAF...
-////		                           otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
-//		                           // And the other TAF is already in its validity window
-////		                           otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now())
-//					)).toArray(Taf[]::new);
-//					       
-//			System.out.println(filteredTafs.length);
+			System.out.println(tafs.length);
+			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
+					// The TAF is still valid....
+					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
+						   // And there is no other taf...
+					       Arrays.stream(tafs).noneMatch(
+					    		   otherTaf -> (!otherTaf.equals(taf) &&
+							       // For this location 
+							       otherTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
+							       // Such that the other TAF has a validity start later than *this* TAF...
+		                           otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
+		                           // And the other TAF is already in its validity window
+		                           otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now()))
+					)).toArray(Taf[]::new);
+					       
+			System.out.println(filteredTafs.length);
 
 			ObjectMapper mapper = Taf.getObjectMapperBean();
-			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(tafs,page,count)));
+			return ResponseEntity.ok(mapper.writeValueAsString(new TafList(filteredTafs,page,count)));
 		}catch(Exception e){
 			try {
 				JSONObject obj=new JSONObject();
