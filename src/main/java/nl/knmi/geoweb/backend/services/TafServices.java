@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
@@ -33,10 +34,11 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
+import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
-
+import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 @RestController
 public class TafServices {
 	
@@ -64,13 +66,14 @@ public class TafServices {
 	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
 		try {
-			JsonNode jsonValidation = tafValidator.validate(tafStr);
-			if(jsonValidation.get("succeeded").asBoolean() == false){
+			TafValidationResult jsonValidation = tafValidator.validate(tafStr);
+			if(jsonValidation.isSucceeded() == false){
+				ObjectNode errors = jsonValidation.getErrors();
 				Debug.errprintln("/tafs/verify: TAF validation failed");
-				String finalJson = new JSONObject().
-				put("succeeded", false).
-				put("errors", jsonValidation.toString()).
-				put("message","TAF is not valid").toString();
+				String finalJson = new JSONObject()
+				.put("succeeded", false)
+				.put("errors", new JSONObject(errors.toString()))
+				.put("message","TAF is not valid").toString();
 				return ResponseEntity.ok(finalJson);
 			} else {
 				String json = new JSONObject().put("succeeded", true).put("message","taf verified").toString();
@@ -126,11 +129,11 @@ public class TafServices {
 //			}
 //			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 //		}
-	
+		ObjectMapper objectMapper = null;
 		try {
-			ObjectMapper objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+			objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
 			taf = objectMapper.readValue(tafStr, Taf.class);
-		} catch (IOException e2) {
+		} catch (Exception e2) {
 			Debug.errprintln("Error parsing taf ["+tafStr+"]");
 			Debug.printStackTrace(e2);
 			try {
@@ -143,10 +146,8 @@ public class TafServices {
 		}
 		if(enableDebug)Debug.println("TAF from Object: " + taf.toJSON());
 		// Assert that the JSONs are equal regardless of order
-		final ObjectMapper JSONMapper = new ObjectMapper();
-
-		final JsonNode tree1 = JSONMapper.readTree(tafStr);
-		final JsonNode tree2 = JSONMapper.readTree(taf.toJSON());
+		final JsonNode tree1 = objectMapper.readTree(tafStr);
+		final JsonNode tree2 = objectMapper.readTree(taf.toJSON());
 		if(!tree1.equals(tree2)) {
 			throw new IllegalArgumentException("TAF JSON is different from origional JSON");
 		} else {
@@ -158,17 +159,24 @@ public class TafServices {
 		} else {
 			taf.metadata.setUuid(UUID.randomUUID().toString());
 		}
+		if (taf.metadata.getType() == null) {
+			taf.metadata.setType(TAFReportType.normal);
+		}
+		
+		if (taf.metadata.getStatus() == null) {
+			taf.metadata.setStatus(TAFReportPublishedConcept.concept);
+		}
 		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
 
 		if (taf.metadata.getStatus() != TAFReportPublishedConcept.concept ){
 			try {
 				// We enforce this to check our TAF code, should always validate <-- But not for saving concept tafs.
-				JsonNode tafValidationReport = tafValidator.validate(taf);
-				if(tafValidationReport.get("succeeded").asBoolean() == false){
+				TafValidationResult tafValidationReport = tafValidator.validate(taf);
+				if(tafValidationReport.isSucceeded() == false){
 					Debug.errprintln(tafValidationReport.toString());
 					try {
 						String json = new JSONObject().
-								put("validationreport", tafValidationReport.toString()).
+								put("validationreport", new JSONObject(tafValidationReport.getErrors().toString())).
 								put("succeeded", false).
 								put("message","Saving TAF has failed: Unable to validate.").
 								put("uuid",taf.metadata.getUuid()).toString();
@@ -194,6 +202,7 @@ public class TafServices {
 			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
+		    e.printStackTrace();
 			try {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());

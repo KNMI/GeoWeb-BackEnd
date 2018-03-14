@@ -39,7 +39,7 @@ public class UserLogin {
 			GeoWebUser geowebUser=userstore.getUser(user);
 			return geowebUser;
 		}
-		RoleType[] roles={RoleType.USER};
+		RoleType[] roles={RoleType.USER, RoleType.ANON};
 		return userstore.new GeoWebUser("guest","XXX", roles);
 	}	
 

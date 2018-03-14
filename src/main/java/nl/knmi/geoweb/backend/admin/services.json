@@ -61,7 +61,7 @@
   "service":"http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi?",
   "type": "WMS",
   "goal": "LAYER",
-  "roles": ["USER"]
+  "roles": ["ANON"]
 },
 {
   "name":"RADAR_EXT",
@@ -69,6 +69,6 @@
   "service":"http://geoservices.knmi.nl/cgi-bin/RADNL_OPER_R___25PCPRR_L3.cgi?",
   "type": "WMS",
   "goal": "LAYER",
-  "roles": ["USER"]
+  "roles": ["ANON"]
 }
 ]

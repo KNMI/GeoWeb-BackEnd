@@ -33,7 +33,7 @@ public class ServiceRegistryServices {
 			UserStore store=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=store.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER"};
+			if (roles==null) roles=new String[]{"USER", "ANON"};
 			List<Service> foundServices=new ArrayList<Service>();
 			for (String role : roles) {
 				List<Service>roleServices=reg.getWMSServicesForRole(role);
@@ -46,9 +46,7 @@ public class ServiceRegistryServices {
 			jsonResponse.print(response);
 		} catch (Exception e1) {
 		}
-
 	}
-
 
 	@RequestMapping(path="/getOverlayServices", method=RequestMethod.GET,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void getOverlayServices(HttpServletRequest req,   HttpServletResponse response){
@@ -58,7 +56,7 @@ public class ServiceRegistryServices {
 			UserStore store=UserStore.getInstance();
 			String user=UserLogin.getUserFromRequest(req);
 			String[]roles=store.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER"};
+			if (roles==null) roles=new String[]{"USER", "ANON"};
 			List<Service> foundServices=new ArrayList<Service>();
 			for (String role : roles) {
 				List<Service>roleServices=reg.getWMSOverlayServicesForRole(role);
