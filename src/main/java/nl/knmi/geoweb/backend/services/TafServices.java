@@ -86,7 +86,8 @@ public class TafServices {
 				Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
 				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published &&
 					Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
-							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()))) {
+							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) &&
+							                                     (taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid())) )) {
 					String finalJson = new JSONObject()
 							.put("succeeded", false)
 							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
