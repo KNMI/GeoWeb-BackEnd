@@ -237,7 +237,8 @@ public class TafServices {
 				}
 				this.publishTafStore.export(taf, tafConverter);
 			}
-			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
+			JSONObject tafjson = new JSONObject(taf.toJSON());
+			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 		    e.printStackTrace();
