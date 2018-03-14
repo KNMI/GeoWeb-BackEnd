@@ -86,7 +86,8 @@ public class TafServices {
 				Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
 				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published &&
 					Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
-							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()))) {
+							                                     publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) &&
+							                                     (taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid())) )) {
 					String finalJson = new JSONObject()
 							.put("succeeded", false)
 							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
@@ -236,7 +237,8 @@ public class TafServices {
 				}
 				this.publishTafStore.export(taf, tafConverter);
 			}
-			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("uuid",taf.metadata.getUuid()).toString();
+			JSONObject tafjson = new JSONObject(taf.toJSON());
+			String json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is stored").put("tac", tacString).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
 			return ResponseEntity.ok(json);
 		}catch(Exception e){
 		    e.printStackTrace();
