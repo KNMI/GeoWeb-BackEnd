@@ -77,7 +77,7 @@ public class SigmetServices {
 	}
 
 	@RequestMapping(path="/publishsigmet")
-	public String publishSigmet(@RequestParam(value="uuid", required=true) String uuid) {
+	public synchronized String publishSigmet(@RequestParam(value="uuid", required=true) String uuid) {
 		Debug.println("publish");
 		Sigmet sigmet = sigmetStore.getByUuid(uuid);
 		sigmet.setStatus(SigmetStatus.PUBLISHED);
