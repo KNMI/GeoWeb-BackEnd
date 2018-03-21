@@ -1,8 +1,8 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.UUID;
 
 import org.json.JSONException;
@@ -53,7 +53,7 @@ public class SigmetServices {
 		sm = sigmet;
 
 		sm.setUuid(UUID.randomUUID().toString());
-		sm.setIssuedate(new Date());
+		sm.setIssuedate(OffsetDateTime.now());
 		try{
 			sigmetStore.storeSigmet(sm);
 			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
@@ -76,8 +76,13 @@ public class SigmetServices {
 		return sigmetStore.getByUuid(uuid);
 	}
 
-	@RequestMapping("/publishsigmet")
-	public String publishSigmet(String uuid) {
+	@RequestMapping(path="/publishsigmet")
+	public String publishSigmet(@RequestParam(value="uuid", required=true) String uuid) {
+		Debug.println("publish");
+		Sigmet sigmet = sigmetStore.getByUuid(uuid);
+		sigmet.setStatus(SigmetStatus.PUBLISHED);
+		sigmet.setSequence(sigmetStore.getNextSequence());
+		sigmetStore.storeSigmet(sigmet);
 		return "sigmet "+sigmetStore.getByUuid(uuid)+" published";
 	}
 	
