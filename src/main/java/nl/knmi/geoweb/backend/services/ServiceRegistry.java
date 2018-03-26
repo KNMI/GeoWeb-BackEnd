@@ -36,25 +36,15 @@ public class ServiceRegistry {
 //		services.add(new Service("NOWCASTMIX", "NOWCASTMIX","http://birdexp07.knmi.nl/cgi-bin/geoweb/adaguc.NOWCASTMIX.cgi?", new String[]{"MET"}));
 	}
 	
-	private void getServices() {
+	private void getServices() throws IOException {
 		ObjectMapper mapper=new ObjectMapper();
 		String json="";
-		try {
-			json = adminStore.read("config", "services.json");
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		try {
-			services=mapper.readValue(json, new TypeReference<List<Service>>(){});
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		json = adminStore.read("config", "services.json");
+		services=mapper.readValue(json, new TypeReference<List<Service>>(){});
 	}
 
-	public List<Service> getWMSServicesForRole(String role) {
-		/* if (services==null) */ this.getServices(); //TODO cache temporarily?
+	public List<Service> getWMSServicesForRole(String role) throws IOException {
+		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS) && srv.getGoal().equals(ServiceGoal.LAYER)){
@@ -69,8 +59,8 @@ public class ServiceRegistry {
 		return foundServices;
 	}
 	
-	public List<Service> getWMSOverlayServicesForRole(String role) {
-		/* if (services==null) */ this.getServices(); //TODO cache temporarily?
+	public List<Service> getWMSOverlayServicesForRole(String role) throws IOException {
+		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS)&&srv.getGoal().equals(ServiceGoal.OVERLAY)){

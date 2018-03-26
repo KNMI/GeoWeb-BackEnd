@@ -55,6 +55,9 @@ public class TafStore {
 	public void storeTaf(Taf taf) throws JsonProcessingException, IOException {
 		Debug.println("Store taf " + this.directory);
 		String fn=String.format("%s/taf_%s.json", this.directory, taf.metadata.getUuid());
+		if(taf.metadata.getValidityStart() == null || taf.metadata.getValidityEnd() == null) {
+			throw new IOException("Validity start end validity end must be specified");
+		}
 		Tools.writeFile(fn, taf.toJSON());
 	}
 
