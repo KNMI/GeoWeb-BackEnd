@@ -23,7 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -67,7 +70,6 @@ public class SigmetServices {
 		Debug.println("storesigmet");
 		ObjectMapper om = getSigmetObjectMapper();
 		Sigmet sm = om.readValue(sigmet, Sigmet.class);
-		System.out.println(sm);
 		sm.setUuid(UUID.randomUUID().toString());
 		try{
 			sigmetStore.storeSigmet(sm);
@@ -100,6 +102,19 @@ public class SigmetServices {
 		sigmet.setSequence(sigmetStore.getNextSequence());
 		sigmetStore.storeSigmet(sigmet);
 		return "sigmet "+sigmetStore.getByUuid(uuid)+" published";
+	}
+	
+	@RequestMapping(path="/sendtestsigmet")
+	public synchronized String sendTestSigmet() {
+		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", UUID.randomUUID().toString());
+		sm.setStatus(SigmetStatus.TEST);
+		OffsetDateTime start = OffsetDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0);
+		sm.setValiddate(start);
+		sm.setValiddate_end(start.plusMinutes(5));
+		sm.setIssuedate(OffsetDateTime.now());
+		sm.setSequence(sigmetStore.getNextSequence());
+		sigmetStore.storeSigmet(sm);
+		return "Stored test sigmet " + sm.getUuid();
 	}
 	
 	@RequestMapping(path="/getsigmetparameters")
@@ -187,10 +202,22 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
 
-
-
 	@RequestMapping("/cancelsigmet")
-	public String cancelSigmet(String uuid) {
-		return "sigmet "+uuid+" canceled";
+	public String cancelSigmet(@RequestParam(value="uuid", required=true) String uuid) throws JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+		Sigmet toBeCancelled = sigmetStore.getByUuid(uuid);
+		Sigmet sm = new Sigmet(toBeCancelled);
+		toBeCancelled.setStatus(SigmetStatus.CANCELLED);
+		sm.setUuid(UUID.randomUUID().toString());
+		sm.setStatus(SigmetStatus.PUBLISHED);
+		sm.setCancels(toBeCancelled.getSequence());
+		OffsetDateTime start = OffsetDateTime.now();
+		sm.setValiddate(start);
+		sm.setValiddate_end(toBeCancelled.getValiddate_end());
+		sm.setIssuedate(start);
+		sm.setSequence(sigmetStore.getNextSequence());
+		sigmetStore.storeSigmet(sm);
+		sigmetStore.storeSigmet(toBeCancelled);
+
+		return "sigmet "+uuid+" canceled by " + sm.getUuid();
 	}
 }
