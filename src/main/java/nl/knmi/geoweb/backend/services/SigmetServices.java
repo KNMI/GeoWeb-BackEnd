@@ -130,6 +130,7 @@ public class SigmetServices {
 	@RequestMapping("/getsigmetphenomena")
 	public ResponseEntity<String> SigmetPhenomena() {
 		try {
+			System.out.println("GetSigmetPhenomena");
 		  ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.ok(mapper.writeValueAsString(new SigmetPhenomenaMapping().getPhenomena()));
 		}catch(Exception e){}
