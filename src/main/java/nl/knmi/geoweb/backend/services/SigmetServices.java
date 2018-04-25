@@ -58,7 +58,7 @@ public class SigmetServices {
 
 	@Autowired
 	private FIRStore firStore;
-	
+
 	@RequestMapping(
 			path = "/storesigmet", 
 			method = RequestMethod.POST, 
@@ -142,51 +142,53 @@ public class SigmetServices {
 		String FIRName=sm.getFirname();
 		Feature FIR=firStore.lookup(FIRName, true);
 		Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
-//		sm.putIntersectionGeometry("abcd",FIR);
-//		sm.putIntersectionGeometry("bcde", FIRStore.cloneThroughSerialize(FIR));
-	
-		GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
-		GeoJsonReader reader=new GeoJsonReader(gf);
+		//		sm.putIntersectionGeometry("abcd",FIR);
+		//		sm.putIntersectionGeometry("bcde", FIRStore.cloneThroughSerialize(FIR));
 
-		List<GeoJsonObject> intersectableGeometries=sm.findIntersectableGeometries();
-		String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
-		
-		for (GeoJsonObject geom: intersectableGeometries) {
-			Feature f=(Feature)geom;
-			String startId=f.getId();
-			Debug.println("id:"+startId);
-		    String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-		    Debug.println("os:"+os);
-		
-		    Debug.println("FIRs:"+FIRs);
-		    try {
-				Geometry geom_fir=reader.read(FIRs);
-				Debug.println("geom_fir:"+geom_fir.toString());
-				Geometry geom_s=reader.read(os);
-				Debug.println("geom_s:"+geom_s.toString());
-				Geometry geom_new=geom_s.intersection(geom_fir);
-				GeoJsonWriter writer=new GeoJsonWriter();
-				String geom_news=writer.write(geom_new);
-				GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
-				Debug.println(intersect_geom.toString());
-				Feature ff=new Feature();
-				ff.setGeometry(intersect_geom);
-				sm.putIntersectionGeometry(startId, ff);
-			} catch (ParseException e1) {
+		if (FIR!=null) {
+			GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
+			GeoJsonReader reader=new GeoJsonReader(gf);
+
+			List<GeoJsonObject> intersectableGeometries=sm.findIntersectableGeometries();
+			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
+
+			for (GeoJsonObject geom: intersectableGeometries) {
+				Feature f=(Feature)geom;
+				String startId=f.getId();
+				Debug.println("id:"+startId);
+				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
+				Debug.println("os:"+os);
+
+				Debug.println("FIRs:"+FIRs);
+				try {
+					Geometry geom_fir=reader.read(FIRs);
+					Debug.println("geom_fir:"+geom_fir.toString());
+					Geometry geom_s=reader.read(os);
+					Debug.println("geom_s:"+geom_s.toString());
+					Geometry geom_new=geom_s.intersection(geom_fir);
+					GeoJsonWriter writer=new GeoJsonWriter();
+					String geom_news=writer.write(geom_new);
+					GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
+					Debug.println(intersect_geom.toString());
+					Feature ff=new Feature();
+					ff.setGeometry(intersect_geom);
+					sm.putIntersectionGeometry(startId, ff);
+				} catch (ParseException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+			}		
+
+			//		Debug.println(sm.dumpSigmetGeometryInfo());		
+			String json;
+			try {
+				json = new JSONObject().put("message","sigmet "+sm.getUuid()+" intersected").put("uuid",sm.getUuid())
+						.put("sigmet", new JSONObject(sigmetObjectMapper.writeValueAsString(sm))).toString();
+				return ResponseEntity.ok(json);
+			} catch (JSONException e) {
 				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				e.printStackTrace();
 			}
-		}		
-
-//		Debug.println(sm.dumpSigmetGeometryInfo());		
-		String json;
-		try {
-			json = new JSONObject().put("message","sigmet "+sm.getUuid()+" intersected").put("uuid",sm.getUuid())
-					.put("sigmet", new JSONObject(sigmetObjectMapper.writeValueAsString(sm))).toString();
-			return ResponseEntity.ok(json);
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
