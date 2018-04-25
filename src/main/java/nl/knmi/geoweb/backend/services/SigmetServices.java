@@ -136,23 +136,25 @@ public class SigmetServices {
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> SigmetIntersections(@RequestBody String sigmet) throws IOException {
+		Debug.println("SM:"+sigmet);
 		Sigmet sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
 		Debug.println(sm.dumpSigmetGeometryInfo());
 		String FIRName=sm.getFirname();
 		Feature FIR=firStore.lookup(FIRName, true);
 		Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
 //		sm.putIntersectionGeometry("abcd",FIR);
-		sm.putIntersectionGeometry("bcde", FIRStore.cloneThroughSerialize(FIR));
+//		sm.putIntersectionGeometry("bcde", FIRStore.cloneThroughSerialize(FIR));
 	
 		GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
 		GeoJsonReader reader=new GeoJsonReader(gf);
 
-		List<GeoJsonObject> startGeometries=sm.findStartGeometries();
+		List<GeoJsonObject> intersectableGeometries=sm.findIntersectableGeometries();
 		String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
 		
-		for (GeoJsonObject geom: startGeometries) {
+		for (GeoJsonObject geom: intersectableGeometries) {
 			Feature f=(Feature)geom;
 			String startId=f.getId();
+			Debug.println("id:"+startId);
 		    String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
 		    Debug.println("os:"+os);
 		
@@ -176,10 +178,11 @@ public class SigmetServices {
 			}
 		}		
 
-		Debug.println(sm.dumpSigmetGeometryInfo());		
+//		Debug.println(sm.dumpSigmetGeometryInfo());		
 		String json;
 		try {
-			json = new JSONObject().put("message","sigmet "+sm.getUuid()+" intersected").put("uuid",sm.getUuid()).put("sigmet", sigmetObjectMapper.writeValueAsString(sm)).toString();
+			json = new JSONObject().put("message","sigmet "+sm.getUuid()+" intersected").put("uuid",sm.getUuid())
+					.put("sigmet", new JSONObject(sigmetObjectMapper.writeValueAsString(sm))).toString();
 			return ResponseEntity.ok(json);
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
