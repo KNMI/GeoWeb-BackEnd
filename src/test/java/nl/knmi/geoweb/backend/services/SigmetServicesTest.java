@@ -55,7 +55,7 @@ public class SigmetServicesTest {
 			+"\"change\":\"NC\","
 			+"\"issuedate\":\"2017-03-24T15:56:16Z\","
 			+"\"validdate\":\"2017-03-24T15:56:16Z\","
-			+"\"firname\":\"AMSTERDAM FIR\","
+			+"\"firname\":\"FIR AMSTERDAM\","
 			+"\"location_indicator_icao\":\"EHAA\","
 			+"\"location_indicator_mwo\":\"EHDB\"}";
 	
@@ -138,7 +138,7 @@ public class SigmetServicesTest {
         assertThat(jsonResult.get("movement").get("stationary").asBoolean(), is(true)); 
         assertThat(jsonResult.get("change").asText(), is("NC"));
         assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
-        assertThat(jsonResult.get("firname").asText(), is("AMSTERDAM FIR"));
+        assertThat(jsonResult.get("firname").asText(), is("FIR AMSTERDAM"));
         assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
         assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
         assertThat(jsonResult.get("status").asText(), is("PRODUCTION"));
