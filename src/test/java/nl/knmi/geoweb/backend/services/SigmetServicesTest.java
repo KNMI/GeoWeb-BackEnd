@@ -111,6 +111,7 @@ public class SigmetServicesTest {
 	
 	@Test
 	public void apiTestGetSigmetListIncrement () throws Exception {
+		apiTestStoreSigmetOK();
 		ObjectNode jsonResult = getSigmetList();
         int currentNrOfSigmets = jsonResult.get("nsigmets").asInt();
 		apiTestStoreSigmetOK();
