@@ -1,4 +1,4 @@
 /target/
-!/.factorypath
+.factorypath
 .settings
 .project
