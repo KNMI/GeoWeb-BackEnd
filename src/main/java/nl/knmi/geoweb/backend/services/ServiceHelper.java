@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
-import nl.knmi.geoweb.backend.services.tools.MyXMLParser;
+import nl.knmi.adaguc.tools.MyXMLParser;
 
 @RestController
 public class ServiceHelper {

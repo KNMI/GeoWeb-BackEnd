@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import nl.knmi.geoweb.backend.services.tools.JsonMessage;
+import nl.knmi.adaguc.tools.JsonMessage;
 import nl.knmi.geoweb.backend.usermanagement.UserStore.GeoWebUser;
 
 @RestController
