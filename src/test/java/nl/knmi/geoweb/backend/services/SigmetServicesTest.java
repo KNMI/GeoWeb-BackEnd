@@ -55,7 +55,7 @@ public class SigmetServicesTest {
 			+"\"change\":\"NC\","
 			+"\"issuedate\":\"2017-03-24T15:56:16Z\","
 			+"\"validdate\":\"2017-03-24T15:56:16Z\","
-			+"\"firname\":\"AMSTERDAM FIR\","
+			+"\"firname\":\"FIR AMSTERDAM\","
 			+"\"location_indicator_icao\":\"EHAA\","
 			+"\"location_indicator_mwo\":\"EHDB\"}";
 	
@@ -99,6 +99,7 @@ public class SigmetServicesTest {
                 .andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
+		Debug.println("getSigmetList() result:"+responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
@@ -110,6 +111,7 @@ public class SigmetServicesTest {
 	
 	@Test
 	public void apiTestGetSigmetListIncrement () throws Exception {
+		apiTestStoreSigmetOK();
 		ObjectNode jsonResult = getSigmetList();
         int currentNrOfSigmets = jsonResult.get("nsigmets").asInt();
 		apiTestStoreSigmetOK();
@@ -138,7 +140,7 @@ public class SigmetServicesTest {
         assertThat(jsonResult.get("movement").get("stationary").asBoolean(), is(true)); 
         assertThat(jsonResult.get("change").asText(), is("NC"));
         assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
-        assertThat(jsonResult.get("firname").asText(), is("AMSTERDAM FIR"));
+        assertThat(jsonResult.get("firname").asText(), is("FIR AMSTERDAM"));
         assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
         assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
         assertThat(jsonResult.get("status").asText(), is("PRODUCTION"));
