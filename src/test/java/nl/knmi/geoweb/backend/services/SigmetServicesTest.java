@@ -99,6 +99,7 @@ public class SigmetServicesTest {
                 .andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
+		Debug.println("getSigmetList() result:"+responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
