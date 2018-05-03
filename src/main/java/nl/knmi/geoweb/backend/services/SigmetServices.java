@@ -88,9 +88,16 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
-	@RequestMapping(path="/getsigmet")
+	@RequestMapping(path="/getsigmet", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Sigmet getSigmet(@RequestParam(value="uuid", required=true) String uuid) {
 		return sigmetStore.getByUuid(uuid);
+	}
+	
+
+	@RequestMapping(path="/getsigmet", produces = MediaType.TEXT_PLAIN_VALUE)
+	public String getSigmetAsText(@RequestParam(value="uuid", required=true) String uuid) {
+		Sigmet sm = sigmetStore.getByUuid(uuid);
+		return sm.toTAC();
 	}
 
 	@RequestMapping(path="/publishsigmet")
@@ -130,7 +137,6 @@ public class SigmetServices {
 	@RequestMapping("/getsigmetphenomena")
 	public ResponseEntity<String> SigmetPhenomena() {
 		try {
-			System.out.println("GetSigmetPhenomena");
 		  ObjectMapper mapper = new ObjectMapper();
 			return ResponseEntity.ok(mapper.writeValueAsString(new SigmetPhenomenaMapping().getPhenomena()));
 		}catch(Exception e){}
