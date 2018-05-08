@@ -93,6 +93,7 @@ public class SigmetServices {
 	@RequestMapping(path="/getsigmet", produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getSigmetAsText(@RequestParam(value="uuid", required=true) String uuid) {
 		Sigmet sm = sigmetStore.getByUuid(uuid);
+		System.out.println(sm);
 		Feature FIR=firStore.lookup(sm.getFirname(), true);
 		return sm.toTAC(FIR);
 	}
@@ -274,6 +275,7 @@ public class SigmetServices {
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setStatus(SigmetStatus.PUBLISHED);
 		sm.setCancels(toBeCancelled.getSequence());
+		sm.setCancelsStart(toBeCancelled.getValiddate());
 		OffsetDateTime start = OffsetDateTime.now();
 		sm.setValiddate(start);
 		sm.setValiddate_end(toBeCancelled.getValiddate_end());
