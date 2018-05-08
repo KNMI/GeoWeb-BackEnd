@@ -93,7 +93,8 @@ public class SigmetServices {
 	@RequestMapping(path="/getsigmet", produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getSigmetAsText(@RequestParam(value="uuid", required=true) String uuid) {
 		Sigmet sm = sigmetStore.getByUuid(uuid);
-		return sm.toTAC();
+		Feature FIR=firStore.lookup(sm.getFirname(), true);
+		return sm.toTAC(FIR);
 	}
 
 	@RequestMapping(path="/publishsigmet")
