@@ -286,4 +286,9 @@ public class SigmetServices {
 
 		return "sigmet "+uuid+" canceled by " + sm.getUuid();
 	}
+	
+	@RequestMapping("/getfir")
+	public Feature getFirByName(@RequestParam(value="name", required=true) String firName) {
+		return firStore.lookup(firName, true);
+	}
 }
