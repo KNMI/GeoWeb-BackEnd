@@ -89,9 +89,18 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
-	@RequestMapping(path="/getsigmet")
+	@RequestMapping(path="/getsigmet", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Sigmet getSigmet(@RequestParam(value="uuid", required=true) String uuid) {
 		return sigmetStore.getByUuid(uuid);
+	}
+	
+
+	@RequestMapping(path="/getsigmet", produces = MediaType.TEXT_PLAIN_VALUE)
+	public String getSigmetAsText(@RequestParam(value="uuid", required=true) String uuid) {
+		Sigmet sm = sigmetStore.getByUuid(uuid);
+		System.out.println(sm);
+		Feature FIR=firStore.lookup(sm.getFirname(), true);
+		return sm.toTAC(FIR);
 	}
 
 	@RequestMapping(path="/publishsigmet")
@@ -271,6 +280,7 @@ public class SigmetServices {
 		sm.setUuid(UUID.randomUUID().toString());
 		sm.setStatus(SigmetStatus.PUBLISHED);
 		sm.setCancels(toBeCancelled.getSequence());
+		sm.setCancelsStart(toBeCancelled.getValiddate());
 		OffsetDateTime start = OffsetDateTime.now();
 		sm.setValiddate(start);
 		sm.setValiddate_end(toBeCancelled.getValiddate_end());
@@ -296,5 +306,14 @@ public class SigmetServices {
 		Sigmet sigmet=sigmetStore.getByUuid(uuid);
 		return sigmetConverter.ToIWXXM_2_1(sigmet);
 	}
-	
+  
+  @RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public Sigmet getSigmet(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException) {
+		return sigmetStore.getByUuid(uuid);
+	}
+
+	@RequestMapping("/getfir")
+	public Feature getFirByName(@RequestParam(value="name", required=true) String firName) {
+		return firStore.lookup(firName, true);
+	}
 }
