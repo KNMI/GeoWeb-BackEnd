@@ -142,7 +142,7 @@ public class SigmetServicesTest {
         assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
         assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
         assertThat(jsonResult.get("status").asText(), is("PRODUCTION"));
-        assertThat(jsonResult.get("sequence").asInt(), is(0));
+        assertThat(jsonResult.get("sequence").asInt(), is(-1));
         assertThat(jsonResult.has("geojson"), is(true));
         Debug.println(responseBody);	
 	}

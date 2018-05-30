@@ -1,12 +1,18 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +22,14 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
@@ -35,25 +48,29 @@ public class SigmetServices {
 	SigmetServices (final SigmetStore sigmetStore) throws IOException {
 		this.sigmetStore = sigmetStore;
 	}
+	public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+	public static ObjectMapper getSigmetObjectMapper() {
+		ObjectMapper om = new ObjectMapper();
+		om.registerModule(new JavaTimeModule());
+		om.setTimeZone(TimeZone.getTimeZone("UTC"));
+		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
+		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+		return om;
+	}
+	
 	@RequestMapping(
 			path = "/storesigmet", 
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmet(@RequestBody Sigmet sigmet) throws IOException {
+	public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) throws IOException {
 		Debug.println("storesigmet");
-		//ObjectMapper om = new ObjectMapper();
-		Sigmet sm = null;
-//		sigmet = URLDecoder.decode(sigmet,"UTF-8");
-//		try {
-//			sm = om.readValue(sigmet, Sigmet.class);
-//		} catch (IOException e2) {
-//			e2.printStackTrace();
-//			throw e2;
-//		}
-		sm = sigmet;
-
+		ObjectMapper om = getSigmetObjectMapper();
+		Sigmet sm = om.readValue(sigmet, Sigmet.class);
 		sm.setUuid(UUID.randomUUID().toString());
-		sm.setIssuedate(OffsetDateTime.now());
 		try{
 			sigmetStore.storeSigmet(sm);
 			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
@@ -81,9 +98,23 @@ public class SigmetServices {
 		Debug.println("publish");
 		Sigmet sigmet = sigmetStore.getByUuid(uuid);
 		sigmet.setStatus(SigmetStatus.PUBLISHED);
+		sigmet.setIssuedate(OffsetDateTime.now());
 		sigmet.setSequence(sigmetStore.getNextSequence());
 		sigmetStore.storeSigmet(sigmet);
 		return "sigmet "+sigmetStore.getByUuid(uuid)+" published";
+	}
+	
+	@RequestMapping(path="/sendtestsigmet")
+	public synchronized String sendTestSigmet() {
+		Sigmet sm=new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", UUID.randomUUID().toString());
+		sm.setStatus(SigmetStatus.TEST);
+		OffsetDateTime start = OffsetDateTime.now().withHour(11).withMinute(0).withSecond(0).withNano(0);
+		sm.setValiddate(start);
+		sm.setValiddate_end(start.plusMinutes(5));
+		sm.setIssuedate(OffsetDateTime.now());
+		sm.setSequence(sigmetStore.getNextSequence());
+		sigmetStore.storeSigmet(sm);
+		return "Stored test sigmet " + sm.getUuid();
 	}
 	
 	@RequestMapping(path="/getsigmetparameters")
@@ -171,10 +202,22 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
 
-
-
 	@RequestMapping("/cancelsigmet")
-	public String cancelSigmet(String uuid) {
-		return "sigmet "+uuid+" canceled";
+	public String cancelSigmet(@RequestParam(value="uuid", required=true) String uuid) throws JsonParseException, JsonMappingException, JsonProcessingException, IOException {
+		Sigmet toBeCancelled = sigmetStore.getByUuid(uuid);
+		Sigmet sm = new Sigmet(toBeCancelled);
+		toBeCancelled.setStatus(SigmetStatus.CANCELLED);
+		sm.setUuid(UUID.randomUUID().toString());
+		sm.setStatus(SigmetStatus.PUBLISHED);
+		sm.setCancels(toBeCancelled.getSequence());
+		OffsetDateTime start = OffsetDateTime.now();
+		sm.setValiddate(start);
+		sm.setValiddate_end(toBeCancelled.getValiddate_end());
+		sm.setIssuedate(start);
+		sm.setSequence(sigmetStore.getNextSequence());
+		sigmetStore.storeSigmet(sm);
+		sigmetStore.storeSigmet(toBeCancelled);
+
+		return "sigmet "+uuid+" canceled by " + sm.getUuid();
 	}
 }
