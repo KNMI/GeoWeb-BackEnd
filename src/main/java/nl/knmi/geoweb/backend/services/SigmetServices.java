@@ -308,7 +308,7 @@ public class SigmetServices {
 	}
   
   @RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public Sigmet getSigmet(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException) {
+	public Sigmet getSigmet(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
 		return sigmetStore.getByUuid(uuid);
 	}
 
