@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.geojson.Feature;
-import org.geojson.FeatureCollection;
 import org.geojson.GeoJsonObject;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,6 +21,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -38,9 +38,11 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
+import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
+import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 
 @RestController
 @RequestMapping("/sigmet")
@@ -56,6 +58,9 @@ public class SigmetServices {
 	@Qualifier("sigmetObjectMapper")
 	private ObjectMapper sigmetObjectMapper;
 
+	@Autowired
+	SigmetConverter sigmetConverter;
+	
 	@Autowired
 	private FIRStore firStore;
 
@@ -276,4 +281,20 @@ public class SigmetServices {
 
 		return "sigmet "+uuid+" canceled by " + sm.getUuid();
 	}
+	
+	@RequestMapping(path="/{uuid}",
+			method = RequestMethod.GET,
+			produces = MediaType.TEXT_PLAIN_VALUE)
+	public String getTacById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		return sigmetStore.getByUuid(uuid).toString();
+	}
+	
+	@RequestMapping(path="/{uuid}",
+			method = RequestMethod.GET,
+			produces = MediaType.APPLICATION_XML_VALUE)
+	public String getIWXXM21ById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Sigmet sigmet=sigmetStore.getByUuid(uuid);
+		return sigmetConverter.ToIWXXM_2_1(sigmet);
+	}
+	
 }
