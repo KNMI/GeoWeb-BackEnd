@@ -38,7 +38,6 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
-import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
@@ -296,7 +295,9 @@ public class SigmetServices {
 			method = RequestMethod.GET,
 			produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getTacById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return sigmetStore.getByUuid(uuid).toString();
+		Sigmet sm = sigmetStore.getByUuid(uuid);
+		Feature FIR=firStore.lookup(sm.getFirname(), true);
+		return sm.toTAC(FIR);
 	}
 	
 	@RequestMapping(path="/{uuid}",
