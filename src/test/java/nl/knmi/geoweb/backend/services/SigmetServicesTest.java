@@ -50,7 +50,7 @@ public class SigmetServicesTest {
 			+"{\"type\":\"FeatureCollection\",\"features\":"+"[{\"type\":\"Feature\",\"properties\":{\"prop0\":\"value0\",\"prop1\":{\"this\":\"that\"}},\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
-			+"\"level\":{\"lev1\":{\"value\":100.0,\"unit\":\"FL\"}},"
+			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
 			+"\"movement\":{\"stationary\":true},"
 			+"\"change\":\"NC\","
 			+"\"issuedate\":\"2017-03-24T15:56:16Z\","
@@ -135,8 +135,9 @@ public class SigmetServicesTest {
         assertThat(jsonResult.get("uuid").asText(), is(sigmetUUID));
         assertThat(jsonResult.get("phenomenon").asText(), is("OBSC_TS"));
         assertThat(jsonResult.get("obs_or_forecast").get("obs").asBoolean(), is(true));
-        assertThat(jsonResult.get("level").get("lev1").get("value").asDouble(), is(100.0));
-        assertThat(jsonResult.get("level").get("lev1").get("unit").asText(), is("FL"));
+        assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("value").asDouble(), is(100.0));
+        assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("unit").asText(), is("FL"));
+        assertThat(jsonResult.get("levelinfo").get("mode").asText(), is("AT"));
         assertThat(jsonResult.get("movement").get("stationary").asBoolean(), is(true)); 
         assertThat(jsonResult.get("change").asText(), is("NC"));
         assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
