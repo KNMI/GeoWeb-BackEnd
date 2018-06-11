@@ -38,7 +38,6 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
-import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
@@ -60,7 +59,7 @@ public class SigmetServices {
 
 	@Autowired
 	SigmetConverter sigmetConverter;
-	
+
 	@Autowired
 	private FIRStore firStore;
 
@@ -93,7 +92,7 @@ public class SigmetServices {
 	public Sigmet getSigmet(@RequestParam(value="uuid", required=true) String uuid) {
 		return sigmetStore.getByUuid(uuid);
 	}
-	
+
 
 	@RequestMapping(path="/getsigmet", produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getSigmetAsText(@RequestParam(value="uuid", required=true) String uuid) {
@@ -145,11 +144,75 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
 
+	@Getter
+	public static class SigmetFeature {
+		private String firname;
+		private Feature feature;
+		public SigmetFeature() {
+		}
+	}
+
 	@RequestMapping(
 			path = "/sigmetintersections", 
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> SigmetIntersections(@RequestBody String sigmet) throws IOException {
+	public ResponseEntity<String> SigmetIntersections(@RequestBody SigmetFeature feature) throws IOException {
+		String FIRName=feature.getFirname();
+		Feature FIR=firStore.lookup(FIRName, true);
+		Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
+
+		if (FIR!=null) {
+			GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
+			GeoJsonReader reader=new GeoJsonReader(gf);
+
+			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
+
+			Feature f=feature.getFeature();
+			String featureId=f.getId();
+			Debug.println("id:"+featureId+" "+f.getBbox());
+
+			String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
+			Debug.println("os:"+os);
+
+			Debug.println("FIRs:"+FIRs);
+			Feature ff=null;
+			try {
+				Geometry geom_fir=reader.read(FIRs);
+				Debug.println("geom_fir:"+geom_fir.toString());
+				Geometry geom_s=reader.read(os);
+				Debug.println("geom_s:"+geom_s.toString());
+				Geometry geom_new=geom_s.intersection(geom_fir);
+				GeoJsonWriter writer=new GeoJsonWriter();
+				String geom_news=writer.write(geom_new);
+				GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
+				Debug.println(intersect_geom.toString());
+				ff=new Feature();
+				ff.setGeometry(intersect_geom);
+			} catch (ParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			//		Debug.println(sm.dumpSigmetGeometryInfo());		
+			String json;
+			try {
+//				json = new JSONObject().put("message","feature "+featureId+" intersected").
+//						 put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff))).toString();
+				json = new JSONObject(sigmetObjectMapper.writeValueAsString(ff)).toString();
+				return ResponseEntity.ok(json);
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	}
+
+	@RequestMapping(
+			path = "/sigmetintersectionsORG", 
+			method = RequestMethod.POST, 
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> SigmetIntersectionsORG(@RequestBody String sigmet) throws IOException {
 		Debug.println("SM:"+sigmet);
 		Sigmet sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
 		Debug.println(sm.dumpSigmetGeometryInfo());
@@ -169,7 +232,8 @@ public class SigmetServices {
 			for (GeoJsonObject geom: intersectableGeometries) {
 				Feature f=(Feature)geom;
 				String startId=f.getId();
-				Debug.println("id:"+startId);
+				Debug.println("id:"+startId+" "+f.getBbox());
+
 				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
 				Debug.println("os:"+os);
 
@@ -291,14 +355,16 @@ public class SigmetServices {
 
 		return "sigmet "+uuid+" canceled by " + sm.getUuid();
 	}
-	
+
 	@RequestMapping(path="/{uuid}",
 			method = RequestMethod.GET,
 			produces = MediaType.TEXT_PLAIN_VALUE)
 	public String getTacById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-		return sigmetStore.getByUuid(uuid).toString();
+		Sigmet sm = sigmetStore.getByUuid(uuid);
+		Feature FIR=firStore.lookup(sm.getFirname(), true);
+		return sm.toTAC(FIR);
 	}
-	
+
 	@RequestMapping(path="/{uuid}",
 			method = RequestMethod.GET,
 			produces = MediaType.APPLICATION_XML_VALUE)
@@ -306,8 +372,8 @@ public class SigmetServices {
 		Sigmet sigmet=sigmetStore.getByUuid(uuid);
 		return sigmetConverter.ToIWXXM_2_1(sigmet);
 	}
-  
-  @RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+
+	@RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Sigmet getSigmetAsJson(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
 		return sigmetStore.getByUuid(uuid);
 	}
