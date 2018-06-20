@@ -130,30 +130,7 @@ public class TafServices {
 		Debug.println("storetaf");
 		Taf taf = null;
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
-		//		if(enableDebug)Debug.println("TAF from String: " + tafStr);
-		//		try {
-		//			if(enableDebug)Debug.println("start taf validation");
-		//			JsonNode jsonValidation = tafValidator.validate(tafStr);
-		//			if(jsonValidation.get("succeeded").asBoolean() == false){
-		//				Debug.errprintln("TAF validation failed");
-		//				String finalJson = new JSONObject().
-		//				put("succeeded", false).
-		//				put("errors", jsonValidation.toString()).
-		//				put("message","TAF is not valid").toString();
-		//				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(finalJson);
-		//			}
-		//		} catch (ProcessingException e3) {
-		//			if(enableDebug)Debug.println("TAF validator exception " + e3.getMessage());
-		//			e3.printStackTrace();
-		//			String json = null;
-		//			try {
-		//				json = new JSONObject().
-		//						put("message","Unable to validate taf").toString();
-		//			} catch (JSONException e) {
-		//				e.printStackTrace();
-		//			}
-		//			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
-		//		}
+
 		ObjectMapper objectMapper = null;
 		try {
 			objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
@@ -178,8 +155,9 @@ public class TafServices {
 		} else {
 			Debug.println("OK: Incoming TAF string is equal to serialized and deserialized TAF string");
 		}
+
 		if(taf.metadata.getUuid() != null){
-			// Check if existing TAF in store is not in published state
+			// Check if TAF to publish is not already published
 			if (taf.metadata.getStatus()==TAFReportPublishedConcept.published) {
 				Taf storedTaf=tafStore.getByUuid(taf.metadata.getUuid());
 				if ((storedTaf!=null)&&storedTaf.metadata.getUuid().equals(taf.metadata.getUuid())
@@ -195,8 +173,10 @@ public class TafServices {
 			}
 			Debug.println("Overwriting TAF with uuid ["+taf.metadata.getUuid()+"]");
 		} else {
+			//Generate random uuid
 			taf.metadata.setUuid(UUID.randomUUID().toString());
 		}
+		
 		if (taf.metadata.getType() == null) {
 			taf.metadata.setType(TAFReportType.normal);
 		}
@@ -204,7 +184,7 @@ public class TafServices {
 		if (taf.metadata.getStatus() == null) {
 			taf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		}
-		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //Set only during concept
+		taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC"))); //TODO Set only during concept
 
 		if (taf.metadata.getStatus() != TAFReportPublishedConcept.concept ){
 			try {
@@ -226,25 +206,64 @@ public class TafServices {
 						e.printStackTrace();
 					}
 				}
-
-				// Search for a taf with the previousUuid
-				if (taf.metadata.getPreviousUuid() != null) {
-					Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
-					if (previousTaf != null) {
-						previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
-						tafStore.storeTaf(previousTaf);
-					}
-				}
-
-				if (taf.metadata.getType() == TAFReportType.amendment) {
-					taf.metadata.setValidityStart(OffsetDateTime.now());
-				}
-
 			} catch (ProcessingException e2) {
 				// TODO Auto-generated catch block
 				e2.printStackTrace();
 			}
 		}
+		boolean alreadyPublished=false;
+		// Search for a taf with the previousUuid and set it to inactive
+		if (taf.metadata.getPreviousUuid() != null) {
+			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+			if (previousTaf.metadata.getStatus()==TAFReportPublishedConcept.published) {
+				alreadyPublished=true;
+			}
+			if (previousTaf != null) {
+				Debug.println("Set "+taf.metadata.getPreviousUuid()+" to inactive");
+				previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
+				tafStore.storeTaf(previousTaf);
+			}
+		}
+
+		if (taf.metadata.getType() == TAFReportType.amendment) {
+			taf.metadata.setValidityStart(OffsetDateTime.now());
+
+			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+			Debug.println("prev:"+previousTaf);
+			Debug.println("Saving amendment, previous "+taf.metadata.getPreviousUuid()+" as "+taf.metadata.getUuid());
+			if (alreadyPublished) {
+				//publish this TAF, (overwriting  old published one ???)
+				Debug.println("Publishing amendment ");
+				publishTaf(taf);
+			}
+		}
+
+		if (taf.metadata.getType() == TAFReportType.canceled) {
+			Debug.println("Save cancel of "+taf.metadata.getPreviousUuid()+" as "+taf.metadata.getUuid());
+			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+			Debug.println("prev:"+previousTaf);
+			taf.metadata.setValidityStart(OffsetDateTime.now());
+			taf.setForecast(null);
+			taf.setChangegroups(null);
+		    if (alreadyPublished) {
+				//publish this TAF, (overwriting  old published one ???)
+				Debug.println("Publishing cancellation ");
+				publishTaf(taf);
+			}
+		}
+
+		if (taf.metadata.getType() == TAFReportType.correction) {
+            Debug.println("Save corr "+taf.metadata.getUuid());
+			taf.metadata.setValidityStart(OffsetDateTime.now());
+			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
+			Debug.println("prev:"+previousTaf);
+			if (alreadyPublished) {
+				//publish this TAF, (overwriting  old published one ???)
+				Debug.println("Publishing correction ");
+				publishTaf(taf);
+			}
+		}
+
 
 		try{
 			tafStore.storeTaf(taf);
@@ -275,8 +294,13 @@ public class TafServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
-
-
+	boolean publishTaf(Taf taf) {
+		if (taf.metadata.getBaseTime() == null) {
+			taf.metadata.setBaseTime(taf.metadata.getValidityStart());
+		}
+		this.publishTafStore.export(taf, tafConverter);
+		return true;
+	}
 
 	@Getter
 	private class TafList {
