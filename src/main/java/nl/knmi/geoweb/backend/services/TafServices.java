@@ -5,6 +5,7 @@ import java.net.URLDecoder;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -218,15 +219,16 @@ public class TafServices {
 			if (previousTaf.metadata.getStatus()==TAFReportPublishedConcept.published) {
 				alreadyPublished=true;
 			}
-			if (previousTaf != null) {
-				Debug.println("Set "+taf.metadata.getPreviousUuid()+" to inactive");
-				previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
-				tafStore.storeTaf(previousTaf);
-			}
+			/* When a previousUUID is entered and we publish a new one, the old one should become inactive */
+//			if (previousTaf != null && alreadyPublished) {
+//				Debug.println("Set "+taf.metadata.getPreviousUuid()+" to inactive");
+//				previousTaf.metadata.setStatus(TAFReportPublishedConcept.inactive);
+//				tafStore.storeTaf(previousTaf);
+//			}
 		}
 
 		if (taf.metadata.getType() == TAFReportType.amendment) {
-			taf.metadata.setValidityStart(OffsetDateTime.now());
+			taf.metadata.setValidityStart(OffsetDateTime.now(ZoneOffset.UTC));
 
 			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
 			Debug.println("prev:"+previousTaf);
@@ -242,9 +244,9 @@ public class TafServices {
 			Debug.println("Save cancel of "+taf.metadata.getPreviousUuid()+" as "+taf.metadata.getUuid());
 			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
 			Debug.println("prev:"+previousTaf);
-			taf.metadata.setValidityStart(OffsetDateTime.now());
-			taf.setForecast(null);
-			taf.setChangegroups(null);
+			taf.metadata.setValidityStart(OffsetDateTime.now(ZoneOffset.UTC));
+//			taf.setForecast(null);
+//			taf.setChangegroups(null);
 		    if (alreadyPublished) {
 				//publish this TAF, (overwriting  old published one ???)
 				Debug.println("Publishing cancellation ");
@@ -254,7 +256,7 @@ public class TafServices {
 
 		if (taf.metadata.getType() == TAFReportType.correction) {
             Debug.println("Save corr "+taf.metadata.getUuid());
-			taf.metadata.setValidityStart(OffsetDateTime.now());
+			taf.metadata.setValidityStart(OffsetDateTime.now(ZoneOffset.UTC));
 			Taf previousTaf = tafStore.getByUuid(taf.metadata.getPreviousUuid());
 			Debug.println("prev:"+previousTaf);
 			if (alreadyPublished) {
@@ -366,7 +368,7 @@ public class TafServices {
 			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
 			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
 					// The TAF is still valid....
-					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
+					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now(ZoneOffset.UTC)) &&
 					// And there is no other taf...
 					Arrays.stream(tafs).noneMatch(
 							otherTaf -> (!otherTaf.equals(taf) &&
@@ -375,7 +377,7 @@ public class TafServices {
 									// Such that the other TAF has a validity start later than *this* TAF...
 									otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
 									// And the other TAF is already in its validity window
-									otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now()))
+									otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneOffset.UTC)))
 							)).toArray(Taf[]::new);
 
 			ObjectMapper mapper = Taf.getObjectMapperBean();
