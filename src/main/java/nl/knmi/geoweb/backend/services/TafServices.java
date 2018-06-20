@@ -93,8 +93,15 @@ public class TafServices {
 							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
 							return ResponseEntity.ok(finalJson);
 				}
+				
+				String tacString = "";
+				try{
+					tacString = taf.toTAC();
+				}catch(Exception e) {
+					tacString = "Unable to process tac";
+				}
 							                                   
-				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").toString();
+				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").put("TAC",tacString).toString();
 				return ResponseEntity.ok(json);
 			}
 		} catch (ProcessingException e) {
