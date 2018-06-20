@@ -168,29 +168,24 @@ public class SigmetServices {
 			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
 
 			Feature f=feature.getFeature();
-			String featureId=f.getId();
-			Debug.println("id:"+featureId+" "+f.getBbox());
 
 			String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-			Debug.println("os:"+os);
-
 			Debug.println("FIRs:"+FIRs);
 			Feature ff=null;
 			try {
 				Geometry geom_fir=reader.read(FIRs);
-				Debug.println("geom_fir:"+geom_fir.toString());
 				Geometry geom_s=reader.read(os);
-				Debug.println("geom_s:"+geom_s.toString());
 				Geometry geom_new=geom_s.intersection(geom_fir);
 				GeoJsonWriter writer=new GeoJsonWriter();
 				String geom_news=writer.write(geom_new);
 				GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
-				Debug.println(intersect_geom.toString());
 				ff=new Feature();
 				ff.setGeometry(intersect_geom);
 			} catch (ParseException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
+				System.err.println("os:"+os);
+				
 			}
 
 			//		Debug.println(sm.dumpSigmetGeometryInfo());		
@@ -207,70 +202,6 @@ public class SigmetServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
-
-	@RequestMapping(
-			path = "/sigmetintersectionsORG", 
-			method = RequestMethod.POST, 
-			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> SigmetIntersectionsORG(@RequestBody String sigmet) throws IOException {
-		Debug.println("SM:"+sigmet);
-		Sigmet sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
-		Debug.println(sm.dumpSigmetGeometryInfo());
-		String FIRName=sm.getFirname();
-		Feature FIR=firStore.lookup(FIRName, true);
-		Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
-		//		sm.putIntersectionGeometry("abcd",FIR);
-		//		sm.putIntersectionGeometry("bcde", FIRStore.cloneThroughSerialize(FIR));
-
-		if (FIR!=null) {
-			GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
-			GeoJsonReader reader=new GeoJsonReader(gf);
-
-			List<GeoJsonObject> intersectableGeometries=sm.findIntersectableGeometries();
-			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
-
-			for (GeoJsonObject geom: intersectableGeometries) {
-				Feature f=(Feature)geom;
-				String startId=f.getId();
-				Debug.println("id:"+startId+" "+f.getBbox());
-
-				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-				Debug.println("os:"+os);
-
-				Debug.println("FIRs:"+FIRs);
-				try {
-					Geometry geom_fir=reader.read(FIRs);
-					Debug.println("geom_fir:"+geom_fir.toString());
-					Geometry geom_s=reader.read(os);
-					Debug.println("geom_s:"+geom_s.toString());
-					Geometry geom_new=geom_s.intersection(geom_fir);
-					GeoJsonWriter writer=new GeoJsonWriter();
-					String geom_news=writer.write(geom_new);
-					GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
-					Debug.println(intersect_geom.toString());
-					Feature ff=new Feature();
-					ff.setGeometry(intersect_geom);
-					sm.putIntersectionGeometry(startId, ff);
-				} catch (ParseException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-			}		
-
-			//		Debug.println(sm.dumpSigmetGeometryInfo());		
-			String json;
-			try {
-				json = new JSONObject().put("message","sigmet "+sm.getUuid()+" intersected").put("uuid",sm.getUuid())
-						.put("sigmet", new JSONObject(sigmetObjectMapper.writeValueAsString(sm))).toString();
-				return ResponseEntity.ok(json);
-			} catch (JSONException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-	}
-
 
 	@Getter
 	private class SigmetList {
