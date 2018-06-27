@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
+import java.util.UUID;
 
 import javax.annotation.Resource;
 
@@ -20,8 +20,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -36,11 +38,11 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes= {TestWebConfig.class,TafServicesTestContext.class})
+@DirtiesContext
 public class TafServicesTest {
 	/** Entry point for Spring MVC testing support. */
     private MockMvc mockMvc;
-    
     
     /** The Spring web application context. */
     @Resource
@@ -48,17 +50,17 @@ public class TafServicesTest {
     
     /** The {@link ObjectMapper} instance to be used. */
     @Autowired
+    @Qualifier("objectMapper")
     private ObjectMapper objectMapper;
     
 	@Before
     public void setUp() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
-
+	
 	private String getValidTaf() throws Exception  {
 		String taf = Tools.readResource("Taf_valid.json");
-		ObjectMapper mapper = new ObjectMapper();
-		ObjectNode tafJson = (ObjectNode)mapper.readTree(taf);
+		ObjectNode tafJson = (ObjectNode)objectMapper.readTree(taf);
 
 		OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
 		ObjectNode metadataNode = (ObjectNode)tafJson.findParent("validityStart");
@@ -66,6 +68,7 @@ public class TafServicesTest {
 		metadataNode.put("validityStart", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
 		metadataNode.put("validityEnd", now.plusHours(29).format(DateTimeFormatter.ISO_INSTANT));
 		metadataNode.put("baseTime", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
+		metadataNode.put("uuid",  UUID.randomUUID().toString());
 		tafJson.set("metadata", (JsonNode)metadataNode);
 		return tafJson.toString();
 	}
@@ -79,7 +82,6 @@ public class TafServicesTest {
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
         assertThat(jsonResult.has("error"), is(false));
-        assertThat(jsonResult.has("message"), is(true));
         assertThat(jsonResult.has("message"), is(true));
         assertThat(jsonResult.get("message").asText().length(), not(0));
         String uuid = jsonResult.get("uuid").asText();
@@ -95,10 +97,11 @@ public class TafServicesTest {
                 .andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
+		Debug.println("resp: "+responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
         assertThat(jsonResult.has("ntafs"), is(true));
-        assertThat(jsonResult.has("tafs"), is(true));
+ //       assertThat(jsonResult.has("tafs"), is(true));
         int tafs = jsonResult.get("ntafs").asInt();
 
         Debug.println("Add taff");
@@ -122,14 +125,16 @@ public class TafServicesTest {
 	
 	@Test
 	public void getTafList () throws Exception {
-		addTaf();
+		String uuid=addTaf();
+		Debug.println("TAF "+uuid+" stored");
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+		ObjectMapper om=new ObjectMapper();
+		ObjectNode jsonResult = (ObjectNode) om.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
         assertThat(jsonResult.has("ntafs"), is(true));
@@ -142,11 +147,12 @@ public class TafServicesTest {
                 .andReturn();
 		
 		responseBody = result.getResponse().getContentAsString();
+		Debug.println("getTafList:"+responseBody);
 		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
         assertThat(jsonResult.has("ntafs"), is(true));
-        assertThat(jsonResult.has("tafs"), is(true));
+        assertThat(jsonResult.has("tafs"), is(false));
         assertThat(jsonResult.get("ntafs").asInt(), is(0));
 
 	}
@@ -174,4 +180,5 @@ public class TafServicesTest {
 		int newTafCount = jsonResult.get("ntafs").asInt();
 		assert(newTafCount == tafCount - 1);
 	}
+	
 }
