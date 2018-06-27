@@ -6,6 +6,8 @@ import java.io.IOException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.IExportable;
@@ -37,8 +39,8 @@ public class ProductExporter {
 		}
 	}
 
-	public void export(IExportable product, TafConverter converter) {
+	public void export(IExportable product, TafConverter converter, ObjectMapper om) {
 		// TODO Auto-generated method stub
-		product.export(path, converter);
+		product.export(path, converter, om);
 	}
 }

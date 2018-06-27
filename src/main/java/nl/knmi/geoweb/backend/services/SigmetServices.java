@@ -47,9 +47,10 @@ import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 @RequestMapping("/sigmet")
 public class SigmetServices {
 
-	SigmetStore sigmetStore = null;
-
+	SigmetStore sigmetStore=null;
+	
 	SigmetServices (final SigmetStore sigmetStore) throws IOException {
+		Debug.println("INITING SigmetServices...");
 		this.sigmetStore = sigmetStore;
 	}
 
