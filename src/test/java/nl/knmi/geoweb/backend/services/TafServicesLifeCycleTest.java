@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -72,6 +73,9 @@ public class TafServicesLifeCycleTest {
 	@Before
 	public void setUp() {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+		for(File file: new File("/tmp/tafs").listFiles()) 
+		    if (!file.isDirectory()) 
+		        file.delete();
 	}
 
 	private String addTaf(Taf taf) throws Exception {
@@ -91,29 +95,18 @@ public class TafServicesLifeCycleTest {
 
 		return uuid;
 	}
-	
+
 	private String publishAndFail(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
 		MvcResult result = mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
-//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
-				.andReturn();
-		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("resp: "+responseBody);
-		Debug.println("status: "+result.getResponse().getStatus());
-//		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-//
-//		assertThat(jsonResult.has("error"), is(false));
-//		assertThat(jsonResult.has("message"), is(true));
-//		assertThat(jsonResult.has("message"), is(true));
-//		assertThat(jsonResult.get("message").asText().length(), not(0));
-//		String uuid = jsonResult.get("uuid").asText();
-//
-//		return uuid;
+				//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
+				.andExpect(status().is4xxClientError()).andReturn();
+		
 		return "FAIL";
 	}
 
-	private String publish(Taf taf) throws Exception {
+	private String storeTaf(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
 		MvcResult result = mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
@@ -125,7 +118,6 @@ public class TafServicesLifeCycleTest {
 
 		assertThat(jsonResult.has("error"), is(false));
 		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.has("message"), is(true));
 		assertThat(jsonResult.get("message").asText().length(), not(0));
 		String uuid = jsonResult.get("uuid").asText();
 
@@ -133,7 +125,7 @@ public class TafServicesLifeCycleTest {
 	}
 
 
-	private Taf getBaseTaf() throws JsonProcessingException, IOException {
+	private Taf getBaseTaf(boolean actualise) throws JsonProcessingException, IOException {
 		Debug.println("getBaseTaf()");
 		String taf=
 				"{  \"metadata\" : {"+
@@ -165,12 +157,14 @@ public class TafServicesLifeCycleTest {
 
 		//		ObjectMapper mapper = new ObjectMapper();
 		Taf tafObj=objectMapper.readValue(taf, Taf.class);
-//		Debug.println("taf: "+tafObj.toJSON(tafObjectMapper));
-		OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
-		tafObj.getMetadata().setValidityStart(now.minusHours(1));
-		tafObj.getMetadata().setValidityEnd(now.plusHours(29));
+		//		Debug.println("taf: "+tafObj.toJSON(tafObjectMapper));
 		tafObj.getMetadata().setUuid(UUID.randomUUID().toString());
-        return tafObj;
+		if (actualise) {
+			OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
+			tafObj.getMetadata().setValidityStart(now.minusHours(1));
+			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
+		}
+		return tafObj;
 	}
 
 	private Taf getTaf(String uuid) throws Exception {
@@ -184,29 +178,53 @@ public class TafServicesLifeCycleTest {
 	@Test
 	public void lifeCycleTest() throws Exception {
 		Debug.println("testing TAF life cycle");
-		Taf baseTaf=getBaseTaf();
+		//Generate a valid TAF
+		Taf baseTaf=getBaseTaf(true);
 		Debug.println("baseTaf:"+baseTaf.toJSON(tafObjectMapper));
+		//Store it
 		String uuid=addTaf(baseTaf);
 		Debug.println("stored:"+uuid);
 		Taf storedTaf=getTaf(uuid);
 		Debug.println("from store:"+storedTaf.toJSON(tafObjectMapper));
 		Debug.println("EQ: "+baseTaf.equals(storedTaf));
 		assertEquals(baseTaf, storedTaf);
-		storedTaf.metadata.setType(TAFReportType.amendment);
-		storedTaf.metadata.setUuid(UUID.randomUUID().toString());
-		storedTaf.getForecast().getWind().setSpeed(20);
-//		String corrUuid = publishAndFail(storedTaf);
 		
+		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
+		storedTaf.metadata.setType(TAFReportType.amendment);
+		storedTaf.metadata.setPreviousUuid(uuid);
+		storedTaf.metadata.setUuid(UUID.randomUUID().toString());
+		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
+		storedTaf.getForecast().getWind().setSpeed(20);
+		String corrUuid = publishAndFail(storedTaf);
+
+		//Publish original TAF
+		Debug.println("Publish original TAF");
 		storedTaf=getTaf(uuid);
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
-		String publishedUuid=publish(storedTaf);
+		String publishedUuid=storeTaf(storedTaf);
 		Debug.println("published: "+publishedUuid);
+		
+		//Make another amendment with a new UUID. 
 		storedTaf.metadata.setType(TAFReportType.amendment);
 		storedTaf.metadata.setUuid(null);
 		storedTaf.metadata.setPreviousUuid(publishedUuid);
+		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		storedTaf.getForecast().getWind().setSpeed(20);
-		String amendedUuid=publish(storedTaf);
+		String amendedUuid=storeTaf(storedTaf);
+		
 		Debug.println("amended: "+amendedUuid);
+		Taf amendedTaf=getTaf(amendedUuid);
+		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
+		amendedTaf.metadata.setUuid(null);
+		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
+		String amendedPublishedUuid=storeTaf(amendedTaf);
+		
+		Debug.println("cancelling");
+		Taf amendedPublishedTaf=getTaf(amendedPublishedUuid);
+		amendedPublishedTaf.metadata.setUuid(null);
+		amendedPublishedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
+		amendedPublishedTaf.metadata.setType(TAFReportType.canceled);
+		String canceledUuid=storeTaf(amendedPublishedTaf);
 	}
 
 	public void addTAFTest () throws Exception {
