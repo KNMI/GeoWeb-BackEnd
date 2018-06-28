@@ -459,7 +459,7 @@ public class TafServices {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
 		}
 		boolean tafIsInConcept = taf.metadata.getStatus() == TAFReportPublishedConcept.concept;
-		if (tafIsInConcept == true) {
+		if (tafIsInConcept != true) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
 		}
 		boolean ret = tafStore.deleteTafByUuid(uuid);
