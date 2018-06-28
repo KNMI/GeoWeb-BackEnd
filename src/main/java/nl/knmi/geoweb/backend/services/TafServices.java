@@ -182,6 +182,7 @@ public class TafServices {
 		}
 
 
+		Debug.println("Posting TAF of type "+taf.metadata.getType());
 		switch (taf.metadata.getType()) {
 		case normal:
 			//Check if TAF with uuid is already published
@@ -312,10 +313,16 @@ public class TafServices {
 					taf.getMetadata().setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")));
 					taf.setForecast(null);
 					taf.setChangegroups(null);
+					if (taf.metadata.getBaseTime() == null) {
+						taf.metadata.setBaseTime(taf.metadata.getValidityStart());
+					}
+					Debug.println("storing cancel");
 					tafStore.storeTaf(taf);
+					Debug.println("publishing cancel");
+					
 					this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
 					tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-					json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is amended").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
+					json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is canceled").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
 					return ResponseEntity.ok(json);
 				}
 			}
@@ -452,7 +459,7 @@ public class TafServices {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
 		}
 		boolean tafIsInConcept = taf.metadata.getStatus() == TAFReportPublishedConcept.concept;
-		if (tafIsInConcept == false) {
+		if (tafIsInConcept == true) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
 		}
 		boolean ret = tafStore.deleteTafByUuid(uuid);
