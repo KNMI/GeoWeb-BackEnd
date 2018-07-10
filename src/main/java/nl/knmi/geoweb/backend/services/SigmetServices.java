@@ -79,7 +79,9 @@ public class SigmetServices {
 
 			if (sm.getStatus()==SigmetStatus.concept) {
 				//Store
-				sm.setUuid(UUID.randomUUID().toString());
+				if (sm.getUuid()==null) {
+				  sm.setUuid(UUID.randomUUID().toString());
+				}
 				Debug.println("Storing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
@@ -114,7 +116,7 @@ public class SigmetServices {
 				}
 			} else if (sm.getStatus()==SigmetStatus.canceled) {
 				//cancel
-				Sigmet toBeCancelled = sigmetStore.getByUuid(sm.getUuid()); //Has to have status published
+				Sigmet toBeCancelled = sigmetStore.getByUuid(sm.getUuid()); //Has to have status published and an uuid
 				Sigmet cancelSigmet = new Sigmet(toBeCancelled);
 				toBeCancelled.setStatus(SigmetStatus.canceled);
 				cancelSigmet.setUuid(UUID.randomUUID().toString());
