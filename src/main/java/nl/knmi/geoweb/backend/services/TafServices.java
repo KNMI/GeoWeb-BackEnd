@@ -49,14 +49,14 @@ public class TafServices {
 	
     @Autowired
 	TafStore tafStore;
-	ProductExporter publishTafStore;
+	ProductExporter<Taf> publishTafStore;
 	TafSchemaStore tafSchemaStore;
 	TafValidator tafValidator;
 
 	@Autowired
 	private TafConverter tafConverter;
 
-	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator, final ProductExporter publishTafStore) throws Exception {
+	TafServices (final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator, final ProductExporter<Taf> publishTafStore) throws Exception {
 		this.tafStore = tafStore;
 		this.tafSchemaStore = tafSchemaStore;
 		this.tafValidator = tafValidator;

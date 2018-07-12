@@ -29,13 +29,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
+import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
@@ -50,10 +50,12 @@ public class SigmetServices {
 	final static String baseUrl="/sigmets";
 
 	SigmetStore sigmetStore=null;
+	private ProductExporter<Sigmet> publishSigmetStore;
 
-	SigmetServices (final SigmetStore sigmetStore) throws IOException {
+	SigmetServices (final SigmetStore sigmetStore, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
 		Debug.println("INITING SigmetServices...");
 		this.sigmetStore = sigmetStore;
+		this.publishSigmetStore=publishSigmetStore;
 	}
 
 	@Autowired
@@ -103,7 +105,9 @@ public class SigmetServices {
 				Debug.println("Publishing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
-					String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" canceled").put("uuid",sm.getUuid()).toString();
+					sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
+					publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
+					String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" published").put("uuid",sm.getUuid()).toString();
 					return ResponseEntity.ok(json);
 				}catch(Exception e){
 					try {
@@ -131,7 +135,9 @@ public class SigmetServices {
 				Debug.println("Canceling "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
-					sigmetStore.storeSigmet(toBeCancelled);	
+					sigmetStore.storeSigmet(toBeCancelled);
+					cancelSigmet.setFirFeature(firStore.lookup(cancelSigmet.getLocation_indicator_icao(), true));
+					publishSigmetStore.export(toBeCancelled, sigmetConverter, sigmetObjectMapper);
 					String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" canceled").put("uuid",sm.getUuid()).toString();
 					return ResponseEntity.ok(json);
 				}catch(Exception e){
