@@ -2,10 +2,11 @@ package nl.knmi.geoweb.backend.services;
 
 import java.util.TimeZone;
 
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -13,14 +14,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import nl.knmi.adaguc.tools.Debug;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-@Configuration
-public class ServicesConfig {
-	//public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'TT'HH:mm:ss'Y'";
+@TestConfiguration
+public class TafServicesTestContext {
 	@Bean("sigmetObjectMapper")
 	public static ObjectMapper getSigmetObjectMapperBean() {
-		Debug.println("Init SigmetObjectMapperBean (services)");
+		Debug.println("Init SigmetObjectMapperBean (TafServicesTestContext)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -35,7 +33,7 @@ public class ServicesConfig {
 	
 	@Bean("tafObjectMapper")
 	public static ObjectMapper getTafObjectMapperBean() {
-		Debug.println("Init TafObjectMapperBean (services)");
+		Debug.println("Init TafObjectMapperBean (TafServicesTestContext)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -49,7 +47,7 @@ public class ServicesConfig {
 	
 	@Bean("geoWebObjectMapper")
 	public static ObjectMapper getGeoWebObjectMapperBean() {
-		Debug.println("Init GeoWebObjectMapperBean (services)");
+		Debug.println("Init GeoWebObjectMapperBean (TafServicesTestContext)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -64,7 +62,7 @@ public class ServicesConfig {
 	@Bean("objectMapper")
 	@Primary
 	public static ObjectMapper getObjectMapperBean() {
-		Debug.println("Init ObjectMapperBean (services)");
+		Debug.println("Init ObjectMapperBean (TafServicesTestContext)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));		
