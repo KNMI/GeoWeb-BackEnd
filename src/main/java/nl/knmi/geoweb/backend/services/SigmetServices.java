@@ -137,7 +137,7 @@ public class SigmetServices {
 					sigmetStore.storeSigmet(cancelSigmet);
 					sigmetStore.storeSigmet(toBeCancelled);
 					cancelSigmet.setFirFeature(firStore.lookup(cancelSigmet.getLocation_indicator_icao(), true));
-					publishSigmetStore.export(toBeCancelled, sigmetConverter, sigmetObjectMapper);
+					publishSigmetStore.export(cancelSigmet, sigmetConverter, sigmetObjectMapper);
 					String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" canceled").put("uuid",sm.getUuid()).toString();
 					return ResponseEntity.ok(json);
 				}catch(Exception e){
