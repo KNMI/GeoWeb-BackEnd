@@ -3,7 +3,6 @@ package nl.knmi.geoweb.backend.services;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import org.geojson.Feature;
@@ -169,19 +168,6 @@ public class SigmetServices {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
-//		try{
-//			sigmetStore.storeSigmet(sm);
-//			String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
-//			return ResponseEntity.ok(json);
-//		}catch(Exception e){
-//			try {
-//				JSONObject obj=new JSONObject();
-//				obj.put("error",e.getMessage());
-//				String json = obj.toString();
-//				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
-//			} catch (JSONException e1) {
-//			}
-//		}
 		Debug.errprintln("Unknown error");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
@@ -208,16 +194,30 @@ public class SigmetServices {
 		return sigmetConverter.ToIWXXM_2_1(sigmet);
 	}
 
-//	@RequestMapping(path="/publishsigmet") //TODO use store
-//	public synchronized String publishSigmet(@RequestParam(value="uuid", required=true) String uuid) {
-//		Debug.println("publish");
-//		Sigmet sigmet = sigmetStore.getByUuid(uuid);
-//		sigmet.setStatus(SigmetStatus.published);
-//		sigmet.setIssuedate(OffsetDateTime.now());
-//		sigmet.setSequence(sigmetStore.getNextSequence());
-//		sigmetStore.storeSigmet(sigmet);
-//		return "sigmet "+sigmetStore.getByUuid(uuid)+" published";
-//	}
+	/**
+	 * Delete a SIGMET by its uuid
+	 * @param uuid
+	 * @return ok if the SIGMET was successfully deleted, BAD_REQUEST if the SIGMET didn't exist, is not in concept, or if some other error occurred
+	 */
+	@RequestMapping(path="/{uuid}",
+			method = RequestMethod.DELETE,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<String> deleteSigmetById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+		Sigmet sigmet = sigmetStore.getByUuid(uuid);
+		if (sigmet == null) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("SIGMET with uuid %s does not exist", uuid));
+		}
+		boolean sigmetIsInConcept = sigmet.getStatus() == SigmetStatus.concept;
+		if (sigmetIsInConcept != true) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("SIGMET with uuid %s is not in concept. Cannot delete.", uuid));
+		}
+		boolean ret = sigmetStore.deleteSigmetByUuid(uuid);
+		if(ret) {
+			return ResponseEntity.ok(String.format("deleted %s", uuid));
+		} else {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
+	}
 
 	@RequestMapping(path="/getsigmetparameters")
 	public SigmetParameters getSigmetParameters() {
@@ -367,27 +367,6 @@ public class SigmetServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
-
-//	@RequestMapping("/cancelsigmet") //TODO via store
-//	public String cancelSigmet(@RequestParam(value="uuid", required=true) String uuid) throws JsonParseException, JsonMappingException, JsonProcessingException, IOException {
-//		Sigmet toBeCancelled = sigmetStore.getByUuid(uuid);
-//		Sigmet sm = new Sigmet(toBeCancelled);
-//		toBeCancelled.setStatus(SigmetStatus.canceled);
-//		sm.setUuid(UUID.randomUUID().toString());
-//		sm.setStatus(SigmetStatus.published);
-//		sm.setCancels(toBeCancelled.getSequence());
-//		sm.setCancelsStart(toBeCancelled.getValiddate());
-//		OffsetDateTime start = OffsetDateTime.now();
-//		sm.setValiddate(start);
-//		sm.setValiddate_end(toBeCancelled.getValiddate_end());
-//		sm.setIssuedate(start);
-//		sm.setSequence(sigmetStore.getNextSequence());
-//		sigmetStore.storeSigmet(sm);
-//		sigmetStore.storeSigmet(toBeCancelled);
-//
-//		return "sigmet "+uuid+" canceled by " + sm.getUuid();
-//	}
-//
 
 	@RequestMapping("/getfir")
 	public Feature getFirByName(@RequestParam(value="name", required=true) String firName) {
