@@ -84,13 +84,13 @@ public class TafServices {
 						.put("message","TAF is not valid").toString();
 				return ResponseEntity.ok(finalJson);
 			} else {
-				// If there is already a taf published for this location and airport
+				// If there is already a taf published for this location and airport; only for type==normal
 				Taf taf = tafObjectMapper.readValue(tafStr, Taf.class);
 				Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
-				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published &&
+				if (taf.metadata.getStatus() != TAFReportPublishedConcept.published && taf.metadata.getType()==TAFReportType.normal &&
 						Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
-								publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) &&
-								(taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid())) )) {
+								publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) /* &&
+								(taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid()))*/ )) {
 					String finalJson = new JSONObject()
 							.put("succeeded", false)
 							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
@@ -152,24 +152,24 @@ public class TafServices {
 		}
 
 
-		if(taf.metadata.getUuid() != null){
-			// Check if TAF to publish is not already published
-			if (taf.metadata.getStatus()==TAFReportPublishedConcept.published) {
-				Taf storedTaf=tafStore.getByUuid(taf.metadata.getUuid());
-				if ((storedTaf!=null)&&storedTaf.metadata.getUuid().equals(taf.metadata.getUuid())
-						&&(storedTaf.metadata.getStatus()==TAFReportPublishedConcept.published)){
-					try {
-						JSONObject obj=new JSONObject();
-						obj.put("error", "TAF with uuid "+taf.metadata.getUuid()+"already published");
-						String json = obj.toString();
-						return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
-					} catch (JSONException e1) {
-					}				
-				}
-			}
-			Debug.println("Overwriting TAF with uuid ["+taf.metadata.getUuid()+"]");
-		} else {
-			//Generate random uuid
+//		if(taf.metadata.getUuid() != null){
+//			// Check if TAF to publish is not already published
+//			if (taf.metadata.getStatus()==TAFReportPublishedConcept.published) {
+//				Taf storedTaf=tafStore.getByUuid(taf.metadata.getUuid());
+//				if ((storedTaf!=null)&&storedTaf.metadata.getUuid().equals(taf.metadata.getUuid())
+//						&&(storedTaf.metadata.getStatus()==TAFReportPublishedConcept.published)){
+//					try {
+//						JSONObject obj=new JSONObject();
+//						obj.put("error", "TAF with uuid "+taf.metadata.getUuid()+"already published");
+//						String json = obj.toString();
+//						return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
+//					} catch (JSONException e1) {
+//					}				
+//				}
+//			}
+//			Debug.println("Overwriting TAF with uuid ["+taf.metadata.getUuid()+"]");
+//		} else {
+		if(taf.metadata.getUuid() == null){			//Generate random uuid
 			taf.metadata.setUuid(UUID.randomUUID().toString());
 		}
 
@@ -250,7 +250,7 @@ public class TafServices {
 				if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation())&&
 						previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
 
-					taf.getMetadata().setUuid(UUID.randomUUID().toString());
+//					taf.getMetadata().setUuid(UUID.randomUUID().toString());
 					taf.getMetadata().setIssueTime(null);
 					tafStore.storeTaf(taf);
 				}
@@ -309,7 +309,7 @@ public class TafServices {
 				if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation())&&
 						previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
 
-					taf.getMetadata().setUuid(UUID.randomUUID().toString());
+//					taf.getMetadata().setUuid(UUID.randomUUID().toString());
 					taf.getMetadata().setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")));
 					taf.setForecast(null);
 					taf.setChangegroups(null);

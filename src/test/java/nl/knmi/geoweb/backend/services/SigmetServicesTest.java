@@ -224,7 +224,7 @@ public class SigmetServicesTest {
 		jsonResult.put("status",  "published");
 		result = mockMvc.perform(post("/sigmets/")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
-//				.andExpect(status().isOk())
+				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();	
 		responseBody =  result.getResponse().getContentAsString();		
