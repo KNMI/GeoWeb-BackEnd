@@ -105,8 +105,14 @@
 		<dependency>
 			<groupId>com.github.maartenplieger</groupId>
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
-			<version>1.0.8</version>
+			<version>1.0.9</version>
 		</dependency>
+	 	<!-- <dependency>
+			<groupId>nl.knmi.adaguc.tools</groupId>
+			<artifactId>adaguc-services-tools</artifactId>
+			<version>1.0.9</version>
+		</dependency>-->
+		
 		<!-- <dependency> <groupId>com.github.maartenplieger</groupId> <artifactId>nl.knmi.adaguc.config</artifactId> 
 			<version>1.0.1</version> </dependency> -->
 

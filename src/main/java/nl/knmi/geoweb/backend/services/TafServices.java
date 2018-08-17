@@ -97,7 +97,13 @@ public class TafServices {
 					return ResponseEntity.ok(finalJson);
 				}
 
-				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").toString();
+				String TAC = "unable to create TAC";
+				try{
+					TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
+				}catch(Exception e){
+					Debug.printStackTrace(e);
+				}
+				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").put("TAC", TAC).toString();
 				return ResponseEntity.ok(json);
 			}
 		} catch (ProcessingException e) {
