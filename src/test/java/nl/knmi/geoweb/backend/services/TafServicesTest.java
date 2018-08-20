@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.UUID;
@@ -62,7 +63,7 @@ public class TafServicesTest {
 		String taf = Tools.readResource("Taf_valid.json");
 		ObjectNode tafJson = (ObjectNode)objectMapper.readTree(taf);
 
-		OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
+		OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z")).truncatedTo(ChronoUnit.HOURS);
 		ObjectNode metadataNode = (ObjectNode)tafJson.findParent("validityStart");
 		metadataNode.put("issueTime", now.minusHours(2).format(DateTimeFormatter.ISO_INSTANT));
 		metadataNode.put("validityStart", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
