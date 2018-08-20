@@ -13,8 +13,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.io.File;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.annotation.Resource;
@@ -156,14 +158,18 @@ public class TafServicesLifeCycleTest {
 
 
 		//		ObjectMapper mapper = new ObjectMapper();
+		objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Taf tafObj=objectMapper.readValue(taf, Taf.class);
 		//		Debug.println("taf: "+tafObj.toJSON(tafObjectMapper));
 		tafObj.getMetadata().setUuid(UUID.randomUUID().toString());
 		if (actualise) {
-			OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.HOURS);
+			OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z")).truncatedTo(ChronoUnit.HOURS);
+			Debug.println(now.toString());
 			tafObj.getMetadata().setValidityStart(now.minusHours(1));
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
 		}
+		
+		
 		return tafObj;
 	}
 

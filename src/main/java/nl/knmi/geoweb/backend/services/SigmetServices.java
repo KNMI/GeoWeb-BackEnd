@@ -2,6 +2,7 @@ package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -99,7 +100,7 @@ public class SigmetServices {
 				}
 			} else if (sm.getStatus()==SigmetStatus.published) {
 				//publish
-				sm.setIssuedate(OffsetDateTime.now());
+				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
 				sm.setSequence(sigmetStore.getNextSequence());
 				Debug.println("Publishing "+sm.getUuid());
 				try{
@@ -126,7 +127,7 @@ public class SigmetServices {
 				cancelSigmet.setStatus(SigmetStatus.published);
 				cancelSigmet.setCancels(toBeCancelled.getSequence());
 				cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
-				OffsetDateTime start = OffsetDateTime.now();
+				OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
 				cancelSigmet.setValiddate(start);
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);

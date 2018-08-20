@@ -424,7 +424,7 @@ public class TafServices {
 			final Taf[] tafs=tafStore.getTafs(active, status,uuid,location);
 			Taf[] filteredTafs = (Taf[])Arrays.stream(tafs).filter(
 					// The TAF is still valid....
-					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now()) &&
+					taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now(ZoneId.of("Z"))) &&
 					// And there is no other taf...
 					Arrays.stream(tafs).noneMatch(
 							otherTaf -> (!otherTaf.equals(taf) &&
@@ -433,7 +433,7 @@ public class TafServices {
 									// Such that the other TAF has a validity start later than *this* TAF...
 									otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
 									// And the other TAF is already in its validity window
-									otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now()))
+									otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))))
 							)).toArray(Taf[]::new);
 
 			return ResponseEntity.ok(tafObjectMapper.writeValueAsString(new TafList(filteredTafs,page,count)));
