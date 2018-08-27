@@ -40,8 +40,8 @@ public class ProductExporter<P> {
 		}
 	}
 
-	public void export(IExportable product, ProductConverter<P> converter, ObjectMapper om) {
+	public String export(IExportable product, ProductConverter<P> converter, ObjectMapper om) {
 		// TODO Auto-generated method stub
-		product.export(path, converter, om);
+		return product.export(path, converter, om);
 	}
 }
