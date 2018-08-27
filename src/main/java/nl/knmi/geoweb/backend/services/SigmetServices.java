@@ -260,11 +260,11 @@ public class SigmetServices {
 			GeoJsonReader reader=new GeoJsonReader(gf);
 
 			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
+			Debug.println("FIRs:"+FIRs);
 
 			Feature f=feature.getFeature();
-
 			String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-			Debug.println("FIRs:"+FIRs);
+			Debug.println("Feature os: "+os);
 			Feature ff=null;
 			try {
 				Geometry geom_fir=reader.read(FIRs);
@@ -278,7 +278,7 @@ public class SigmetServices {
 			} catch (ParseException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
-				System.err.println("os:"+os);
+				Debug.println("Error with os:"+os);
 
 			}
 
