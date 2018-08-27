@@ -76,6 +76,14 @@ public class TafServices {
 			)
 	public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
 		tafStr = URLDecoder.decode(tafStr,"UTF8");
+		/* Add TAC */
+		String TAC = "unable to create TAC";
+		try{
+			TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
+		}catch(Exception e){
+			Debug.printStackTrace(e);
+		}
+
 		try {
 			TafValidationResult jsonValidation = tafValidator.validate(tafStr);
 			if(jsonValidation.isSucceeded() == false){
@@ -84,6 +92,7 @@ public class TafServices {
 				String finalJson = new JSONObject()
 						.put("succeeded", false)
 						.put("errors", new JSONObject(errors.toString()))
+						.put("TAC", TAC)
 						.put("message","TAF is not valid").toString();
 				return ResponseEntity.ok(finalJson);
 			} else {
@@ -96,16 +105,11 @@ public class TafServices {
 								(taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid()))*/ )) {
 					String finalJson = new JSONObject()
 							.put("succeeded", false)
+							.put("TAC", TAC)
 							.put("message","There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
 					return ResponseEntity.ok(finalJson);
 				}
 
-				String TAC = "unable to create TAC";
-				try{
-					TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
-				}catch(Exception e){
-					Debug.printStackTrace(e);
-				}
 				String json = new JSONObject().put("succeeded", true).put("message","TAF is verified.").put("TAC", TAC).toString();
 				return ResponseEntity.ok(json);
 			}
