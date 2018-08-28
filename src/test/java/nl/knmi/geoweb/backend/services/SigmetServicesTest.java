@@ -64,7 +64,7 @@ public class SigmetServicesTest {
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
-			+"\"movement\":{\"stationary\":true},"
+			+"\"movement_type\":\"STATIONARY\","
 			+"\"change\":\"NC\","
 			+"\"status\":\"concept\","
 			+"\"validdate\":\"2017-03-24T15:56:16Z\","
@@ -79,7 +79,7 @@ public class SigmetServicesTest {
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
-			+"\"movement\":{\"stationary\":true},"
+			+"\"movement_type\":\"STATIONARY\","
 			+"\"change\":\"NC\","
 			+"\"status\":\"concept\","
 			+"\"validdate\":\"%DATETIME%\","
@@ -166,7 +166,7 @@ public class SigmetServicesTest {
 		assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("value").asDouble(), is(100.0));
 		assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("unit").asText(), is("FL"));
 		assertThat(jsonResult.get("levelinfo").get("mode").asText(), is("AT"));
-		assertThat(jsonResult.get("movement").get("stationary").asBoolean(), is(true)); 
+		assertThat(jsonResult.get("movement_type").asText(), is("STATIONARY")); 
 		assertThat(jsonResult.get("change").asText(), is("NC"));
 		assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
 		assertThat(jsonResult.get("firname").asText(), is("FIR AMSTERDAM"));
