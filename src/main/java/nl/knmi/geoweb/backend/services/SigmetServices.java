@@ -82,7 +82,7 @@ public class SigmetServices {
 			if (sm.getStatus()==SigmetStatus.concept) {
 				//Store
 				if (sm.getUuid()==null) {
-				  sm.setUuid(UUID.randomUUID().toString());
+					sm.setUuid(UUID.randomUUID().toString());
 				}
 				Debug.println("Storing "+sm.getUuid());
 				try{
@@ -220,9 +220,13 @@ public class SigmetServices {
 		}
 	}
 
+	static SigmetParameters sigmetParameters;
 	@RequestMapping(path="/getsigmetparameters")
 	public SigmetParameters getSigmetParameters() {
-		return new SigmetParameters();
+		if (sigmetParameters==null) {
+			sigmetParameters=new SigmetParameters();
+		}
+		return sigmetParameters;
 	}
 
 	@RequestMapping(path="/putsigmetparameters")
@@ -263,25 +267,28 @@ public class SigmetServices {
 			Debug.println("FIRs:"+FIRs);
 
 			Feature f=feature.getFeature();
-			String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-			Debug.println("Feature os: "+os);
 			Feature ff=null;
-			try {
-				Geometry geom_fir=reader.read(FIRs);
-				Geometry geom_s=reader.read(os);
-				Geometry geom_new=geom_s.intersection(geom_fir);
-				GeoJsonWriter writer=new GeoJsonWriter();
-				String geom_news=writer.write(geom_new);
-				GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
+			if ("fir".equals(f.getProperty("selectionType"))) {
 				ff=new Feature();
-				ff.setGeometry(intersect_geom);
-			} catch (ParseException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-				Debug.println("Error with os:"+os);
-
+				ff.setGeometry(FIR);
+			}else {
+				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
+				Debug.println("Feature os: "+os);
+				try {
+					Geometry geom_fir=reader.read(FIRs);
+					Geometry geom_s=reader.read(os);
+					Geometry geom_new=geom_s.intersection(geom_fir);
+					GeoJsonWriter writer=new GeoJsonWriter();
+					String geom_news=writer.write(geom_new);
+					GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
+					ff=new Feature();
+					ff.setGeometry(intersect_geom);
+				} catch (ParseException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+					Debug.println("Error with os:"+os);
+				}
 			}
-
 			//		Debug.println(sm.dumpSigmetGeometryInfo());		
 			String json;
 			try {

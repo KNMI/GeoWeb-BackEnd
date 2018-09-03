@@ -242,4 +242,19 @@ public class SigmetServicesTest {
 		Debug.println("After cancel: "+responseBody);
 		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 	}
+	
+	static String testFeatureFIR="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";
+	@Test
+	public void apiIntersections() throws Exception {
+		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testFeatureFIR+"}";
+		Debug.println(feature);
+		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(feature))
+				.andExpect(status().isOk())
+				.andReturn();
+		
+		String responseBody = result.getResponse().getContentAsString();
+		Debug.println("After sigmetintersections: "+responseBody);
+	}
 }
