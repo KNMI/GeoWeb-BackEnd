@@ -270,7 +270,8 @@ public class SigmetServices {
 			Feature ff=null;
 			if ("fir".equals(f.getProperty("selectionType"))) {
 				ff=new Feature();
-				ff.setGeometry(FIR);
+				ff.setGeometry(FIR.getGeometry());
+				ff.setProperty("selectionType", "poly");
 			}else {
 				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
 				Debug.println("Feature os: "+os);
@@ -280,9 +281,11 @@ public class SigmetServices {
 					Geometry geom_new=geom_s.intersection(geom_fir);
 					GeoJsonWriter writer=new GeoJsonWriter();
 					String geom_news=writer.write(geom_new);
+					String selectionType = feature.getFeature().getProperty("selectionType");
 					GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
 					ff=new Feature();
 					ff.setGeometry(intersect_geom);
+					ff.setProperty("selectionType", selectionType);
 				} catch (ParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
