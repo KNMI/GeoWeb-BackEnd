@@ -282,6 +282,7 @@ public class SigmetServices {
 					Geometry geom_new=geom_s.intersection(geom_fir);
 					GeoJsonWriter writer=new GeoJsonWriter();
 					String geom_news=writer.write(geom_new);
+					String selectionType = feature.getFeature().getProperty("selectionType");
 					GeoJsonObject intersect_geom=sigmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
 					ff=new Feature();
 					ff.setGeometry(intersect_geom);
