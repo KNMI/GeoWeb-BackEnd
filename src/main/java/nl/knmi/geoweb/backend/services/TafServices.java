@@ -279,9 +279,9 @@ public class TafServices {
 
 					//					taf.getMetadata().setUuid(UUID.randomUUID().toString());
 					Instant iValidityStart=Instant.now().truncatedTo(ChronoUnit.HOURS);
-//TODO enable this when frontend handles this
-					//TODO taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
+					taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
 					taf.getMetadata().setIssueTime(null);
+					taf.getMetadata().setPreviousMetadata(previousTaf.getMetadata());
 					tafStore.storeTaf(taf);
 				}
 			} else if (taf.getMetadata().getStatus().equals(TAFReportPublishedConcept.published)) {
@@ -290,6 +290,7 @@ public class TafServices {
 
 					if (previousTaf.getMetadata().getValidityEnd().isAfter(OffsetDateTime.now(ZoneId.of("UTC")))){
 						taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")));
+						taf.metadata.setPreviousMetadata(previousTaf.getMetadata());
 						tafStore.storeTaf(taf);
 						// Publish it
 						if (taf.metadata.getBaseTime() == null) {
@@ -340,9 +341,13 @@ public class TafServices {
 						previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
 
 					//					taf.getMetadata().setUuid(UUID.randomUUID().toString());
+					Instant iValidityStart=Instant.now().truncatedTo(ChronoUnit.HOURS);
+					taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
 					taf.getMetadata().setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")));
 					taf.setForecast(null);
 					taf.setChangegroups(null);
+					taf.getMetadata().setPreviousMetadata(previousTaf.getMetadata());
+
 					if (taf.metadata.getBaseTime() == null) {
 						taf.metadata.setBaseTime(taf.metadata.getValidityStart());
 					}
@@ -352,7 +357,7 @@ public class TafServices {
 
 					this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
 					tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-					json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getUuid()+" is canceled").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
+					json = new JSONObject().put("succeeded", true).put("message","Taf with id "+taf.metadata.getPreviousUuid()+" is canceled").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid",taf.metadata.getUuid()).toString();
 					return ResponseEntity.ok(json);
 				}
 			}
@@ -369,7 +374,6 @@ public class TafServices {
 		default:
 			break;
 		}
-
 
 		Debug.errprintln("Unknown error");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
