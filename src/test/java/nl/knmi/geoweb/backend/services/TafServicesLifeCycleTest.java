@@ -188,6 +188,7 @@ public class TafServicesLifeCycleTest {
 		Taf baseTaf=getBaseTaf(true);
 		Debug.println("baseTaf:"+baseTaf.toJSON(tafObjectMapper));
 		//Store it
+		Debug.println("Storing base taf");
 		String uuid=addTaf(baseTaf);
 		Debug.println("stored:"+uuid);
 		Taf storedTaf=getTaf(uuid);
@@ -196,41 +197,46 @@ public class TafServicesLifeCycleTest {
 		assertEquals(baseTaf, storedTaf);
 		
 		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
+		Debug.println("Amending unpublished base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
 		storedTaf.metadata.setPreviousUuid(uuid);
 		storedTaf.metadata.setUuid(UUID.randomUUID().toString());
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		storedTaf.getForecast().getWind().setSpeed(20);
-		String corrUuid = publishAndFail(storedTaf);
+		String amendedConceptUuid = publishAndFail(storedTaf);
+		Debug.println("amendedUuid: "+amendedConceptUuid);
 
 		//Publish original TAF
-		Debug.println("Publish original TAF");
+		Debug.println("Publishing base TAF");
 		storedTaf=getTaf(uuid);
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		String publishedUuid=storeTaf(storedTaf);
 		Debug.println("published: "+publishedUuid);
 		
-		//Make another amendment with a new UUID. 
+		//Make another amendment with a new UUID.
+		Debug.println("Amending published base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
 		storedTaf.metadata.setUuid(null);
 		storedTaf.metadata.setPreviousUuid(publishedUuid);
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		storedTaf.getForecast().getWind().setSpeed(20);
 		String amendedUuid=storeTaf(storedTaf);
-		
-		Debug.println("amended: "+amendedUuid);
+		Debug.println("amended base taf in concept: "+amendedUuid);
+
+		Debug.println("Publishing amendment");
 		Taf amendedTaf=getTaf(amendedUuid);
 		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedTaf.metadata.setUuid(null);
-		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		String amendedPublishedUuid=storeTaf(amendedTaf);
-		
+		Debug.println("Published amendment: "+amendedPublishedUuid);
+
 		Debug.println("cancelling");
 		Taf amendedPublishedTaf=getTaf(amendedPublishedUuid);
 		amendedPublishedTaf.metadata.setUuid(null);
 		amendedPublishedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedPublishedTaf.metadata.setType(TAFReportType.canceled);
 		String canceledUuid=storeTaf(amendedPublishedTaf);
+		Debug.println("Canceled uuid: "+canceledUuid);
 	}
 
 	public void addTAFTest () throws Exception {
