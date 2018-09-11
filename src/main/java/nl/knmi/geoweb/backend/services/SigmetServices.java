@@ -276,7 +276,6 @@ public class SigmetServices {
 				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
 				Debug.println("Feature os: "+os);
 				try {
-					String selectionType=feature.getFeature().getProperty("selectionType");
 					Geometry geom_fir=reader.read(FIRs);
 					Geometry geom_s=reader.read(os);
 					Geometry geom_new=geom_s.intersection(geom_fir);
