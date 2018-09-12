@@ -30,7 +30,7 @@ public class TafStore {
 
 	@Autowired
 	@Qualifier("tafObjectMapper")
-	private ObjectMapper objectMapper;
+	private ObjectMapper tafObjectMapper;
 	
 	private String directory = null;
 		
@@ -70,7 +70,7 @@ public class TafStore {
 		if(taf.metadata.getValidityStart() == null || taf.metadata.getValidityEnd() == null) {
 			throw new IOException("Validity start end validity end must be specified");
 		}
-		Tools.writeFile(fn, taf.toJSON(objectMapper));
+		Tools.writeFile(fn, taf.toJSON(tafObjectMapper));
 	}
 
 
@@ -103,7 +103,7 @@ public class TafStore {
 			List<Taf> tafs=new ArrayList<Taf>();
 			for (File f: files) {
 				Taf taf;
-				taf = Taf.fromFile(f, objectMapper);
+				taf = Taf.fromFile(f, tafObjectMapper);
 				//Check on UUID
 				if(taf.metadata.getUuid()!=null && uuid!=null){
 					if(taf.metadata.getUuid().equals(uuid) == false ) continue;
@@ -170,7 +170,7 @@ public class TafStore {
 		}
 		return false;
 	}
-	
+
 	public boolean deleteTafByUuid(String uuid) throws IOException {
 		String fn=String.format("%s/taf_%s.json", this.directory, uuid);
 		return Tools.rm(fn);
