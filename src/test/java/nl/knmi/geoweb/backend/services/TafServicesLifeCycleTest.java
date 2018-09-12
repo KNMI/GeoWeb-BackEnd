@@ -134,6 +134,7 @@ public class TafServicesLifeCycleTest {
 						"	    \"uuid\" : \"d612cd81-a043-4fdb-b6fd-d043463d451a\","+
 						"	    \"validityStart\" : \"2018-06-25T06:00:00Z\","+
 						"	    \"validityEnd\" : \"2018-06-26T12:00:00Z\","+
+						"       \"baseTime\" : \"2018-09-12T13:00:00Z\","+
 						"	    \"location\" : \"EHAM\","+
 						"	    \"status\" : \"concept\","+
 						"	    \"type\" : \"normal\""+
@@ -167,6 +168,7 @@ public class TafServicesLifeCycleTest {
 			Debug.println(now.toString());
 			tafObj.getMetadata().setValidityStart(now.minusHours(1));
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
+			tafObj.getMetadata().setBaseTime(now);
 		}
 		
 		
@@ -233,6 +235,7 @@ public class TafServicesLifeCycleTest {
 		Debug.println("cancelling");
 		Taf amendedPublishedTaf=getTaf(amendedPublishedUuid);
 		amendedPublishedTaf.metadata.setUuid(null);
+		amendedPublishedTaf.metadata.setPreviousUuid(amendedPublishedUuid);
 		amendedPublishedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedPublishedTaf.metadata.setType(TAFReportType.canceled);
 		String canceledUuid=storeTaf(amendedPublishedTaf);
