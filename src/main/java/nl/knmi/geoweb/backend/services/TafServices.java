@@ -8,7 +8,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -90,7 +89,7 @@ public class TafServices {
             TafValidationResult jsonValidation = tafValidator.validate(tafStr);
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
-                Debug.errprintln("/tafs/verify: TAF validation failed");
+//                Debug.errprintln("/tafs/verify: TAF validation failed");
                 String finalJson = new JSONObject()
                         .put("succeeded", false)
                         .put("errors", new JSONObject(errors.toString()))
@@ -117,7 +116,6 @@ public class TafServices {
             }
         } catch (ProcessingException e) {
             Debug.printStackTrace(e);
-            // TODO Auto-generated catch block
             String json = new JSONObject().
                     put("message", "Unable to validate taf").toString();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
@@ -232,8 +230,11 @@ public class TafServices {
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                     }
                 }
-                JSONObject tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-                String json = new JSONObject().put("succeeded", true).put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid", taf.metadata.getUuid()).toString();
+                String json = new JSONObject().
+                		put("succeeded", true).
+                		put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").
+                		put("tac", taf.toTAC()).put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
+                		put("uuid", taf.metadata.getUuid()).toString();
                 return ResponseEntity.ok(json);
             case amendment:
             case correction:
@@ -273,6 +274,13 @@ public class TafServices {
                         taf.getMetadata().setPreviousMetadata(previousTaf.getMetadata());
                         taf.getMetadata().setBaseTime(previousTaf.getMetadata().getBaseTime());
                         tafStore.storeTaf(taf);
+                        json = new JSONObject().
+                        		put("succeeded", true).
+                        		put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").
+                        		put("tac", taf.toTAC()).
+                        		put("tafjson",  new JSONObject(taf.toJSON(tafObjectMapper))).
+                        		put("uuid", taf.metadata.getUuid()).toString();
+                        return ResponseEntity.ok(json);
                     }
                 } else if (taf.getMetadata().getStatus().equals(TAFReportPublishedConcept.published)) {
                     if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation()) &&
@@ -283,28 +291,37 @@ public class TafServices {
                             previousTaf.getMetadata().setPreviousMetadata(null); //Wipe previousMetadata of previousTaf object
                             taf.metadata.setPreviousMetadata(previousTaf.getMetadata());
                             tafStore.storeTaf(taf);
-                            // Publish it
+                            /* Publish TAF */
                             if (taf.metadata.getBaseTime() == null) {
                                 taf.metadata.setBaseTime(previousTaf.metadata.getBaseTime());
                             }
                             this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
-                            tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
                             json = new JSONObject().put("succeeded", true)
-                                    .put("message", "Taf with id " + taf.metadata.getUuid() + " is amended")
-                                    .put("tac", taf.toTAC()).put("tafjson", tafjson)
+                                    .put("message", "Taf with id " + taf.metadata.getUuid() + " is " + taf.metadata.getType())
+                                    .put("tac", taf.toTAC()).put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper)))
                                     .put("uuid", taf.metadata.getUuid()).toString();
+                            /* After successful publish make previous TAF inactive */
+                            Debug.println("Inactivating TAF with uuid " + previousTaf.getMetadata().getUuid());
+                            Debug.println("Inactivating TAF with previousMetadata uuid " + taf.getMetadata().getPreviousMetadata().getUuid());
+                            previousTaf.getMetadata().setStatus(TAFReportPublishedConcept.inactive);
+                            tafStore.storeTaf(previousTaf);
                             return ResponseEntity.ok(json);
                         } else {
                             //Error
-                            Debug.println("Error: COR/AMD for old TAF");
+                            Debug.errprintln("Error: COR/AMD for old TAF");
                         }
                     } else {
                         //Error
-                        Debug.println("Error: COR/AMD do not match with previousTaf");
+                        Debug.errprintln("Error: COR/AMD do not match with previousTaf");
                     }
                 }
-                tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-                json = new JSONObject().put("succeeded", true).put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid", taf.metadata.getUuid()).toString();
+                
+                json = new JSONObject().
+                		put("succeeded", false).
+                		put("message", "Unable to store taf with uuid " + taf.metadata.getUuid()).
+                		put("tac", taf.toTAC()).
+                		put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
+                		put("uuid", taf.metadata.getUuid()).toString();
                 return ResponseEntity.ok(json);
             case canceled:
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
@@ -352,8 +369,13 @@ public class TafServices {
                         Debug.println("publishing cancel");
 
                         this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
-                        tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-                        json = new JSONObject().put("succeeded", true).put("message", "Taf with id " + taf.metadata.getPreviousUuid() + " is canceled").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid", taf.metadata.getUuid()).toString();
+
+                        json = new JSONObject().
+                        		put("succeeded", true).
+                        		put("message", "Taf with id " + taf.metadata.getPreviousUuid() + " is canceled").
+                        		put("tac", taf.toTAC()).
+                        		put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
+                        		put("uuid", taf.metadata.getUuid()).toString();
                         return ResponseEntity.ok(json);
                     }
                 }
