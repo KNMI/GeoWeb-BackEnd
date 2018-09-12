@@ -470,9 +470,10 @@ public class TafServices {
                                             // For this location
                                             otherTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
                                             // Such that the other TAF has a validity start later than *this* TAF...
-                                            otherTaf.metadata.getValidityStart().isAfter(taf.metadata.getValidityStart()) &&
+                                            otherTaf.metadata.getValidityEnd().isAfter(taf.metadata.getValidityEnd()) &&
                                             // And the other TAF is already in its validity window
-                                            otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))))
+                                            otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))
+                                            ))
                             )).toArray(Taf[]::new);
 
             return ResponseEntity.ok(tafObjectMapper.writeValueAsString(new TafList(filteredTafs, page, count)));
