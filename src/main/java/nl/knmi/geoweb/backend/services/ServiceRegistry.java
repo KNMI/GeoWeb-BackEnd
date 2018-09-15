@@ -11,8 +11,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nl.knmi.geoweb.backend.admin.AdminStore;
-import nl.knmi.geoweb.backend.services.Service.ServiceGoal;
-import nl.knmi.geoweb.backend.services.Service.ServiceType;
+import nl.knmi.geoweb.backend.services.model.Service;
+import nl.knmi.geoweb.backend.services.model.ServiceGoal;
+import nl.knmi.geoweb.backend.services.model.ServiceType;
 
 @Component
 public class ServiceRegistry {

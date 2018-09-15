@@ -6,7 +6,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.JSONResponse;
+import nl.knmi.geoweb.backend.services.model.Service;
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 import nl.knmi.geoweb.backend.usermanagement.UserStore;
 

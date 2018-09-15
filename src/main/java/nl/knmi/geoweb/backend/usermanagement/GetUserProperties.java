@@ -7,21 +7,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.AbstractJsonpResponseBodyAdvice;
 
-import lombok.Getter;
+import nl.knmi.geoweb.backend.usermanagement.model.UserProperties;
 
 
 @RestController
 public class GetUserProperties {
-	@Getter
-	public class UserProperties {
-		private String name;
-		public UserProperties(){
-			name="NONAME";
-		}
-		public UserProperties(String nm) {
-			this.name=nm;
-		}
-	}
     @ControllerAdvice
     static class JsonpAdvice extends AbstractJsonpResponseBodyAdvice {
         public JsonpAdvice() {

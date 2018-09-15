@@ -5,21 +5,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import nl.knmi.geoweb.backend.triggers.model.Trigger;
+import nl.knmi.geoweb.backend.triggers.view.TriggerTransport;
+
 @RestController
 @RequestMapping("/triggers") 
 public class TriggerServices {
-	TriggerStore triggerStore;	
+	TriggerStore triggerStore;
 	
 	TriggerServices (final TriggerStore triggerStore) throws IOException {
 		this.triggerStore = triggerStore;
@@ -40,8 +44,8 @@ public class TriggerServices {
 	}
 
     @RequestMapping(path="/addtrigger", method=RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> addTrigger(@RequestBody Trigger.TriggerTransport transport) {
-    	Trigger trig=new Trigger(transport);
+    public ResponseEntity<String> addTrigger(@RequestBody TriggerTransport transport) {
+		Trigger trig=new Trigger(transport, UUID.randomUUID().toString());
     	try {
 			triggerStore.storeTrigger(trig);
 	    	return ResponseEntity.status(HttpStatus.OK).body("OK");

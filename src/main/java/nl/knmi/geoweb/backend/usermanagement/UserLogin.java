@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import nl.knmi.adaguc.tools.JsonMessage;
-import nl.knmi.geoweb.backend.usermanagement.UserStore.GeoWebUser;
+import nl.knmi.geoweb.backend.usermanagement.model.GeoWebUser;
+import nl.knmi.geoweb.backend.usermanagement.model.RoleType;
 
 @RestController
 public class UserLogin {
@@ -40,7 +41,7 @@ public class UserLogin {
 			return geowebUser;
 		}
 		RoleType[] roles={RoleType.USER, RoleType.ANON};
-		return userstore.new GeoWebUser("guest","XXX", roles);
+		return new GeoWebUser("guest","XXX", roles);
 	}	
 
 	private Cookie getCookie(GeoWebUser user) {
@@ -77,7 +78,7 @@ public class UserLogin {
 			List<RoleType>roles=new ArrayList<RoleType>();
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//, "User/password incorrect");
 			response.sendError(401, "User/password incorrect");
-			return userstore.new GeoWebUser(null, null, roles);
+			return new GeoWebUser(null, null, roles);
 
 		}
 		Cookie cookie=getCookie(user);

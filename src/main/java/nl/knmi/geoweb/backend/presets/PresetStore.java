@@ -25,38 +25,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.presets.model.Preset;
+import nl.knmi.geoweb.backend.presets.model.StoredPreset;
 
 
 @Getter
 @Component
 public class PresetStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Getter
-	public static class StoredPreset {
-		Preset preset;
-		private boolean system=false;
-		private String user;
-		private List<String> roles;
-		public StoredPreset(Preset preset) {
-			this.system=true;
-			this.user=null;
-			this.roles=null;
-			this.preset=preset;
-		}
-		public StoredPreset(String user, Preset preset) {
-			this.system=false;
-			this.user=user;
-			this.roles=null;
-			this.preset=preset;
-		}
-		public StoredPreset(List<String>roles, Preset preset) {
-			this.system=false;
-			this.user=null;
-			this.roles=roles;
-			this.preset=preset;
-		}
-		public StoredPreset(){}
-	}
 
 	private String directory;
 	private String roleDir;

@@ -1,43 +1,13 @@
 package nl.knmi.geoweb.backend.usermanagement;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import lombok.Getter;
-import nl.knmi.geoweb.backend.usermanagement.RoleType;
+import nl.knmi.geoweb.backend.usermanagement.model.GeoWebUser;
+import nl.knmi.geoweb.backend.usermanagement.model.RoleType;
 
 public class UserStore {
 
-	@Getter
-	public class GeoWebUser {
-		private String username;
-		private String password;
-		private List<RoleType>roles=new ArrayList<RoleType>();
-		public GeoWebUser(String nm, String pw, RoleType[]roles) {
-			username=nm;
-			password=pw;
-			for (RoleType role: roles) {
-				this.roles.add(role);
-			}
-		}
-		public GeoWebUser(String nm, String pw, List<RoleType>roles) {
-			username=nm;
-			password=pw;
-			for (RoleType role: roles) {
-				this.roles.add(role);
-			}
-		}
-		public List<String> getRoleNames(){
-			List<String> roles=new ArrayList<String>();
-			for (RoleType r: this.roles) {
-				roles.add(r.toString());
-			}
-			return roles;
-		}
-	}
-	
 	private static UserStore instance;
 
 	public boolean userHasRole(String user, String role) {

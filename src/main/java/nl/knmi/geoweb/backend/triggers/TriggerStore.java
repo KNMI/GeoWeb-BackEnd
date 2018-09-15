@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.triggers.model.Trigger;
 
 @Getter
 @Component

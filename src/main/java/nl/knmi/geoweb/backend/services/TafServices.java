@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
-import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.datastore.TafStore;
@@ -44,6 +43,7 @@ import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
+import nl.knmi.geoweb.backend.services.view.TafPaginationWrapper;
 
 @RestController
 public class TafServices {
@@ -397,48 +397,6 @@ public class TafServices {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
-    @Getter
-    private class TafList {
-        Taf[] tafs;
-        int page;
-        int npages;
-        int ntafs;
-
-        TafList(Taf tafs[], Integer page, Integer count) {
-            int numtafs = tafs.length;
-            int first;
-            int last;
-            if (count == null) {
-                count = 0;
-            }
-            if (page == null) {
-                page = 0;
-            }
-            if (count != 0) {
-                /* Select all tafs for requested page/count*/
-                if (numtafs <= count) {
-                    first = 0;
-                    last = numtafs;
-                } else {
-                    first = page * count;
-                    last = Math.min(first + count, numtafs);
-                }
-                this.npages = (numtafs / count) + ((numtafs % count) > 0 ? 1 : 0);
-            } else {
-                /* Select all tafs when count or page are not set*/
-                first = 0;
-                last = numtafs;
-                this.npages = 1;
-            }
-            if (first < numtafs && first >= 0 && last >= first && page < this.npages) {
-                this.tafs = Arrays.copyOfRange(tafs, first, last);
-            }
-            this.page = page;
-            this.ntafs = numtafs;
-        }
-
-    }
-
     /**
      * Get list of tafs
      *
@@ -476,7 +434,7 @@ public class TafServices {
                                             ))
                             )).toArray(Taf[]::new);
 
-            return ResponseEntity.ok(tafObjectMapper.writeValueAsString(new TafList(filteredTafs, page, count)));
+            return ResponseEntity.ok(tafObjectMapper.writeValueAsString(new TafPaginationWrapper(filteredTafs, page, count)));
         } catch (Exception e) {
             try {
                 JSONObject obj = new JSONObject();
