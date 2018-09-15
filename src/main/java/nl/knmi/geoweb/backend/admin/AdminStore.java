@@ -14,11 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
-@Getter
 @Component
 public class AdminStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());

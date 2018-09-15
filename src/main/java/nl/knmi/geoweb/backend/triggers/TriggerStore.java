@@ -25,12 +25,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.triggers.model.Trigger;
 
-@Getter
 @Component
 public class TriggerStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
