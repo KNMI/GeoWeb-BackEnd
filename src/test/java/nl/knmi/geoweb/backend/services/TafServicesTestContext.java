@@ -22,7 +22,6 @@ public class TafServicesTestContext {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -37,7 +36,6 @@ public class TafServicesTestContext {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -51,7 +49,6 @@ public class TafServicesTestContext {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);

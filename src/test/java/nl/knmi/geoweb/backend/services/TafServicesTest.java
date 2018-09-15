@@ -110,7 +110,6 @@ public class TafServicesTest {
 		System.err.println("Before add: "+jsonResult);
 
         assertThat(jsonResult.has("ntafs"), is(true));
- //       assertThat(jsonResult.has("tafs"), is(true));
         int tafs = jsonResult.get("ntafs").asInt();
 
         Debug.println("Add taff");
@@ -162,8 +161,6 @@ public class TafServicesTest {
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
         assertThat(jsonResult.has("ntafs"), is(true));
-  //      assertThat(jsonResult.has("tafs"), is(false));
-  //      assertThat(jsonResult.get("ntafs").asInt(), is(0));
         assert(ntafs>=jsonResult.get("ntafs").asInt());
 
 	}

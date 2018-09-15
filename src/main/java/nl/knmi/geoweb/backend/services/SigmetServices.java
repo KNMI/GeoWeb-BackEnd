@@ -48,9 +48,7 @@ import nl.knmi.geoweb.backend.services.view.SigmetPaginationWrapper;
 @RestController
 @RequestMapping("/sigmets")
 public class SigmetServices {
-	final static String baseUrl="/sigmets";
-
-	SigmetStore sigmetStore=null;
+	private SigmetStore sigmetStore;
 	private ProductExporter<Sigmet> publishSigmetStore;
 
 	SigmetServices (final SigmetStore sigmetStore, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
@@ -412,11 +410,8 @@ public class SigmetServices {
 					Debug.println("Error with os:"+os);
 				}
 			}
-			//		Debug.println(sm.dumpSigmetGeometryInfo());		
 			JSONObject json;
 			try {
-				//				json = new JSONObject().put("message","feature "+featureId+" intersected").
-				//						 put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff))).toString();
 				json = new JSONObject().put("succeeded", "true").
 						put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff).toString()));
 				if (message!=null) {

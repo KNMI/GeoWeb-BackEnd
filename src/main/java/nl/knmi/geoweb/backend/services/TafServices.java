@@ -67,10 +67,7 @@ public class TafServices {
         this.publishTafStore = publishTafStore;
     }
 
-    static TafSchemaStore schemaStore = null;
-
     boolean enableDebug = false;
-
 
     @RequestMapping(path = "/tafs/verify", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
@@ -89,7 +86,6 @@ public class TafServices {
             TafValidationResult jsonValidation = tafValidator.validate(tafStr);
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
-//                Debug.errprintln("/tafs/verify: TAF validation failed");
                 String finalJson = new JSONObject()
                         .put("succeeded", false)
                         .put("errors", new JSONObject(errors.toString()))
@@ -102,8 +98,7 @@ public class TafServices {
                 Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
                 if (taf.metadata.getStatus() != TAFReportPublishedConcept.published && taf.metadata.getType() == TAFReportType.normal &&
                         Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
-                                publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) /* &&
-								(taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid()))*/)) {
+                                publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()))) {
                     String finalJson = new JSONObject()
                             .put("succeeded", false)
                             .put("TAC", TAC)
@@ -143,7 +138,6 @@ public class TafServices {
         tafStr = URLDecoder.decode(tafStr, "UTF8");
 
         try {
-            //			objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
             taf = tafObjectMapper.readValue(tafStr, Taf.class);
         } catch (Exception e2) {
             Debug.errprintln("Error parsing taf [" + tafStr + "]");
@@ -352,7 +346,6 @@ public class TafServices {
                     if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation()) &&
                             previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
 
-                        //					taf.getMetadata().setUuid(UUID.randomUUID().toString());
                         Instant iValidityStart = Instant.now().truncatedTo(ChronoUnit.HOURS);
                         taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
                         taf.getMetadata().setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS));
@@ -419,7 +412,7 @@ public class TafServices {
         Debug.println("getTafList");
         try {
             final Taf[] tafs = tafStore.getTafs(active, status, uuid, location);
-            Taf[] filteredTafs = (Taf[]) Arrays.stream(tafs).filter(
+            Taf[] filteredTafs = Arrays.stream(tafs).filter(
                     // The TAF is still valid....
                     taf -> taf.metadata.getValidityEnd().isAfter(OffsetDateTime.now(ZoneId.of("Z"))) &&
                             // And there is no other taf...

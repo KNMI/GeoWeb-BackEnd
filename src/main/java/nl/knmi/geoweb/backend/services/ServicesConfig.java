@@ -16,14 +16,12 @@ import nl.knmi.adaguc.tools.Debug;
 
 @Configuration
 public class ServicesConfig {
-	//public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'TT'HH:mm:ss'Y'";
 	@Bean("sigmetObjectMapper")
 	public static ObjectMapper getSigmetObjectMapperBean() {
 		Debug.println("Init SigmetObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -38,7 +36,6 @@ public class ServicesConfig {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -52,7 +49,6 @@ public class ServicesConfig {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);

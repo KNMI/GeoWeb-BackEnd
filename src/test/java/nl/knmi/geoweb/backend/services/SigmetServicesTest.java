@@ -34,7 +34,6 @@ import nl.knmi.adaguc.tools.Debug;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-//@WebMvcTest(SigmetServices.class)
 @DirtiesContext
 public class SigmetServicesTest {
 	/** Entry point for Spring MVC testing support. */
@@ -60,7 +59,6 @@ public class SigmetServicesTest {
 	
 	static String testSigmet="{\"geojson\":"
 			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//+"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
@@ -75,7 +73,6 @@ public class SigmetServicesTest {
 
 	static String testSigmetWithDate="{\"geojson\":"
 			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
@@ -155,7 +152,6 @@ public class SigmetServicesTest {
 
 		/*getsigmet by uuid*/
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -191,7 +187,6 @@ public class SigmetServicesTest {
 		String currentTestSigmet=fixDate(testSigmetWithDate);
 		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -208,7 +203,6 @@ public class SigmetServicesTest {
 				.andReturn();	
 		responseBody =  result.getResponse().getContentAsString();
 		Debug.println("After publish: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 	}
 	
 	@Test
@@ -216,7 +210,6 @@ public class SigmetServicesTest {
 		String currentTestSigmet=fixDate(testSigmetWithDate);
 		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -242,7 +235,6 @@ public class SigmetServicesTest {
 				.andReturn();	
 		responseBody =  result.getResponse().getContentAsString();
 		Debug.println("After cancel: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 	}
 	
 	static String testFeatureFIR="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";

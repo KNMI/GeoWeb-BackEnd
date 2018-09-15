@@ -8,12 +8,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.IExportable;
 import nl.knmi.geoweb.backend.product.ProductConverter;
-import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
-import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebConverter;
 
 @Component
 public class ProductExporter<P> {

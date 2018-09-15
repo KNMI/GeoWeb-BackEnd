@@ -41,7 +41,6 @@ public class TafStore {
 			throw new Exception("productstorelocation property is null");
 		}
 		if(isCreated == true) {
-//			throw new Exception("TafStore is already created");
 			Debug.println("WARN: TafStore is already created");
 		}
 		isCreated = true;
@@ -65,7 +64,6 @@ public class TafStore {
 	}
 	
 	public void storeTaf(Taf taf) throws JsonProcessingException, IOException {
-//		Debug.println("Store taf " + this.directory);
 		String fn=String.format("%s/taf_%s.json", this.directory, taf.metadata.getUuid());
 		if(taf.metadata.getValidityStart() == null || taf.metadata.getValidityEnd() == null) {
 			throw new IOException("Validity start end validity end must be specified");
@@ -76,7 +74,6 @@ public class TafStore {
 
 
 	public Taf[] getTafs(boolean selectActive, TAFReportPublishedConcept selectStatus, String uuid, String location) throws JsonParseException, JsonMappingException, IOException {
-//		Debug.println("directory:"+directory);
 		Comparator<Taf> comp = new Comparator<Taf>() {
 			public int compare(Taf lhs, Taf rhs) {
 				try{
