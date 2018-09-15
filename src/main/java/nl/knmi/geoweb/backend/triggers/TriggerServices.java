@@ -29,7 +29,7 @@ public class TriggerServices {
 		this.triggerStore = triggerStore;
 	}
 	
-	@RequestMapping("/gettriggers")
+	@RequestMapping(path="/gettriggers", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public List<Trigger> getTriggers(@RequestParam("startdate")@DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate, 
 			                  @RequestParam("duration")Integer duration) {
 		List<Trigger>triggers=triggerStore.getLastTriggers(startDate, duration);

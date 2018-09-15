@@ -343,7 +343,7 @@ public class SigmetServices {
 	}
 
 	static SigmetParameters sigmetParameters;
-	@RequestMapping(path="/getsigmetparameters")
+	@RequestMapping(path="/getsigmetparameters", method=RequestMethod.GET)
 	public SigmetParameters getSigmetParameters() {
 		if (sigmetParameters==null) {
 			sigmetParameters=new SigmetParameters();
@@ -351,12 +351,12 @@ public class SigmetServices {
 		return sigmetParameters;
 	}
 
-	@RequestMapping(path="/putsigmetparameters")
+	@RequestMapping(path="/putsigmetparameters", method=RequestMethod.GET)
 	public ResponseEntity<String> storeSigmetParameters(String json) { 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
 
-	@RequestMapping("/getsigmetphenomena")
+	@RequestMapping(path="/getsigmetphenomena", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> SigmetPhenomena() {
 		try {
 			return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetPhenomenaMapping().getPhenomena()));
@@ -433,6 +433,7 @@ public class SigmetServices {
 
 	@RequestMapping(
 			path = "",
+			method = RequestMethod.GET,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> getSigmetList(@RequestParam(value="active", required=true) Boolean active, 
 			@RequestParam(value="status", required=false) SigmetStatus status,
@@ -456,7 +457,7 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);		
 	}
 
-	@RequestMapping("/getfir")
+	@RequestMapping(path="/getfir", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Feature getFirByName(@RequestParam(value="name", required=true) String firName) {
 		return firStore.lookup(firName, true);
 	}

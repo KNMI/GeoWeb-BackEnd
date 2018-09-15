@@ -38,7 +38,7 @@ import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 
 @RestController
-@RequestMapping(path={"/admin", "/store"}, method=RequestMethod.GET)
+@RequestMapping(path={"/admin", "/store"})
 public class AdminServices {
 	AdminStore adminStore ;
 	TafSchemaStore tafSchemaStore;
@@ -105,7 +105,7 @@ public class AdminServices {
 		}
 	}
 
-	@RequestMapping(path="/create", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(path = "/create", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void createConfigurationItem(HttpServletRequest req, HttpServletResponse response, @RequestBody String payload) throws JsonProcessingException {
 		Debug.println("admin/create");
 		JSONResponse jsonResponse = new JSONResponse(req);
@@ -231,7 +231,7 @@ public class AdminServices {
 	}
 
 
-	@RequestMapping(path="/read", method=RequestMethod.GET,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	@RequestMapping(path = "/read", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void readConfigurationItem(HttpServletRequest req, HttpServletResponse response) throws JsonProcessingException {
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {

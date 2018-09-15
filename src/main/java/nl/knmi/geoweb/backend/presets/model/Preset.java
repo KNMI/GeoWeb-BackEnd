@@ -25,6 +25,10 @@ public class Preset {
 		this.area = area;
 	}
 
+	public static Preset emptyPreset() {
+		return new Preset(null, null, null, null, null);
+	}
+
 	public String getName() {
 		return name;
 	}

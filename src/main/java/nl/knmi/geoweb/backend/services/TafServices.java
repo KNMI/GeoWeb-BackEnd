@@ -498,13 +498,13 @@ public class TafServices {
         return tafConverter.ToIWXXM_2_1(taf);
     }
 
-    /* Deprecated */
-    @RequestMapping(path = "/gettaf")
+    @Deprecated
+    @RequestMapping(path = "/gettaf", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Taf getTaf(@RequestParam(value = "uuid", required = true) String uuid) throws JsonParseException, JsonMappingException, IOException {
         return tafStore.getByUuid(uuid);
     }
 
-    @RequestMapping("/publishtaf")
+    @RequestMapping(path = "/publishtaf", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public String publishTaf(String uuid) throws JsonParseException, JsonMappingException, IOException {
         return "taf " + tafStore.getByUuid(uuid) + " published";
     }
