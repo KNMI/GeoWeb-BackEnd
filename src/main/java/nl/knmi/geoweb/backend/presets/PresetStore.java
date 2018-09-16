@@ -22,37 +22,35 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.presets.model.Preset;
 import nl.knmi.geoweb.backend.presets.model.StoredPreset;
 
 @Component
 public class PresetStore {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static final Logger LOGGER = LoggerFactory.getLogger(PresetStore.class);
 
 	private String directory;
 	private String roleDir;
 	private String userDir;
 
-
 	public PresetStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/presets";
-		Debug.println("PRESET STORE at " + dir);
+		LOGGER.debug("PRESET STORE at {}", dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating presetstore at ["+f.getAbsolutePath()+"]");
+			LOGGER.debug("Creating presetstore at [{}]", f.getAbsolutePath());
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Sigmet directory location is not a directory");
+			LOGGER.error("Sigmet directory location is not a directory");
 			throw new NotDirectoryException("Sigmet directory location is not a directory");
 		}
 		this.userDir=dir+"/users";
 		f=new File(userDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				LOGGER.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
@@ -60,7 +58,7 @@ public class PresetStore {
 		f=new File(roleDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				LOGGER.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}

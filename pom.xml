@@ -84,6 +84,10 @@
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
 			<version>1.0.9</version>
 		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

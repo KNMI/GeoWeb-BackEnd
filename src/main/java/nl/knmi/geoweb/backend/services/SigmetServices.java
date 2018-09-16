@@ -16,6 +16,8 @@ import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.locationtech.jts.io.geojson.GeoJsonWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -32,7 +34,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
@@ -48,11 +49,12 @@ import nl.knmi.geoweb.backend.services.view.SigmetPaginationWrapper;
 @RestController
 @RequestMapping("/sigmets")
 public class SigmetServices {
+	private static final Logger LOGGER = LoggerFactory.getLogger(SigmetServices.class);
 	private SigmetStore sigmetStore;
 	private ProductExporter<Sigmet> publishSigmetStore;
 
 	SigmetServices (final SigmetStore sigmetStore, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
-		Debug.println("INITING SigmetServices...");
+		LOGGER.debug("INITING SigmetServices...");
 		this.sigmetStore = sigmetStore;
 		this.publishSigmetStore=publishSigmetStore;
 	}
@@ -73,7 +75,7 @@ public class SigmetServices {
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
-		Debug.println("storesigmetORG: "+sigmet);
+		LOGGER.debug("storesigmetORG: {}", sigmet);
 		Sigmet sm=null;
 		try {
 			sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
@@ -83,7 +85,7 @@ public class SigmetServices {
 				if (sm.getUuid()==null) {
 					sm.setUuid(UUID.randomUUID().toString());
 				}
-				Debug.println("Storing "+sm.getUuid());
+				LOGGER.debug("Storing {}", sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
 					String json = new JSONObject().put("message","sigmet "+sm.getUuid()+" stored").put("uuid",sm.getUuid()).toString();
@@ -101,7 +103,7 @@ public class SigmetServices {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
 				sm.setSequence(sigmetStore.getNextSequence());
-				Debug.println("Publishing "+sm.getUuid());
+				LOGGER.debug("Publishing {}", sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
 					sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
@@ -131,7 +133,7 @@ public class SigmetServices {
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
 				cancelSigmet.setSequence(sigmetStore.getNextSequence());
-				Debug.println("Canceling "+sm.getUuid());
+				LOGGER.debug("Canceling {}", sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
 					sigmetStore.storeSigmet(toBeCancelled);
@@ -168,7 +170,7 @@ public class SigmetServices {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
-		Debug.errprintln("Unknown error");
+		LOGGER.error("Unknown error");
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
@@ -178,7 +180,7 @@ public class SigmetServices {
 			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
-        Debug.println("storesigmet: "+sigmet);
+		LOGGER.info("storesigmet: {}", sigmet);
         Sigmet sm=null;
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
@@ -188,7 +190,7 @@ public class SigmetServices {
                 if (sm.getUuid()==null) {
                     sm.setUuid(UUID.randomUUID().toString());
                 }
-                Debug.println("Storing "+sm.getUuid());
+				LOGGER.info("Storing {}", sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(sm);
                     JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
@@ -210,7 +212,7 @@ public class SigmetServices {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
                 sm.setSequence(sigmetStore.getNextSequence());
-                Debug.println("Publishing "+sm.getUuid());
+                LOGGER.info("Publishing {}", sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(sm);
                     sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
@@ -244,7 +246,7 @@ public class SigmetServices {
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
                 cancelSigmet.setSequence(sigmetStore.getNextSequence());
-                Debug.println("Canceling "+sm.getUuid());
+                LOGGER.info("Canceling {}", sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(cancelSigmet);
                     sigmetStore.storeSigmet(toBeCancelled);
@@ -286,7 +288,7 @@ public class SigmetServices {
             // TODO Auto-generated catch block
             e2.printStackTrace();
         }
-        Debug.errprintln("Unknown error");
+        LOGGER.error("Unknown error");
         JSONObject obj=new JSONObject();
         obj.put("error", "Unknown error");
         String json = obj.toString();
@@ -369,14 +371,14 @@ public class SigmetServices {
 	public ResponseEntity<String> SigmetIntersections(@RequestBody SigmetFeature feature) throws IOException {
 		String FIRName=feature.getFirname();
 		Feature FIR=firStore.lookup(FIRName, true);
-		Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
+		LOGGER.debug("SigmetIntersections for {} {}", FIRName, FIR);
 
 		if (FIR!=null) {
 			GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
 			GeoJsonReader reader=new GeoJsonReader(gf);
 
 			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
-			Debug.println("FIRs:"+FIRs);
+			LOGGER.debug("FIRs:{}", FIRs);
 
             String message=null;
 			Feature f=feature.getFeature();
@@ -387,7 +389,7 @@ public class SigmetServices {
 				ff.setProperty("selectionType", "poly");
 			}else {
 				String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-				Debug.println("Feature os: "+os);
+				LOGGER.debug("Feature os: {}", os);
 				try {
 					Geometry geom_fir=reader.read(FIRs);
 					Geometry geom_s=reader.read(os);
@@ -407,7 +409,7 @@ public class SigmetServices {
 				} catch (ParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
-					Debug.println("Error with os:"+os);
+					LOGGER.debug("Error with os:{}", os);
 				}
 			}
 			JSONObject json;
@@ -434,17 +436,17 @@ public class SigmetServices {
 			@RequestParam(value="status", required=false) SigmetStatus status,
 			@RequestParam(value="page", required=false) Integer page,
 			@RequestParam(value="count", required=false) Integer count) {
-		Debug.println("getSigmetList");
+		LOGGER.debug("getSigmetList");
 		try{
 			Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
-			Debug.println("SIGMETLIST has length of "+sigmets.length);
+			LOGGER.debug("SIGMETLIST has length of {}", sigmets.length);
 			return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetPaginationWrapper(sigmets,page,count)));
 		}catch(Exception e){
 			try {
 				JSONObject obj=new JSONObject();
 				obj.put("error",e.getMessage());
 				String json = obj.toString();
-				Debug.errprintln("Method not allowed" + json);
+				LOGGER.error("Method not allowed{}", json);
 				return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
 			} catch (JSONException e1) {
 			}

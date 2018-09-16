@@ -2,6 +2,8 @@ package nl.knmi.geoweb.backend.services;
 
 import java.util.TimeZone;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -12,13 +14,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import nl.knmi.adaguc.tools.Debug;
-
 @Configuration
 public class ServicesConfig {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ServicesConfig.class);
+
 	@Bean("sigmetObjectMapper")
 	public static ObjectMapper getSigmetObjectMapperBean() {
-		Debug.println("Init SigmetObjectMapperBean (services)");
+		LOGGER.debug("Init SigmetObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -32,7 +34,7 @@ public class ServicesConfig {
 	
 	@Bean("tafObjectMapper")
 	public static ObjectMapper getTafObjectMapperBean() {
-		Debug.println("Init TafObjectMapperBean (services)");
+		LOGGER.debug("Init TafObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -45,7 +47,7 @@ public class ServicesConfig {
 	
 	@Bean("geoWebObjectMapper")
 	public static ObjectMapper getGeoWebObjectMapperBean() {
-		Debug.println("Init GeoWebObjectMapperBean (services)");
+		LOGGER.debug("Init GeoWebObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -59,7 +61,7 @@ public class ServicesConfig {
 	@Bean("objectMapper")
 	@Primary
 	public static ObjectMapper getObjectMapperBean() {
-		Debug.println("Init ObjectMapperBean (services)");
+		LOGGER.debug("Init ObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
 		om.setTimeZone(TimeZone.getTimeZone("UTC"));		

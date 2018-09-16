@@ -21,6 +21,8 @@ import javax.annotation.Resource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,13 +38,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes= {TestWebConfig.class,TafServicesTestContext.class})
 @DirtiesContext
 public class TafServicesTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(TafServicesTest.class);
+
 	/** Entry point for Spring MVC testing support. */
     private MockMvc mockMvc;
     
@@ -58,7 +61,7 @@ public class TafServicesTest {
 	@Before
 	public void setUp() {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		Debug.println("Cleaning /tmp/tafs");
+		LOGGER.debug("Cleaning /tmp/tafs");
 		for(File file: new File("/tmp/tafs").listFiles())
 			if (!file.isDirectory()) {
 				file.delete();
@@ -98,23 +101,23 @@ public class TafServicesTest {
 	 
 	@Test
 	public void addTAFTest () throws Exception {
-		Debug.println("get inactive tafs");
+		LOGGER.debug("get inactive tafs");
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("resp: "+responseBody);
+		LOGGER.debug("resp: {}", responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		System.err.println("Before add: "+jsonResult);
+		LOGGER.info("Before add: {}", jsonResult);
 
         assertThat(jsonResult.has("ntafs"), is(true));
         int tafs = jsonResult.get("ntafs").asInt();
 
-        Debug.println("Add taff");
+        LOGGER.debug("Add taff");
 		String uuid = addTaf();
-		Debug.println("Add taff done: "+ uuid);
+		LOGGER.debug("Add taff done: {}", uuid);
 		assert(uuid != null);
 		
 		result = mockMvc.perform(get("/tafs?active=false"))
@@ -124,18 +127,18 @@ public class TafServicesTest {
 		
 		responseBody = result.getResponse().getContentAsString();
 		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		System.err.println("After add: "+jsonResult);
+		LOGGER.info("After add: {}", jsonResult);
         assertThat(jsonResult.has("ntafs"), is(true));
         assertThat(jsonResult.has("tafs"), is(true));
         int new_tafs = jsonResult.get("ntafs").asInt();
-        Debug.println("" + new_tafs + " === " + tafs);
+        LOGGER.debug("{} === {}", new_tafs, tafs);
         assert(new_tafs == tafs + 1);
 	}
 	
 	@Test
 	public void getTafList () throws Exception {
 		String uuid=addTaf();
-		Debug.println("TAF "+uuid+" stored");
+		LOGGER.debug("TAF {} stored", uuid);
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -156,7 +159,7 @@ public class TafServicesTest {
                 .andReturn();
 		
 		responseBody = result.getResponse().getContentAsString();
-		Debug.println("getTafList:"+responseBody);
+		LOGGER.debug("getTafList:{}", responseBody);
 		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("page"), is(true));
         assertThat(jsonResult.has("npages"), is(true));
@@ -168,7 +171,7 @@ public class TafServicesTest {
 	@Test
 	public void removeTaf () throws Exception {
 		String uuid = addTaf();
-		System.err.println("TAF with uuid "+uuid+" added");
+		LOGGER.info("TAF with uuid {} added", uuid);
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))

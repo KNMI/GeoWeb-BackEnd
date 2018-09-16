@@ -7,6 +7,8 @@ import java.net.URLDecoder;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,6 +24,8 @@ import nl.knmi.adaguc.tools.MyXMLParser;
 
 @RestController
 public class ServiceHelper {
+	private static final Logger LOGGER = LoggerFactory.getLogger(ServiceHelper.class);
+
 	@Bean
 	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
 		ObjectMapper mapper = new ObjectMapper();
@@ -39,7 +43,7 @@ public class ServiceHelper {
 		 * @param out1
 		 * @param response
 		 */
-		System.err.println("XML2JSON "+request);
+		LOGGER.debug("XML2JSON {}", request);
 
 		String requestStr;
 		OutputStream out;
@@ -54,7 +58,7 @@ public class ServiceHelper {
 			requestStr=URLDecoder.decode(request,"UTF-8");
 			MyXMLParser.XMLElement rootElement = new MyXMLParser.XMLElement();
 			//Remote XML2JSON request to external WMS service
-			System.err.println("Converting XML to JSON for "+requestStr);
+			LOGGER.info("Converting XML to JSON for {}", requestStr);
 			rootElement.parse(new URL(requestStr));
 			if (callback==null) {
 				response.setContentType("application/json");
