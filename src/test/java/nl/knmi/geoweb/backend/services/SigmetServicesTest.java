@@ -112,7 +112,9 @@ public class SigmetServicesTest {
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		assertThat(jsonResult.has("error"), is(false));
 		assertThat(jsonResult.has("message"), is(true));
+		assertThat(jsonResult.get("succeeded").asText(), is("true"));
 		assertThat(jsonResult.get("message").asText().length(), not(0));
+		assertThat(jsonResult.get("sigmetjson").asText().length(), not(0));
 		String uuid = jsonResult.get("uuid").asText();
 		Debug.println("Sigmet uuid = " + uuid);
 		return uuid;
@@ -257,4 +259,52 @@ public class SigmetServicesTest {
 		String responseBody = result.getResponse().getContentAsString();
 		Debug.println("After sigmetintersections: "+responseBody);
 	}
+
+	static String testIntersection6points="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{" +
+			"\"featureFunction\":\"start\", \"selectionType\":\"poly\"},"+
+			"\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4,51],[4.25,51.25],[4.5,51.5],[5.5,51.5],[5.25,51.25],[5,51],[4,51]]]}"+
+			"}";
+
+	@Test
+	public void apiIntersections6points() throws Exception {
+		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection6points+"}";
+		Debug.println(feature);
+		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(feature))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String responseBody = result.getResponse().getContentAsString();
+		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+		assertThat(jsonResult.has("error"), is(false));
+        assertThat(jsonResult.has("message"), is(false));
+        assertThat(jsonResult.has("feature"), is(true));
+        Debug.println("After sigmetintersections: "+responseBody);
+	}
+
+	static String testIntersection8points="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{" +
+			"\"featureFunction\":\"start\", \"selectionType\":\"poly\"},"+
+			"\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4,51],[4.25,51.25],[4.5,51.5],[4.75,51.75],[5.75,51.75],[5.5,51.5],[5.25,51.25],[5,51],[4,51]]]}"+
+			"}";
+
+	@Test
+	public void apiIntersections8points() throws Exception {
+		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection8points+"}";
+		Debug.println(feature);
+		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
+				.contentType(MediaType.APPLICATION_JSON_UTF8)
+				.content(feature))
+				.andExpect(status().isOk())
+				.andReturn();
+
+		String responseBody = result.getResponse().getContentAsString();
+		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        assertThat(jsonResult.has("error"), is(false));
+        assertThat(jsonResult.has("message"), is(true));
+        assertThat(jsonResult.get("message").asText().contains("more than"), is(true));
+        assertThat(jsonResult.has("feature"), is(true));
+        Debug.println("After sigmetintersections: "+responseBody);
+	}
+
 }

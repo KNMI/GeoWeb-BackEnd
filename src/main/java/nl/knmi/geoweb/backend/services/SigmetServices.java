@@ -12,6 +12,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
@@ -70,11 +71,11 @@ public class SigmetServices {
 
 	//Store sigmet, publish or cancel
 	@RequestMapping(
-			path = "", 
+			path = "/ORG",
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
-		Debug.println("storesigmet: "+sigmet);
+	public ResponseEntity<String> storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
+		Debug.println("storesigmetORG: "+sigmet);
 		Sigmet sm=null;
 		try {
 			sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
@@ -173,6 +174,127 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
 
+	//Store sigmet, publish or cancel
+	@RequestMapping(
+			path = "",
+			method = RequestMethod.POST,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
+        Debug.println("storesigmet: "+sigmet);
+        Sigmet sm=null;
+        try {
+            sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
+
+            if (sm.getStatus()==SigmetStatus.concept) {
+                //Store
+                if (sm.getUuid()==null) {
+                    sm.setUuid(UUID.randomUUID().toString());
+                }
+                Debug.println("Storing "+sm.getUuid());
+                try{
+                    sigmetStore.storeSigmet(sm);
+                    JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                    JSONObject json = new JSONObject().put("succeeded", "true").
+                            put("message","sigmet "+sm.getUuid()+" stored").
+                            put("uuid",sm.getUuid()).
+                            put("sigmetjson", sigmetJson.toString());
+                    return ResponseEntity.ok(json.toString());
+                }catch(Exception e){
+                    try {
+                        JSONObject obj=new JSONObject();
+                        obj.put("error",e.getMessage());
+                        String json = obj.toString();
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                    } catch (JSONException e1) {
+                    }
+                }
+            } else if (sm.getStatus()==SigmetStatus.published) {
+                //publish
+                sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
+                sm.setSequence(sigmetStore.getNextSequence());
+                Debug.println("Publishing "+sm.getUuid());
+                try{
+                    sigmetStore.storeSigmet(sm);
+                    sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
+                    publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
+                    JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                    JSONObject json = new JSONObject().put("succeeded", "true").
+                            put("message","sigmet "+sm.getUuid()+" published").
+                            put("uuid",sm.getUuid()).
+                            put("sigmetjson", sigmetJson.toString());
+                    return ResponseEntity.ok(json.toString());
+                }catch(Exception e){
+                    try {
+                        JSONObject obj=new JSONObject();
+                        obj.put("error",e.getMessage());
+                        String json = obj.toString();
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                    } catch (JSONException e1) {
+                    }
+                }
+            } else if (sm.getStatus()==SigmetStatus.canceled) {
+                //cancel
+                Sigmet toBeCancelled = sigmetStore.getByUuid(sm.getUuid()); //Has to have status published and an uuid
+                Sigmet cancelSigmet = new Sigmet(toBeCancelled);
+                toBeCancelled.setStatus(SigmetStatus.canceled);
+                cancelSigmet.setUuid(UUID.randomUUID().toString());
+                cancelSigmet.setStatus(SigmetStatus.published);
+                cancelSigmet.setCancels(toBeCancelled.getSequence());
+                cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
+                OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
+                cancelSigmet.setValiddate(start);
+                cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
+                cancelSigmet.setIssuedate(start);
+                cancelSigmet.setSequence(sigmetStore.getNextSequence());
+                Debug.println("Canceling "+sm.getUuid());
+                try{
+                    sigmetStore.storeSigmet(cancelSigmet);
+                    sigmetStore.storeSigmet(toBeCancelled);
+                    cancelSigmet.setFirFeature(firStore.lookup(cancelSigmet.getLocation_indicator_icao(), true));
+                    publishSigmetStore.export(cancelSigmet, sigmetConverter, sigmetObjectMapper);
+                    JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                    JSONObject json = new JSONObject().put("succeeded", "true").
+                            put("message","sigmet "+sm.getUuid()+" canceled").
+                            put("uuid",sm.getUuid()).
+                            put("sigmetjson", sigmetJson.toString()).
+                            put("tac","");
+                    return ResponseEntity.ok(json.toString());
+                }catch(Exception e){
+                    try {
+                        JSONObject obj=new JSONObject();
+                        obj.put("error",e.getMessage());
+                        String json = obj.toString();
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                    } catch (JSONException e1) {
+                    }
+                }
+            } else if (sm.getStatus()==null) {
+                //Empty sigmet
+                try {
+                    JSONObject obj=new JSONObject();
+                    obj.put("error", "empty sigmet");
+                    String json = obj.toString();
+                    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                } catch (JSONException e1) {
+                }
+            }
+        } catch (JsonParseException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        } catch (JsonMappingException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        } catch (IOException e2) {
+            // TODO Auto-generated catch block
+            e2.printStackTrace();
+        }
+        Debug.errprintln("Unknown error");
+        JSONObject obj=new JSONObject();
+        obj.put("error", "Unknown error");
+        String json = obj.toString();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+    }
+
 	@RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Sigmet getSigmetAsJson(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
 		return sigmetStore.getByUuid(uuid);
@@ -266,6 +388,7 @@ public class SigmetServices {
 			String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
 			Debug.println("FIRs:"+FIRs);
 
+            String message=null;
 			Feature f=feature.getFeature();
 			Feature ff=null;
 			if ("fir".equals(f.getProperty("selectionType"))) {
@@ -286,6 +409,11 @@ public class SigmetServices {
 					ff=new Feature();
 					ff.setGeometry(intersect_geom);
 					ff.setProperty("selectionType", selectionType);
+					try {
+						if (((Polygon) geom_new).getCoordinates().length > 7) {
+							message="Polygon has more than 6 points";
+						}
+					}catch (Exception e){}
 				} catch (ParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
@@ -293,12 +421,16 @@ public class SigmetServices {
 				}
 			}
 			//		Debug.println(sm.dumpSigmetGeometryInfo());		
-			String json;
+			JSONObject json;
 			try {
 				//				json = new JSONObject().put("message","feature "+featureId+" intersected").
 				//						 put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff))).toString();
-				json = new JSONObject(sigmetObjectMapper.writeValueAsString(ff)).toString();
-				return ResponseEntity.ok(json);
+				json = new JSONObject().put("succeeded", "true").
+						put("feature", sigmetObjectMapper.writeValueAsString(ff));
+				if (message!=null) {
+					json.put("message", message);
+				}
+				return ResponseEntity.ok(json.toString());
 			} catch (JSONException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
