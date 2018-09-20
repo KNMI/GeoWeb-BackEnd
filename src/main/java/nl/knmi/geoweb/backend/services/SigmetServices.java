@@ -426,7 +426,7 @@ public class SigmetServices {
 				//				json = new JSONObject().put("message","feature "+featureId+" intersected").
 				//						 put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff))).toString();
 				json = new JSONObject().put("succeeded", "true").
-						put("feature", sigmetObjectMapper.writeValueAsString(ff));
+						put("feature", new JSONObject(sigmetObjectMapper.writeValueAsString(ff).toString()));
 				if (message!=null) {
 					json.put("message", message);
 				}
