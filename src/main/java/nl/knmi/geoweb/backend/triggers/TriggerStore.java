@@ -25,27 +25,25 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.triggers.model.Trigger;
 
-@Getter
 @Component
 public class TriggerStore {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static final Logger LOGGER = LoggerFactory.getLogger(TriggerStore.class);
 
 	private String directory;
 
 	public TriggerStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/triggers";
-		Debug.println("TRIGGER STORE at " + dir);
+		LOGGER.debug("TRIGGER STORE at {}", dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating triggerdir at ["+f.getAbsolutePath()+"]");
+			LOGGER.debug("Creating triggerdir at [{}]", f.getAbsolutePath());
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Trigger directory location is not a directory");
+			LOGGER.error("Trigger directory location is not a directory");
 			throw new NotDirectoryException("Trigger directory location is not a directory");
 		}
 		this.directory=dir;

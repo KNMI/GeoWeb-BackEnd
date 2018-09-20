@@ -1,29 +1,23 @@
 package nl.knmi.geoweb.backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
-import nl.knmi.adaguc.tools.Debug;
 @SpringBootApplication
 @EnableAutoConfiguration
 @ComponentScan({"nl.knmi.geoweb.backend"})
 public class GeoWebBackEndApplication extends SpringBootServletInitializer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(GeoWebBackEndApplication.class);
 	
 	@Value("${info.version}")
 	private String infoVersion;
-
-	@RequestMapping(path="/")
-	String home() {
-		Debug.println(infoVersion);
-		return "GeoWeb Backend version [" + infoVersion + "]";
-	}
 
 	public static void main(String[] args) {
 		configureApplication(new SpringApplicationBuilder()).run(args);
@@ -31,7 +25,7 @@ public class GeoWebBackEndApplication extends SpringBootServletInitializer {
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application)  {
-		Debug.println(infoVersion);
+		LOGGER.debug("{}", infoVersion);
 		return application.sources(GeoWebBackEndApplication.class).properties();
 	}
 

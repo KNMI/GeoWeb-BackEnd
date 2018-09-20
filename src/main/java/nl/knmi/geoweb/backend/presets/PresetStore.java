@@ -22,64 +22,35 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.presets.model.Preset;
+import nl.knmi.geoweb.backend.presets.model.StoredPreset;
 
-
-@Getter
 @Component
 public class PresetStore {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
-	@Getter
-	public static class StoredPreset {
-		Preset preset;
-		private boolean system=false;
-		private String user;
-		private List<String> roles;
-		public StoredPreset(Preset preset) {
-			this.system=true;
-			this.user=null;
-			this.roles=null;
-			this.preset=preset;
-		}
-		public StoredPreset(String user, Preset preset) {
-			this.system=false;
-			this.user=user;
-			this.roles=null;
-			this.preset=preset;
-		}
-		public StoredPreset(List<String>roles, Preset preset) {
-			this.system=false;
-			this.user=null;
-			this.roles=roles;
-			this.preset=preset;
-		}
-		public StoredPreset(){}
-	}
+	private static final Logger LOGGER = LoggerFactory.getLogger(PresetStore.class);
 
 	private String directory;
 	private String roleDir;
 	private String userDir;
 
-
 	public PresetStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/presets";
-		Debug.println("PRESET STORE at " + dir);
+		LOGGER.debug("PRESET STORE at {}", dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating presetstore at ["+f.getAbsolutePath()+"]");
+			LOGGER.debug("Creating presetstore at [{}]", f.getAbsolutePath());
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Sigmet directory location is not a directory");
+			LOGGER.error("Sigmet directory location is not a directory");
 			throw new NotDirectoryException("Sigmet directory location is not a directory");
 		}
 		this.userDir=dir+"/users";
 		f=new File(userDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				LOGGER.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
@@ -87,7 +58,7 @@ public class PresetStore {
 		f=new File(roleDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				LOGGER.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
@@ -247,79 +218,4 @@ public class PresetStore {
 		}
 		return presets;
 	}
-	
-//	public static void main(String[]args) {
-//		PresetStore ps=null;
-//		try {
-//			ps=new PresetStore("/tmp/presets");
-//		} catch (NotDirectoryException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		AreaPreset pi1=PresetItem.createAreaPreset(60, 50, "EPSG:4326");
-//		DisplayPreset pi2=PresetItem.createDisplayPreset("QUADCOL", 4);
-//
-//		Map<String, String> dims=new HashMap<String, String>();
-//		String[] layers={"layer1", "layer2"};
-//		String[] services={"http://service.knmi.nl/service1", "http://service.knmi.nl/service1"};
-//		LayerPreset pi3=PresetItem.createLayerPreset(services[0], layers[0],  dims);
-//		List<LayerPreset>lyrs=new ArrayList<LayerPreset>();
-//		lyrs.add(pi3);
-//		LayerPreset pi4=PresetItem.createLayerPreset(services[1], layers[1],  dims);
-//		lyrs.add(pi4);
-//		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(lyrs));
-//		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		List<List<LayerPreset>>lyrslist=new ArrayList<List<LayerPreset>>();
-//		lyrslist.add(lyrs);
-//		String[]keywords={"SIGMET", "AVIATION"};
-//		//	public Preset(String name, String[] keywords, List<List<LayerPreset>> layers, DisplayPreset display, AreaPreset area){
-//		Preset p1=new Preset("preset1", keywords, lyrslist, pi2, pi1);
-//		try {
-//			ps.storeSystemPreset(p1);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		Preset p2=new Preset("preset2", keywords, lyrslist, pi2, pi1);
-//		try {
-//			ps.storeUserPreset("ernst", p2);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//		Preset p3=new Preset("preset3", keywords, lyrslist, pi2, pi1);
-//		try {
-//			String[]roles={"met", "admin"};
-//			ps.storeRolePreset(Arrays.asList(roles), p3);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-//
-//		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(ps.readUserPresets("ernst")));
-//		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(ps.readRolePresets("met")));
-//		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//		try {
-//			System.err.println("sys:"+new ObjectMapper().writeValueAsString(ps.readSystemPresets()));
-//		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-//	}
 }

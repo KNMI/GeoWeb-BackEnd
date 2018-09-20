@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+<configuration>
+	<include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+	<property name="KNMI_LOG_PATTERN" value="\\(%logger{0}.java:%line\\) %msg%n" />
+
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+			<pattern>${CONSOLE_LOG_PATTERN}</pattern>
+		</encoder>
+	</appender>
+	<appender name="STDOUT_KNMI" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>WARN</level>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<filter class="ch.qos.logback.classic.filter.LevelFilter">
+			<level>ERROR</level>
+			<OnMatch>DENY</OnMatch>
+		</filter>
+		<encoder>
+			<pattern>${KNMI_LOG_PATTERN}</pattern>
+		</encoder>
+		<target>System.out</target>
+	</appender>
+	<appender name="STDERR_KNMI" class="ch.qos.logback.core.ConsoleAppender">
+		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+			<level>WARN</level>
+		</filter>
+		<encoder>
+			<pattern>${KNMI_LOG_PATTERN}</pattern>
+		</encoder>
+		<target>System.err</target>
+	</appender>
+
+	<logger name="nl.knmi" level="debug" additivity="false">
+		<appender-ref ref="STDOUT_KNMI" />
+		<appender-ref ref="STDERR_KNMI" />
+	</logger>
+
+	<root level="${LOG_LEVEL:-info}">
+		<appender-ref ref="STDOUT" />
+	</root>
+</configuration>

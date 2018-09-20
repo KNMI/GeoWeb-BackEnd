@@ -14,29 +14,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
-@Getter
 @Component
 public class AdminStore {
-	private final Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static final Logger LOGGER = LoggerFactory.getLogger(AdminStore.class);
 	private String dir = null;
 	private String roleDir;
 	private String userDir;
 
-	
-	
 	AdminStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation+"/admin";
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating admin store at ["+f.getAbsolutePath()+"]");
+			LOGGER.debug("Creating admin store at [{}]", f.getAbsolutePath());
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Admin store directory location is not a directory");
+			LOGGER.error("Admin store directory location is not a directory");
 			throw new NotDirectoryException("Admin store directory location is not a directory");
 		}
 		this.dir=dir;

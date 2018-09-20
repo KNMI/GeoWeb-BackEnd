@@ -1,73 +1,63 @@
 package nl.knmi.geoweb.backend.services;
 
-import java.util.TimeZone;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
-import nl.knmi.adaguc.tools.Debug;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 @Configuration
 public class ServicesConfig {
-	//public static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'TT'HH:mm:ss'Y'";
-	@Bean("sigmetObjectMapper")
-	public static ObjectMapper getSigmetObjectMapperBean() {
-		Debug.println("Init SigmetObjectMapperBean (services)");
+	private static final Logger LOGGER = LoggerFactory.getLogger(ServicesConfig.class);
+
+	@Bean
+	public MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
+		return new MappingJackson2HttpMessageConverter(getObjectMapper());
+	}
+
+	private ObjectMapper getObjectMapper() {
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
-		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
 		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+
 		return om;
+	}
+
+	@Bean("sigmetObjectMapper")
+	public ObjectMapper getSigmetObjectMapperBean() {
+		LOGGER.debug("Init SigmetObjectMapperBean (services)");
+		return getObjectMapper();
 
 	}
-	
+
 	@Bean("tafObjectMapper")
-	public static ObjectMapper getTafObjectMapperBean() {
-		Debug.println("Init TafObjectMapperBean (services)");
-		ObjectMapper om = new ObjectMapper();
-		om.registerModule(new JavaTimeModule());
-		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
-		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-		return om;
+	public ObjectMapper getTafObjectMapperBean() {
+		LOGGER.debug("Init TafObjectMapperBean (services)");
+		return getObjectMapper();
 	}
 	
 	@Bean("geoWebObjectMapper")
-	public static ObjectMapper getGeoWebObjectMapperBean() {
-		Debug.println("Init GeoWebObjectMapperBean (services)");
-		ObjectMapper om = new ObjectMapper();
-		om.registerModule(new JavaTimeModule());
-		om.setTimeZone(TimeZone.getTimeZone("UTC"));
-//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
-		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-		return om;
+	public ObjectMapper getGeoWebObjectMapperBean() {
+		LOGGER.debug("Init GeoWebObjectMapperBean (services)");
+		return getObjectMapper();
 	}
 	
 	@Bean("objectMapper")
 	@Primary
-	public static ObjectMapper getObjectMapperBean() {
-		Debug.println("Init ObjectMapperBean (services)");
+	public ObjectMapper getObjectMapperBean() {
+		LOGGER.debug("Init ObjectMapperBean (services)");
 		ObjectMapper om = new ObjectMapper();
 		om.registerModule(new JavaTimeModule());
-		om.setTimeZone(TimeZone.getTimeZone("UTC"));		
 		return om;
 	}
 }

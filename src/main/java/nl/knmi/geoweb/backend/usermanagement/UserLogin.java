@@ -8,12 +8,15 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import nl.knmi.adaguc.tools.JsonMessage;
-import nl.knmi.geoweb.backend.usermanagement.UserStore.GeoWebUser;
+import nl.knmi.geoweb.backend.usermanagement.model.GeoWebUser;
+import nl.knmi.geoweb.backend.usermanagement.model.RoleType;
 
 @RestController
 public class UserLogin {
@@ -32,7 +35,7 @@ public class UserLogin {
 
 	UserStore userstore=UserStore.getInstance();
 
-	@RequestMapping("/getuser")
+	@RequestMapping(path = "/getuser", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public GeoWebUser getGeoWebUser (HttpServletRequest req) {
 		String user=getUserFromRequest(req);
 		if (!user.equals("anonymous")) {
@@ -40,7 +43,7 @@ public class UserLogin {
 			return geowebUser;
 		}
 		RoleType[] roles={RoleType.USER, RoleType.ANON};
-		return userstore.new GeoWebUser("guest","XXX", roles);
+		return new GeoWebUser("guest","XXX", roles);
 	}	
 
 	private Cookie getCookie(GeoWebUser user) {
@@ -52,7 +55,7 @@ public class UserLogin {
 	}
 
 
-	@RequestMapping("/logout")
+	@RequestMapping(path = "/logout", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public JsonMessage userLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		Cookie []cookies=request.getCookies();
 		if (cookies!=null) {
@@ -68,7 +71,7 @@ public class UserLogin {
 		return new JsonMessage("not logged in");
 	}
 
-	@RequestMapping("/login")
+	@RequestMapping(path = "/login", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public GeoWebUser userLogin(@RequestParam(value="username", required=true)String name,
 			@RequestParam(value="password", required=true)String password,
 			HttpServletResponse response) throws IOException {
@@ -77,7 +80,7 @@ public class UserLogin {
 			List<RoleType>roles=new ArrayList<RoleType>();
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//, "User/password incorrect");
 			response.sendError(401, "User/password incorrect");
-			return userstore.new GeoWebUser(null, null, roles);
+			return new GeoWebUser(null, null, roles);
 
 		}
 		Cookie cookie=getCookie(user);

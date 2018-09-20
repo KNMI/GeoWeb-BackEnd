@@ -18,8 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
+import nl.knmi.geoweb.backend.presets.model.Preset;
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 import nl.knmi.geoweb.backend.usermanagement.UserStore;
 
@@ -32,8 +32,8 @@ public class PresetServices {
 	PresetServices (final PresetStore presetStore) throws IOException {
 		this.presetStore = presetStore;
 	}
-	@RequestMapping(path="/getpresets")
-	public ResponseEntity<String> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
+	@RequestMapping(path = "/getpresets", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public List<Preset> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
 			UserStore userStore=UserStore.getInstance();
@@ -47,13 +47,11 @@ public class PresetServices {
 				presets.addAll(rolePresets);
 			}
 		}
-		String json=new ObjectMapper().writeValueAsString(presets);
-		return ResponseEntity.status(HttpStatus.OK).body(json);
-		//		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
+		return presets;
 	}
 
-	@RequestMapping(path="/getpreset")
-	public ResponseEntity<String> getPreset(@RequestParam("name")String name, @RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
+	@RequestMapping(path="/getpreset", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public Preset getPreset(@RequestParam("name")String name, @RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
 			UserStore userStore=UserStore.getInstance();
@@ -69,11 +67,10 @@ public class PresetServices {
 		}
 		for (Preset preset : presets) {
 			if (preset.getName().equals(name)) {
-				String json=new ObjectMapper().writeValueAsString(preset);
-				return ResponseEntity.status(HttpStatus.OK).body(json);
+				return preset;
 			}
 		}
-		return ResponseEntity.status(HttpStatus.OK).body("{}");
+		return Preset.emptyPreset();
 	}
 
 	@RequestMapping(path="/putsystempreset", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)

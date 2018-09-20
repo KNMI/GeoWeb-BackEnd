@@ -15,7 +15,6 @@ import java.io.File;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -26,6 +25,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -39,14 +40,9 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import fi.fmi.avi.model.taf.TAF;
-import icao.iwxxm21.TAFReportStatusType;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
@@ -55,11 +51,10 @@ import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 @SpringBootTest(classes= {TestWebConfig.class,TafServicesTestContext.class})
 @DirtiesContext
 public class TafServicesLifeCycleTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(TafServicesLifeCycleTest.class);
+
 	/** Entry point for Spring MVC testing support. */
 	private MockMvc mockMvc;
-
-	//    @Autowired
-	//    TafStore tafStore;
 
 	/** The Spring web application context. */
 	@Resource
@@ -104,7 +99,6 @@ public class TafServicesLifeCycleTest {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
 		MvcResult result = mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
-				//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 				.andExpect(status().is4xxClientError()).andReturn();
 		
 		return "FAIL";
@@ -116,8 +110,8 @@ public class TafServicesLifeCycleTest {
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("resp: "+responseBody);
-		Debug.println("status: "+result.getResponse().getStatus());
+		LOGGER.debug("resp: {}", responseBody);
+		LOGGER.debug("status: {}", result.getResponse().getStatus());
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
 		assertThat(jsonResult.has("error"), is(false));
@@ -132,7 +126,7 @@ public class TafServicesLifeCycleTest {
 	static OffsetDateTime actualisedBaseTime;
 
 	private Taf getBaseTaf(boolean actualise) throws JsonProcessingException, IOException {
-		Debug.println("getBaseTaf()");
+		LOGGER.debug("getBaseTaf()");
 		String taf=
 				"{  \"metadata\" : {"+
 						"	    \"uuid\" : \"d612cd81-a043-4fdb-b6fd-d043463d451a\","+
@@ -162,15 +156,13 @@ public class TafServicesLifeCycleTest {
 						"	}";
 
 
-		//		ObjectMapper mapper = new ObjectMapper();
 		objectMapper.setTimeZone(TimeZone.getTimeZone("UTC"));
 		Taf tafObj=objectMapper.readValue(taf, Taf.class);
-		//		Debug.println("taf: "+tafObj.toJSON(tafObjectMapper));
 		tafObj.getMetadata().setUuid(UUID.randomUUID().toString());
 		actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 		if (actualise) {
 			OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z")).truncatedTo(ChronoUnit.HOURS);
-			Debug.println(now.toString());
+			LOGGER.debug("{}", now);
 			tafObj.getMetadata().setValidityStart(now.minusHours(1));
 			actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
@@ -190,53 +182,53 @@ public class TafServicesLifeCycleTest {
 
 	@Test
 	public void lifeCycleTest() throws Exception {
-		Debug.println("testing TAF life cycle");
+		LOGGER.debug("testing TAF life cycle");
 		//Generate a valid TAF
 		Taf baseTaf=getBaseTaf(true);
-		Debug.println("baseTaf:"+baseTaf.toJSON(tafObjectMapper));
+		LOGGER.debug("baseTaf:{}", baseTaf.toJSON(tafObjectMapper));
 		//Store it
-		Debug.println("Storing base taf");
+		LOGGER.debug("Storing base taf");
 		String uuid=addTaf(baseTaf);
-		Debug.println("stored:"+uuid);
+		LOGGER.debug("stored:{}", uuid);
 		Taf storedTaf=getTaf(uuid);
-		Debug.println("from store:"+storedTaf.toJSON(tafObjectMapper));
+		LOGGER.debug("from store:{}", storedTaf.toJSON(tafObjectMapper));
 		//check if baseTime is set to validityStart
         OffsetDateTime baseTime=storedTaf.getMetadata().getBaseTime();
         assertEquals(storedTaf.getMetadata().getBaseTime(), storedTaf.getMetadata().getValidityStart());
 		storedTaf.metadata.setBaseTime(null);
-		Debug.println("EQ: "+baseTaf.equals(storedTaf));
+		LOGGER.debug("EQ: {}", baseTaf.equals(storedTaf));
 		assertEquals(baseTaf, storedTaf);
 		storedTaf.getMetadata().setBaseTime(baseTime);
 		
 		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
-		Debug.println("Amending unpublished base taf");
+		LOGGER.debug("Amending unpublished base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
 		storedTaf.metadata.setPreviousUuid(uuid);
 		storedTaf.metadata.setUuid(UUID.randomUUID().toString());
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		storedTaf.getForecast().getWind().setSpeed(20);
 		String amendedConceptUuid = publishAndFail(storedTaf);
-		Debug.println("amendedUuid: "+amendedConceptUuid);
+		LOGGER.debug("amendedUuid: {}", amendedConceptUuid);
 		assertEquals(amendedConceptUuid, "FAIL");
 
 		//Publish original TAF
-		Debug.println("Publishing base TAF");
+		LOGGER.debug("Publishing base TAF");
 		storedTaf=getTaf(uuid);
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		String publishedUuid=storeTaf(storedTaf);
-		Debug.println("published: "+publishedUuid);
+		LOGGER.debug("published: {}", publishedUuid);
 		
 		//Make another amendment with a new UUID.
-		Debug.println("Amending published base taf");
+		LOGGER.debug("Amending published base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
 		storedTaf.metadata.setUuid(null);
 		storedTaf.metadata.setPreviousUuid(publishedUuid);
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.concept);
 		storedTaf.getForecast().getWind().setSpeed(20);
 		String amendedUuid=storeTaf(storedTaf);
-		Debug.println("amended base taf in concept: "+amendedUuid);
+		LOGGER.debug("amended base taf in concept: {}", amendedUuid);
 
-		Debug.println("Publishing amendment");
+		LOGGER.debug("Publishing amendment");
 		Taf amendedTaf=getTaf(amendedUuid);
 		assertNotNull(amendedTaf.getMetadata().getBaseTime());
 		assertEquals(amendedTaf.getMetadata().getBaseTime(), baseTime);
@@ -244,9 +236,9 @@ public class TafServicesLifeCycleTest {
 		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedTaf.metadata.setUuid(null);
 		String amendedPublishedUuid=storeTaf(amendedTaf);
-		Debug.println("Published amendment: "+amendedPublishedUuid);
+		LOGGER.debug("Published amendment: {}", amendedPublishedUuid);
 
-		Debug.println("cancelling");
+		LOGGER.debug("cancelling");
 		Taf amendedPublishedTaf=getTaf(amendedPublishedUuid);
         assertNotNull(amendedPublishedTaf.getMetadata().getBaseTime());
         assertEquals(amendedPublishedTaf.getMetadata().getBaseTime(), baseTime);
@@ -256,7 +248,7 @@ public class TafServicesLifeCycleTest {
 		amendedPublishedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedPublishedTaf.metadata.setType(TAFReportType.canceled);
 		String canceledUuid=storeTaf(amendedPublishedTaf);
-		Debug.println("Canceled uuid: "+canceledUuid);
+		LOGGER.debug("Canceled uuid: {}", canceledUuid);
 
 		Taf cancelTaf=getTaf(canceledUuid);
 		assertNotNull(cancelTaf.getMetadata().getBaseTime());
@@ -264,7 +256,7 @@ public class TafServicesLifeCycleTest {
 	}
 
 	public void addTAFTest () throws Exception {
-		Debug.println("get inactive tafs");
+		LOGGER.debug("get inactive tafs");
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
@@ -277,9 +269,9 @@ public class TafServicesLifeCycleTest {
 		assertThat(jsonResult.has("tafs"), is(true));
 		int tafs = jsonResult.get("ntafs").asInt();
 
-		Debug.println("Add taff");
+		LOGGER.debug("Add taff");
 		String uuid = "v";//addTaf("");
-		Debug.println("Add taff done: "+ uuid);
+		LOGGER.debug("Add taff done: {}", uuid);
 		assert(uuid != null);
 
 		result = mockMvc.perform(get("/tafs?active=false"))
@@ -292,12 +284,11 @@ public class TafServicesLifeCycleTest {
 		assertThat(jsonResult.has("ntafs"), is(true));
 		assertThat(jsonResult.has("tafs"), is(true));
 		int new_tafs = jsonResult.get("ntafs").asInt();
-		Debug.println("" + new_tafs + " === " + tafs);
+		LOGGER.debug("{} === {}", new_tafs, tafs);
 		assert(new_tafs == tafs + 1);
 	}
 
 	public void getTafList () throws Exception {
-		//	addTaf();
 		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))

@@ -17,6 +17,8 @@ import javax.annotation.Resource;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -30,13 +32,12 @@ import org.springframework.web.context.WebApplicationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import nl.knmi.adaguc.tools.Debug;
-
 @RunWith(SpringRunner.class)
 @SpringBootTest
-//@WebMvcTest(SigmetServices.class)
 @DirtiesContext
 public class SigmetServicesTest {
+	private static final Logger LOGGER = LoggerFactory.getLogger(SigmetServicesTest.class);
+
 	/** Entry point for Spring MVC testing support. */
 	private MockMvc mockMvc;
 
@@ -60,7 +61,6 @@ public class SigmetServicesTest {
 	
 	static String testSigmet="{\"geojson\":"
 			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//+"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
@@ -75,7 +75,6 @@ public class SigmetServicesTest {
 
 	static String testSigmetWithDate="{\"geojson\":"
 			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
 			+"\"obs_or_forecast\":{\"obs\":true},"
 			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
@@ -96,7 +95,7 @@ public class SigmetServicesTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
 		String responseBody = result.getResponse().getContentAsString();
-		Debug.println(responseBody);
+		LOGGER.debug("{}", responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		assertThat(jsonResult.has("error"), is(true));
 		assertThat(jsonResult.get("error").asText().length(), not(0));
@@ -116,7 +115,7 @@ public class SigmetServicesTest {
 		assertThat(jsonResult.get("message").asText().length(), not(0));
 		assertThat(jsonResult.get("sigmetjson").asText().length(), not(0));
 		String uuid = jsonResult.get("uuid").asText();
-		Debug.println("Sigmet uuid = " + uuid);
+		LOGGER.debug("Sigmet uuid = {}", uuid);
 		return uuid;
 	}
 
@@ -129,7 +128,7 @@ public class SigmetServicesTest {
 				.andReturn();
 
 		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("getSigmetList() result:"+responseBody);
+		LOGGER.debug("getSigmetList() result:{}", responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		assertThat(jsonResult.has("page"), is(true));
 		assertThat(jsonResult.has("npages"), is(true));
@@ -155,7 +154,6 @@ public class SigmetServicesTest {
 
 		/*getsigmet by uuid*/
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -177,7 +175,7 @@ public class SigmetServicesTest {
 		assertThat(jsonResult.get("status").asText(), is("concept"));
 		assertThat(jsonResult.get("sequence").asInt(), is(-1));
 		assertThat(jsonResult.has("geojson"), is(true));
-		Debug.println(responseBody);	
+		LOGGER.debug("{}", responseBody);
 	}
 
 	private String fixDate(String testSigmetWithDate) {
@@ -191,7 +189,6 @@ public class SigmetServicesTest {
 		String currentTestSigmet=fixDate(testSigmetWithDate);
 		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -199,7 +196,7 @@ public class SigmetServicesTest {
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		jsonResult.put("status",  "published");
-		Debug.println("After setting status=published: "+jsonResult.toString());
+		LOGGER.debug("After setting status=published: {}", jsonResult.toString());
 
 		result = mockMvc.perform(post("/sigmets/")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
@@ -207,8 +204,7 @@ public class SigmetServicesTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();	
 		responseBody =  result.getResponse().getContentAsString();
-		Debug.println("After publish: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+		LOGGER.debug("After publish: {}", responseBody);
 	}
 	
 	@Test
@@ -216,7 +212,6 @@ public class SigmetServicesTest {
 		String currentTestSigmet=fixDate(testSigmetWithDate);
 		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
 		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
 				.andExpect(status().isOk())
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
@@ -233,7 +228,7 @@ public class SigmetServicesTest {
 		
 		
 		jsonResult.put("status",  "canceled");
-		Debug.println("After setting status=canceled: "+jsonResult.toString());
+		LOGGER.debug("After setting status=canceled: {}", jsonResult.toString());
 
 		result = mockMvc.perform(post("/sigmets/")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
@@ -241,15 +236,14 @@ public class SigmetServicesTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();	
 		responseBody =  result.getResponse().getContentAsString();
-		Debug.println("After cancel: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+		LOGGER.debug("After cancel: {}", responseBody);
 	}
 	
 	static String testFeatureFIR="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";
 	@Test
 	public void apiIntersections() throws Exception {
 		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testFeatureFIR+"}";
-		Debug.println(feature);
+		LOGGER.debug("{}", feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.content(feature))
@@ -257,7 +251,7 @@ public class SigmetServicesTest {
 				.andReturn();
 		
 		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("After sigmetintersections: "+responseBody);
+		LOGGER.debug("After sigmetintersections: {}", responseBody);
 	}
 
 	static String testIntersection6points="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{" +
@@ -268,7 +262,7 @@ public class SigmetServicesTest {
 	@Test
 	public void apiIntersections6points() throws Exception {
 		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection6points+"}";
-		Debug.println(feature);
+		LOGGER.info("{}", feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.content(feature))
@@ -280,7 +274,7 @@ public class SigmetServicesTest {
 		assertThat(jsonResult.has("error"), is(false));
         assertThat(jsonResult.has("message"), is(false));
         assertThat(jsonResult.has("feature"), is(true));
-        Debug.println("After sigmetintersections: "+responseBody);
+        LOGGER.info("After sigmetintersections: {}", responseBody);
 	}
 
 	static String testIntersection8points="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{" +
@@ -291,7 +285,7 @@ public class SigmetServicesTest {
 	@Test
 	public void apiIntersections8points() throws Exception {
 		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection8points+"}";
-		Debug.println(feature);
+		LOGGER.info("{}", feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.content(feature))
@@ -304,7 +298,7 @@ public class SigmetServicesTest {
         assertThat(jsonResult.has("message"), is(true));
         assertThat(jsonResult.get("message").asText().contains("more than"), is(true));
         assertThat(jsonResult.has("feature"), is(true));
-        Debug.println("After sigmetintersections: "+responseBody);
+        LOGGER.info("After sigmetintersections: {}", responseBody);
 	}
 
 }
