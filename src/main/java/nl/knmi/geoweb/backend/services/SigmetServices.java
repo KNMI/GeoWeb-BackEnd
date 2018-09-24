@@ -452,7 +452,7 @@ public class SigmetServices {
 					ff.setProperty("selectionType", selectionType);
 					try {
 						if (((Polygon) geom_new).getCoordinates().length > 7) {
-							message="Polygon has more than 6 points";
+							message="Intersection of the drawn polygon with the FIR-boundary has more than 6 individual points. The drawn polygon will be used for the TAC-code.";
 						}
 					}catch (Exception e){}
 				} catch (org.locationtech.jts.io.ParseException e1) {
