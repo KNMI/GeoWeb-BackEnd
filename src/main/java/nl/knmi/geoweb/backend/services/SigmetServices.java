@@ -216,16 +216,38 @@ public class SigmetServices {
                 sm.setSequence(sigmetStore.getNextSequence());
                 Debug.println("Publishing "+sm.getUuid());
                 try{
-                    sigmetStore.storeSigmet(sm);
-                    sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
-                    publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
-                    JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
-                            put("message","sigmet "+sm.getUuid()+" published").
-                            put("uuid",sm.getUuid()).
-                            put("sigmetjson", sigmetJson.toString());
-                    return ResponseEntity.ok(json.toString());
+                    Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
+
+                    sm.setFirFeature(firFeature);
+                    synchronized (sigmetStore){ //Lock on sigmetStore
+                        if (sigmetStore.isPublished(sm.getUuid())) {
+                            //Already published
+                            JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                            JSONObject json = new JSONObject().put("succeeded", "false").
+                                    put("message", "sigmet " + sm.getUuid() + " is already published").
+                                    put("uuid", sm.getUuid()).
+                                    put("sigmetjson", sigmetJson.toString());
+                            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                        } else {
+                            String result = publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
+                            if (result.equals("OK")) {
+                                sigmetStore.storeSigmet(sm);
+                                JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                                JSONObject json = new JSONObject().put("succeeded", "true").
+                                        put("message", "sigmet " + sm.getUuid() + " published").
+                                        put("uuid", sm.getUuid()).
+                                        put("sigmetjson", sigmetJson.toString());
+                                return ResponseEntity.ok(json.toString());
+                            } else {
+                                JSONObject json = new JSONObject().put("succeeded", "false").
+                                        put("message", "sigmet " + sm.getUuid() + " failed to publish").
+                                        put("uuid", sm.getUuid());
+                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                            }
+                        }
+                    }
                 }catch(Exception e){
+                    Debug.printStackTrace(e);
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
