@@ -1,11 +1,15 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import nl.knmi.geoweb.backend.product.sigmet.*;
 import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
 import org.json.JSONException;
@@ -14,7 +18,6 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.geom.PrecisionModel;
-import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.locationtech.jts.io.geojson.GeoJsonWriter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,11 +40,7 @@ import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
-import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
-import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
-import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
-import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 
 
@@ -53,9 +52,12 @@ public class SigmetServices {
 	SigmetStore sigmetStore=null;
 	private ProductExporter<Sigmet> publishSigmetStore;
 
-	SigmetServices (final SigmetStore sigmetStore, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
+	private SigmetValidator sigmetValidator;
+
+	SigmetServices (final SigmetStore sigmetStore, final SigmetValidator sigmetValidator, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
 		Debug.println("INITING SigmetServices...");
 		this.sigmetStore = sigmetStore;
+		this.sigmetValidator=sigmetValidator;
 		this.publishSigmetStore=publishSigmetStore;
 	}
 
@@ -214,16 +216,38 @@ public class SigmetServices {
                 sm.setSequence(sigmetStore.getNextSequence());
                 Debug.println("Publishing "+sm.getUuid());
                 try{
-                    sigmetStore.storeSigmet(sm);
-                    sm.setFirFeature(firStore.lookup(sm.getLocation_indicator_icao(), true));
-                    publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
-                    JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
-                            put("message","sigmet "+sm.getUuid()+" published").
-                            put("uuid",sm.getUuid()).
-                            put("sigmetjson", sigmetJson.toString());
-                    return ResponseEntity.ok(json.toString());
+                    Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
+
+                    sm.setFirFeature(firFeature);
+                    synchronized (sigmetStore){ //Lock on sigmetStore
+                        if (sigmetStore.isPublished(sm.getUuid())) {
+                            //Already published
+                            JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                            JSONObject json = new JSONObject().put("succeeded", "false").
+                                    put("message", "sigmet " + sm.getUuid() + " is already published").
+                                    put("uuid", sm.getUuid()).
+                                    put("sigmetjson", sigmetJson.toString());
+                            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                        } else {
+                            String result = publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
+                            if (result.equals("OK")) {
+                                sigmetStore.storeSigmet(sm);
+                                JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
+                                JSONObject json = new JSONObject().put("succeeded", "true").
+                                        put("message", "sigmet " + sm.getUuid() + " published").
+                                        put("uuid", sm.getUuid()).
+                                        put("sigmetjson", sigmetJson.toString());
+                                return ResponseEntity.ok(json.toString());
+                            } else {
+                                JSONObject json = new JSONObject().put("succeeded", "false").
+                                        put("message", "sigmet " + sm.getUuid() + " failed to publish").
+                                        put("uuid", sm.getUuid());
+                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                            }
+                        }
+                    }
                 }catch(Exception e){
+                    Debug.printStackTrace(e);
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
@@ -364,6 +388,45 @@ public class SigmetServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
 
+	@RequestMapping(path = "/verify", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+			produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+	)
+	public ResponseEntity<String> verifySIGMET(@RequestBody String sigmetStr) throws IOException, JSONException, java.text.ParseException {
+	    sigmetStr = URLDecoder.decode(sigmetStr, "UTF8");
+		/* Add TAC */
+		String TAC = "unable to create TAC";
+		try {
+			Sigmet sigmet = sigmetObjectMapper.readValue(sigmetStr, Sigmet.class);
+			Feature fir=sigmet.getFirFeature();
+			if (fir!=null) {
+				TAC = sigmet.toTAC(fir);
+			}
+		} catch (Exception e) {
+			Debug.printStackTrace(e);
+		}
+
+        try {
+            SigmetValidationResult jsonValidation = sigmetValidator.validate(sigmetStr);
+            if (jsonValidation.isSucceeded() == false) {
+                ObjectNode errors = jsonValidation.getErrors();
+                String finalJson = new JSONObject()
+                        .put("succeeded", false)
+                        .put("errors", new JSONObject(errors.toString())) //TODO Get errors from validation
+                                .put("TAC", TAC)
+                                .put("message", "SIGMET is not valid").toString();
+                return ResponseEntity.ok(finalJson);
+            } else {
+                String json = new JSONObject().put("succeeded", true).put("message", "SIGMET is verified.").put("TAC", TAC).toString();
+                return ResponseEntity.ok(json);
+            }
+        } catch (Exception e) {
+            Debug.printStackTrace(e);
+            String json = new JSONObject().
+                    put("message", "Unable to validate sigmet").toString();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+        }
+    }
+
 	@Getter
 	public static class SigmetFeature {
 		private String firname;
@@ -411,10 +474,10 @@ public class SigmetServices {
 					ff.setProperty("selectionType", selectionType);
 					try {
 						if (((Polygon) geom_new).getCoordinates().length > 7) {
-							message="Polygon has more than 6 points";
+							message="Intersection of the drawn polygon with the FIR-boundary has more than 6 individual points. The drawn polygon will be used for the TAC-code.";
 						}
 					}catch (Exception e){}
-				} catch (ParseException e1) {
+				} catch (org.locationtech.jts.io.ParseException e1) {
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 					Debug.println("Error with os:"+os);
