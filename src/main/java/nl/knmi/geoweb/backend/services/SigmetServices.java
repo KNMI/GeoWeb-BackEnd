@@ -398,6 +398,10 @@ public class SigmetServices {
 		try {
 			Sigmet sigmet = sigmetObjectMapper.readValue(sigmetStr, Sigmet.class);
 			Feature fir=sigmet.getFirFeature();
+			if (fir==null) {
+			    fir=firStore.lookup(sigmet.getLocation_indicator_icao(), true);
+                sigmet.setFirFeature(fir);
+            }
 			if (fir!=null) {
 				TAC = sigmet.toTAC(fir);
 			}
