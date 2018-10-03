@@ -26,8 +26,8 @@ public class AdminStore {
 	private String roleDir;
 	private String userDir;
 
-	
-	
+
+
 	AdminStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation+"/admin";
 		File f = new File(dir);
@@ -89,7 +89,26 @@ public class AdminStore {
 
 	public String read(String type, String name) throws IOException{
 		String itemdir = dir+"/"+type+"/";
-		return Tools.readFile(itemdir + name+".dat");
+		File file = new File(itemdir + name+".dat");
+		if (file.exists() == false){
+			String resourceName = "adminstore/" + type + "/" + name;
+			Debug.println("Unable to load item [" + file.getAbsolutePath() + "] Attempting to read from resources with name [" + resourceName + "]");
+			String item = null;
+			try {
+				item = Tools.readResource(resourceName);
+				Debug.println("[OK] Read from resource [" + resourceName + "] now writing to store");
+			}catch(Exception e) {				
+			}
+			if (item != null && item.length() > 0) {
+				Tools.writeFile(file.getAbsolutePath(), item);
+				Debug.println("[OK] Write  item [" + file.getAbsolutePath() + "]");
+			} else {
+				Debug.errprintln("Unable to find resource " + resourceName);
+				throw new java.io.IOException("Unable to locate item " + resourceName);
+			}
+		}
+		Debug.println("[ADMINSTORE] Reading item [" + file.getAbsolutePath() + "]");
+		return Tools.readFile(file.getAbsolutePath());
 	}
 	private Long getTimestamp(String fname) {
 		return Long.parseLong(fname.replaceAll("\\D+", ""));

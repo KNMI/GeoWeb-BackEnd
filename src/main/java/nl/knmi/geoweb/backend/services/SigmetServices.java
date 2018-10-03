@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,11 +34,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.JSONResponse;
+import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
@@ -48,7 +52,10 @@ import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 @RequestMapping("/sigmets")
 public class SigmetServices {
 	final static String baseUrl="/sigmets";
-
+	
+	@Autowired
+	AdminStore adminStore;
+	
 	SigmetStore sigmetStore=null;
 	private ProductExporter<Sigmet> publishSigmetStore;
 
@@ -369,13 +376,18 @@ public class SigmetServices {
 		}
 	}
 
-	static SigmetParameters sigmetParameters;
+	
 	@RequestMapping(path="/getsigmetparameters")
-	public SigmetParameters getSigmetParameters() {
-		if (sigmetParameters==null) {
-			sigmetParameters=new SigmetParameters();
+	public ResponseEntity<String> getSigmetParameters() {
+		JSONResponse jsonResponse = new JSONResponse();
+		try {
+			return ResponseEntity.ok(adminStore.read("config", "sigmetparameters.json"));
+		}catch(Exception e){
+			Debug.println(e.getMessage());
+			jsonResponse.setErrorMessage("Unable to read sigmetparameters", 400);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.getMessage());
 		}
-		return sigmetParameters;
+				
 	}
 
 	@RequestMapping(path="/putsigmetparameters")
