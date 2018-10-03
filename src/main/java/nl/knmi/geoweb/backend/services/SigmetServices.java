@@ -314,7 +314,10 @@ public class SigmetServices {
         }
         Debug.errprintln("Unknown error");
         JSONObject obj=new JSONObject();
-        obj.put("error", "Unknown error");
+        try {
+			obj.put("error", "Unknown error");
+		} catch (JSONException e) {
+		}
         String json = obj.toString();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
     }
