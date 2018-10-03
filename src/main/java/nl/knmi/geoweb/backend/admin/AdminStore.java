@@ -92,6 +92,9 @@ public class AdminStore {
 		File file = new File(itemdir + name+".dat");
 		if (file.exists() == false){
 			String resourceName = "adminstore/" + type + "/" + name;
+			if (!resourceName.endsWith(".json")) {
+				resourceName += ".json";
+			}
 			Debug.println("Unable to load item [" + file.getAbsolutePath() + "] Attempting to read from resources with name [" + resourceName + "]");
 			String item = null;
 			try {
@@ -100,6 +103,7 @@ public class AdminStore {
 			}catch(Exception e) {				
 			}
 			if (item != null && item.length() > 0) {
+				Tools.mksubdirs(file.getParentFile().getAbsolutePath());
 				Tools.writeFile(file.getAbsolutePath(), item);
 				Debug.println("[OK] Write  item [" + file.getAbsolutePath() + "]");
 			} else {

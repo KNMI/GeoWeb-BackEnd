@@ -381,6 +381,10 @@ public class SigmetServices {
 	public ResponseEntity<String> getSigmetParameters() {
 		JSONResponse jsonResponse = new JSONResponse();
 		try {
+			/* If sigmetparameters.json is not available on disk: 
+			 * sigmetparameters.json is defined in src/main/resources/adminstore/config/sigmetparameters.json and 
+			 * is copied to disk location in adminstore
+			 */
 			return ResponseEntity.ok(adminStore.read("config", "sigmetparameters.json"));
 		}catch(Exception e){
 			Debug.println(e.getMessage());
