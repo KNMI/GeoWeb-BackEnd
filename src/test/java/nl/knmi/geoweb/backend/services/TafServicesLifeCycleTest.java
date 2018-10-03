@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,6 +22,7 @@ import java.util.UUID;
 
 import javax.annotation.Resource;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -127,6 +129,8 @@ public class TafServicesLifeCycleTest {
 	}
 
 
+	static OffsetDateTime actualisedBaseTime;
+
 	private Taf getBaseTaf(boolean actualise) throws JsonProcessingException, IOException {
 		Debug.println("getBaseTaf()");
 		String taf=
@@ -134,7 +138,7 @@ public class TafServicesLifeCycleTest {
 						"	    \"uuid\" : \"d612cd81-a043-4fdb-b6fd-d043463d451a\","+
 						"	    \"validityStart\" : \"2018-06-25T06:00:00Z\","+
 						"	    \"validityEnd\" : \"2018-06-26T12:00:00Z\","+
-						"       \"baseTime\" : \"2018-09-12T13:00:00Z\","+
+//						"       \"baseTime\" : \"2018-09-12T13:00:00Z\","+
 						"	    \"location\" : \"EHAM\","+
 						"	    \"status\" : \"concept\","+
 						"	    \"type\" : \"normal\""+
@@ -163,12 +167,13 @@ public class TafServicesLifeCycleTest {
 		Taf tafObj=objectMapper.readValue(taf, Taf.class);
 		//		Debug.println("taf: "+tafObj.toJSON(tafObjectMapper));
 		tafObj.getMetadata().setUuid(UUID.randomUUID().toString());
+		actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 		if (actualise) {
 			OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z")).truncatedTo(ChronoUnit.HOURS);
 			Debug.println(now.toString());
 			tafObj.getMetadata().setValidityStart(now.minusHours(1));
+			actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
-			tafObj.getMetadata().setBaseTime(now);
 		}
 		
 		
@@ -195,8 +200,13 @@ public class TafServicesLifeCycleTest {
 		Debug.println("stored:"+uuid);
 		Taf storedTaf=getTaf(uuid);
 		Debug.println("from store:"+storedTaf.toJSON(tafObjectMapper));
+		//check if baseTime is set to validityStart
+        OffsetDateTime baseTime=storedTaf.getMetadata().getBaseTime();
+        assertEquals(storedTaf.getMetadata().getBaseTime(), storedTaf.getMetadata().getValidityStart());
+		storedTaf.metadata.setBaseTime(null);
 		Debug.println("EQ: "+baseTaf.equals(storedTaf));
 		assertEquals(baseTaf, storedTaf);
+		storedTaf.getMetadata().setBaseTime(baseTime);
 		
 		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
 		Debug.println("Amending unpublished base taf");
@@ -207,6 +217,7 @@ public class TafServicesLifeCycleTest {
 		storedTaf.getForecast().getWind().setSpeed(20);
 		String amendedConceptUuid = publishAndFail(storedTaf);
 		Debug.println("amendedUuid: "+amendedConceptUuid);
+		assertEquals(amendedConceptUuid, "FAIL");
 
 		//Publish original TAF
 		Debug.println("Publishing base TAF");
@@ -227,6 +238,9 @@ public class TafServicesLifeCycleTest {
 
 		Debug.println("Publishing amendment");
 		Taf amendedTaf=getTaf(amendedUuid);
+		assertNotNull(amendedTaf.getMetadata().getBaseTime());
+		assertEquals(amendedTaf.getMetadata().getBaseTime(), baseTime);
+
 		amendedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedTaf.metadata.setUuid(null);
 		String amendedPublishedUuid=storeTaf(amendedTaf);
@@ -234,12 +248,19 @@ public class TafServicesLifeCycleTest {
 
 		Debug.println("cancelling");
 		Taf amendedPublishedTaf=getTaf(amendedPublishedUuid);
-		amendedPublishedTaf.metadata.setUuid(null);
+        assertNotNull(amendedPublishedTaf.getMetadata().getBaseTime());
+        assertEquals(amendedPublishedTaf.getMetadata().getBaseTime(), baseTime);
+
+        amendedPublishedTaf.metadata.setUuid(null);
 		amendedPublishedTaf.metadata.setPreviousUuid(amendedPublishedUuid);
 		amendedPublishedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		amendedPublishedTaf.metadata.setType(TAFReportType.canceled);
 		String canceledUuid=storeTaf(amendedPublishedTaf);
 		Debug.println("Canceled uuid: "+canceledUuid);
+
+		Taf cancelTaf=getTaf(canceledUuid);
+		assertNotNull(cancelTaf.getMetadata().getBaseTime());
+        assertEquals(cancelTaf.getMetadata().getBaseTime(), baseTime);
 	}
 
 	public void addTAFTest () throws Exception {
