@@ -43,7 +43,7 @@ public class UserStore {
 	public boolean userHasRole(String user, String role) {
 		if (store.containsKey(user)){
           for (RoleType r: store.get(user).getRoles()) {
-        	  if (r.equals(role)) return true;
+        	  if (r.toString().equals(role)) return true;
           }
 		}
 		return false;

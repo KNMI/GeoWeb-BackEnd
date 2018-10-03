@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpStatus;
@@ -41,7 +42,11 @@ import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 public class AdminServices {
 	AdminStore adminStore ;
 	TafSchemaStore tafSchemaStore;
-
+	
+	@Autowired
+	@Qualifier("geoWebObjectMapper")
+    private ObjectMapper objectMapper;
+	
 	//Grab feedback config info from global config
 	@Value("${geoweb.feedback.feedbackfromname}")
 	private String feedbackFromName;
@@ -63,11 +68,10 @@ public class AdminServices {
 
 	@RequestMapping(path="/receiveFeedback", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void distributeFeedback(HttpServletRequest req, HttpServletResponse response, @RequestBody String payload) throws MessagingException, UnsupportedEncodingException {
-		ObjectMapper om = new ObjectMapper();
 		JsonNode json_payload = null;
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
-			json_payload = om.readTree(payload);
+			json_payload = objectMapper.readTree(payload);
 		} catch (IOException e) {
 			e.printStackTrace();
 			jsonResponse.setException("Failed to read payload", e);
@@ -138,7 +142,7 @@ public class AdminServices {
 		System.out.println(schemaId + ": " + content);
 		if("taf".equals(schemaId.toLowerCase())) {
 			try {
-				tafSchemaStore.storeTafSchema(content);
+				tafSchemaStore.storeTafSchema(content, objectMapper);
 			} catch(Exception e) {
 				e.printStackTrace();
 			}

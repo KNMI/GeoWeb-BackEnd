@@ -5,7 +5,7 @@
 
 	<groupId>nl.knmi.geoweb</groupId>
 	<artifactId>geoweb-backend</artifactId>
-	<version>0.28.0-SNAPSHOT</version>
+	<version>0.38.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>GeoWeb-BackEnd</name>
@@ -25,6 +25,7 @@
 	</properties>
 
 	<dependencies>
+
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -83,7 +84,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.28.0-SNAPSHOT</version>
+			<version>1.38.4-SNAPSHOT</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
@@ -96,16 +97,22 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context-support</artifactId>
 		</dependency>
-	    <dependency>
-	        <groupId>com.sun.mail</groupId>
-	        <artifactId>smtp</artifactId>
-	        <version>1.4.5</version>
-	    </dependency>
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>smtp</artifactId>
+			<version>1.4.5</version>
+		</dependency>
 		<dependency>
 			<groupId>com.github.maartenplieger</groupId>
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
-			<version>1.0.8</version>
+			<version>1.0.9</version>
 		</dependency>
+	 	<!-- <dependency>
+			<groupId>nl.knmi.adaguc.tools</groupId>
+			<artifactId>adaguc-services-tools</artifactId>
+			<version>1.0.9</version>
+		</dependency>-->
+		
 		<!-- <dependency> <groupId>com.github.maartenplieger</groupId> <artifactId>nl.knmi.adaguc.config</artifactId> 
 			<version>1.0.1</version> </dependency> -->
 
@@ -175,7 +182,7 @@
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
 		</repository>
-		
+
 	</repositories>
 	<pluginRepositories>
 		<pluginRepository>
