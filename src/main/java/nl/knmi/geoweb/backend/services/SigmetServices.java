@@ -189,7 +189,8 @@ public class SigmetServices {
 			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
-        Debug.println("storesigmet: "+sigmet);
+        Debug.println("########################################### storesigmet #######################################");
+        Debug.println(sigmet);
         Sigmet sm=null;
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
