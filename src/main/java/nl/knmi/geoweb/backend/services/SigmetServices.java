@@ -386,7 +386,14 @@ public class SigmetServices {
 			 * sigmetparameters.json is defined in src/main/resources/adminstore/config/sigmetparameters.json and 
 			 * is copied to disk location in adminstore
 			 */
-			return ResponseEntity.ok(adminStore.read("config", "sigmetparameters.json"));
+			
+			String validParam = sigmetObjectMapper.writeValueAsString(
+					sigmetObjectMapper.readValue(
+							adminStore.read("config", "sigmetparameters.json"),
+							SigmetParameters.class
+							)
+					);
+			return ResponseEntity.ok(validParam);
 		}catch(Exception e){
 			Debug.println(e.getMessage());
 			jsonResponse.setErrorMessage("Unable to read sigmetparameters", 400);
