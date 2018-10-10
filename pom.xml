@@ -5,7 +5,7 @@
 
 	<groupId>nl.knmi.geoweb</groupId>
 	<artifactId>geoweb-backend</artifactId>
-	<version>0.39.2-SNAPSHOT</version>
+	<version>0.40.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>GeoWeb-BackEnd</name>
@@ -84,7 +84,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.39.2-SNAPSHOT</version>
+			<version>1.40.2-SNAPSHOT</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>com.github.maartenplieger</groupId>
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
-			<version>1.0.9</version>
+			<version>1.0.12</version>
 		</dependency>
 	 	<!-- <dependency>
 			<groupId>nl.knmi.adaguc.tools</groupId>

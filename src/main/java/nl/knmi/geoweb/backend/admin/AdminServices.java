@@ -238,13 +238,12 @@ public class AdminServices {
 			String type = HTTPTools.getHTTPParam(req, "type");
 			String name = HTTPTools.getHTTPParam(req, "name");
 			JSONObject result = new JSONObject();
-			Debug.println("admin/read type" + type + " and name " + name);
-
 			String payload = adminStore.read(type,name);
 			result.put("message", "ok");
 			result.put("payload", new JSONArray(payload));
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
+			Debug.printStackTrace(e);
 			Debug.errprintln("Failed to read " + e.getMessage());
 			jsonResponse.setException("read failed",e);
 		}
