@@ -194,7 +194,7 @@ public class SigmetServices {
         Sigmet sm=null;
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
-
+            
             if (sm.getStatus()==SigmetStatus.concept) {
                 //Store
                 if (sm.getUuid()==null) {
@@ -278,6 +278,8 @@ public class SigmetServices {
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
                 cancelSigmet.setSequence(sigmetStore.getNextSequence());
+                /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
+                cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
                 Debug.println("Canceling "+sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(cancelSigmet);
