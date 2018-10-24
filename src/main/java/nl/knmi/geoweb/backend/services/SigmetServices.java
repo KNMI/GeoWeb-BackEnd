@@ -83,7 +83,7 @@ public class SigmetServices {
 			path = "/ORG",
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
+	public ResponseEntity<String> __storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
 		Debug.println("storesigmetORG: "+sigmet);
 		Sigmet sm=null;
 		try {
@@ -111,7 +111,7 @@ public class SigmetServices {
 			} else if (sm.getStatus()==SigmetStatus.published) {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-				sm.setSequence(sigmetStore.getNextSequence());
+				sm.setSequence(sigmetStore.getNextSequence(sm));
 				Debug.println("Publishing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
@@ -141,7 +141,7 @@ public class SigmetServices {
 				cancelSigmet.setValiddate(start);
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
-				cancelSigmet.setSequence(sigmetStore.getNextSequence());
+				cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
 				Debug.println("Canceling "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
@@ -188,7 +188,7 @@ public class SigmetServices {
 			path = "",
 			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
+    public synchronized ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
         Debug.println("########################################### storesigmet #######################################");
         Debug.println(sigmet);
         Sigmet sm=null;
@@ -221,7 +221,7 @@ public class SigmetServices {
             } else if (sm.getStatus()==SigmetStatus.published) {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-                sm.setSequence(sigmetStore.getNextSequence());
+                sm.setSequence(sigmetStore.getNextSequence(sm));
                 Debug.println("Publishing "+sm.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
@@ -277,7 +277,7 @@ public class SigmetServices {
                 cancelSigmet.setValiddate(start);
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
-                cancelSigmet.setSequence(sigmetStore.getNextSequence());
+                cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
                 /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
                 cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
                 Debug.println("Canceling "+sm.getUuid());
@@ -592,7 +592,7 @@ public class SigmetServices {
 		Debug.println("getSigmetList");
 		try{
 			Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
-			Debug.println("SIGMETLIST has length of "+sigmets.length);
+//			Debug.println("SIGMETLIST has length of "+sigmets.length);
 			return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetList(sigmets,page,count)));
 		}catch(Exception e){
 			try {
