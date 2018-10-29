@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: fi.fmi.avi.converter:fmi-avi-messageconverter-iwxxm:0.6.4-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/fi/fmi/avi/converter/fmi-avi-messageconverter-iwxxm/0.6.4-SNAPSHOT/fmi-avi-messageconverter-iwxxm-0.6.4-20180917.085543-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/fi/fmi/avi/converter/fmi-avi-messageconverter-iwxxm/0.6.4-SNAPSHOT/fmi-avi-messageconverter-iwxxm-0.6.4-20180917.085543-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/fi/fmi/avi/converter/fmi-avi-messageconverter-iwxxm/0.6.4-SNAPSHOT/fmi-avi-messageconverter-iwxxm-0.6.4-20180917.085543-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

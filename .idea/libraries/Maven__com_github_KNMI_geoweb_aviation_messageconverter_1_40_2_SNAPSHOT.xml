@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.KNMI:geoweb-aviation-messageconverter:1.40.2-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/KNMI/geoweb-aviation-messageconverter/1.40.2-SNAPSHOT/geoweb-aviation-messageconverter-1.40.2-20181010.134744-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/KNMI/geoweb-aviation-messageconverter/1.40.2-SNAPSHOT/geoweb-aviation-messageconverter-1.40.2-20181010.134744-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/KNMI/geoweb-aviation-messageconverter/1.40.2-SNAPSHOT/geoweb-aviation-messageconverter-1.40.2-20181010.134744-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

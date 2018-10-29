@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.betadriven:jackson-datatype-jts:2.6-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/betadriven/jackson-datatype-jts/2.6-SNAPSHOT/jackson-datatype-jts-2.6-20180530.105240-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/betadriven/jackson-datatype-jts/2.6-SNAPSHOT/jackson-datatype-jts-2.6-20180530.105240-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/betadriven/jackson-datatype-jts/2.6-SNAPSHOT/jackson-datatype-jts-2.6-20180530.105240-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
