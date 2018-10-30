@@ -25,6 +25,7 @@ public class TriggerTest {
 
     private static String name = null;
     private static String unit = null;
+    public static String triggerjsonpath = null;
     private static Array
             station = null,
             data = null,
@@ -35,10 +36,11 @@ public class TriggerTest {
     private static boolean jsoncreated = false;
     private static JSONArray locarray = null;
 
-    @RequestMapping(path= "/triggertest", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static void addTrigger(@RequestBody String payload) throws IOException, InvalidRangeException {
 
         org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
+        System.out.println(payload);
 
         String path = triggerInfo.getString("serviceurl");
         String par = triggerInfo.getString("parameter");
@@ -101,8 +103,8 @@ public class TriggerTest {
                     .appendValue(ChronoField.MILLI_OF_SECOND, 5)
                     .toFormatter();
 
-            String triggerjsonpath = "/nobackup/users/schouten/Triggers/trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
-            String triggerjsonfile = triggerjsonpath.substring(triggerjsonpath.lastIndexOf("/") + 1);   // The actual name of the created json file without the path (to print what the file is called)
+            triggerjsonpath = "/nobackup/users/schouten/Triggers/trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
+//            String triggerjsonfile = triggerjsonpath.substring(triggerjsonpath.lastIndexOf("/") + 1);   // The actual name of the created json file without the path (to print what the file is called)
 
             json.put("locations", locarray);
             json.put("phenomenon", phenomenon);
@@ -116,6 +118,11 @@ public class TriggerTest {
                 e.printStackTrace();
             }
         }
+    }
+
+    @RequestMapping(path="/triggerget")
+    public static String getTrigger() {
+        return triggerjsonpath;
     }
 
     private static void createJSONObject(int i){
