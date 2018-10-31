@@ -1,5 +1,6 @@
 package nl.knmi.geoweb.backend.triggers;
 
+import nl.knmi.adaguc.tools.Tools;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.http.MediaType;
@@ -104,7 +105,6 @@ public class TriggerTest {
                     .toFormatter();
 
             triggerjsonpath = "/nobackup/users/schouten/Triggers/trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
-//            String triggerjsonfile = triggerjsonpath.substring(triggerjsonpath.lastIndexOf("/") + 1);   // The actual name of the created json file without the path (to print what the file is called)
 
             json.put("locations", locarray);
             json.put("phenomenon", phenomenon);
@@ -120,9 +120,10 @@ public class TriggerTest {
         }
     }
 
-    @RequestMapping(path="/triggerget")
-    public static String getTrigger() {
-        return triggerjsonpath;
+    @RequestMapping(path="/triggerget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public static String getTrigger() throws IOException {
+        String triggerFile = Tools.readFile(triggerjsonpath);
+        return triggerFile;
     }
 
     private static void createJSONObject(int i){
