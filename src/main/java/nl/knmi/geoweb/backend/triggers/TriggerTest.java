@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.List;
 
 @RestController
 @RequestMapping("/triggers")
@@ -124,6 +125,22 @@ public class TriggerTest {
     public static String getTrigger() throws IOException {
         String triggerFile = Tools.readFile(triggerjsonpath);
         return triggerFile;
+    }
+
+    @RequestMapping(path="/parametersget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public static String getParameters(@RequestBody String payload) throws IOException, InvalidRangeException {
+
+        org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
+
+        String path = triggerInfo.getString("serviceurl");
+
+        NetcdfFile hdf = NetcdfDataset.open(path);
+
+        List parameters = hdf.getVariables();
+
+        System.out.println(parameters);
+
+        return "";
     }
 
     private static void createJSONObject(int i){
