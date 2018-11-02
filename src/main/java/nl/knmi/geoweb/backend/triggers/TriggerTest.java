@@ -10,15 +10,17 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
-import ucar.nc2.NetcdfFile;
+import ucar.nc2.*;
 import ucar.nc2.dataset.NetcdfDataset;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -52,19 +54,22 @@ public class TriggerTest {
         NetcdfFile hdf = NetcdfDataset.open(path);
 
         station = hdf.readSection("stationname");
-        data = hdf.readSection(par);
+//        data = hdf.readSection(par);
+        Group find = hdf.getRootGroup();
+        String variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
+        data = hdf.readSection(String.valueOf(variable));
         lat = hdf.readSection("lat");
         lon = hdf.readSection("lon");
         code = hdf.readSection("station");
-        name = hdf.findAttValueIgnoreCase(hdf.findVariable(par), "long_name", "long_name");
-        unit = hdf.findAttValueIgnoreCase(hdf.findVariable(par), "units", "units");
+        name = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "long_name", "long_name");
+        unit = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
 
         JSONObject json = new JSONObject();
 
         locarray = new JSONArray();
 
         JSONObject phenomenon = new JSONObject();
-        phenomenon.put("parameter", par);
+        phenomenon.put("parameter", variable);
         phenomenon.put("long_name", name);
         phenomenon.put("operator", operator);
         phenomenon.put("limit", limit);
@@ -128,7 +133,23 @@ public class TriggerTest {
     }
 
     @RequestMapping(path="/parametersget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public static String getParameters(@RequestBody String payload) throws IOException, InvalidRangeException {
+    public static String getParameters(@RequestBody String payload) throws IOException, NullPointerException {
+
+//        org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
+//
+//        String path = triggerInfo.getString("serviceurl");
+//
+//        NetcdfFile hdf = NetcdfDataset.open(path);
+//
+//        List var = hdf.getVariables();
+//
+//        System.out.println(var);
+//
+//        JSONArray a = new JSONArray();
+//
+//        a.add(var);
+//
+//        return String.valueOf(a);
 
         org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
 
@@ -136,11 +157,22 @@ public class TriggerTest {
 
         NetcdfFile hdf = NetcdfDataset.open(path);
 
-        List parameters = hdf.getVariables();
+        JSONArray phenomena = new JSONArray();
+        Array phen = null;
 
-        System.out.println(parameters);
-
-        return "";
+        List vars = hdf.getVariables();
+        for(int i = 0; i < vars.size(); i++) {
+            Variable var = (Variable) vars.get(i);
+            Attribute phenomenon = var.findAttributeIgnoreCase("long_name");
+            try {
+                phen = phenomenon.getValues();
+            }catch (NullPointerException e){
+                e.printStackTrace();
+            }
+            phenomena.add(String.valueOf(phen));
+            System.out.println(phen);
+        }
+        return String.valueOf(phenomena);
     }
 
     private static void createJSONObject(int i){
