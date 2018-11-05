@@ -54,7 +54,6 @@ public class TriggerTest {
         NetcdfFile hdf = NetcdfDataset.open(path);
 
         station = hdf.readSection("stationname");
-//        data = hdf.readSection(par);
         Group find = hdf.getRootGroup();
         String variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
         data = hdf.readSection(String.valueOf(variable));
@@ -135,22 +134,6 @@ public class TriggerTest {
     @RequestMapping(path="/parametersget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getParameters(@RequestBody String payload) throws IOException, NullPointerException {
 
-//        org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
-//
-//        String path = triggerInfo.getString("serviceurl");
-//
-//        NetcdfFile hdf = NetcdfDataset.open(path);
-//
-//        List var = hdf.getVariables();
-//
-//        System.out.println(var);
-//
-//        JSONArray a = new JSONArray();
-//
-//        a.add(var);
-//
-//        return String.valueOf(a);
-
         org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
 
         String path = triggerInfo.getString("serviceurl");
@@ -170,9 +153,29 @@ public class TriggerTest {
                 e.printStackTrace();
             }
             phenomena.add(String.valueOf(phen));
-            System.out.println(phen);
         }
         return String.valueOf(phenomena);
+    }
+
+    @RequestMapping(path="/unitget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public static String getUnit(@RequestBody String payload) throws IOException {
+
+        org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
+
+        String path = triggerInfo.getString("serviceurl");
+        String parameter = triggerInfo.getString("parameter");
+
+        NetcdfFile hdf = NetcdfDataset.open(path);
+
+        Group find = hdf.getRootGroup();
+        String variable = hdf.findVariableByAttribute(find, "long_name", parameter).getName();
+        String value = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
+
+        JSONObject unit = new JSONObject();
+
+        unit.put("unit", value);
+
+        return String.valueOf(unit);
     }
 
     private static void createJSONObject(int i){
