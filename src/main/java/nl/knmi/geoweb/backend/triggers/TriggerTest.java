@@ -3,6 +3,7 @@ package nl.knmi.geoweb.backend.triggers;
 import nl.knmi.adaguc.tools.Tools;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.locationtech.jts.util.Debug;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,14 +14,13 @@ import ucar.ma2.InvalidRangeException;
 import ucar.nc2.*;
 import ucar.nc2.dataset.NetcdfDataset;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -150,10 +150,12 @@ public class TriggerTest {
             try {
                 phen = phenomenon.getValues();
             }catch (NullPointerException e){
-                e.printStackTrace();
+                Debug.print("Some variables don't have a long_name");
             }
-            phenomena.add(String.valueOf(phen));
+            phenomena.add(String.valueOf(phen).substring(0, String.valueOf(phen).length() - 1));
         }
+        removeThese(phenomena);
+
         return String.valueOf(phenomena);
     }
 
@@ -178,6 +180,22 @@ public class TriggerTest {
         return String.valueOf(unit);
     }
 
+    @RequestMapping(path="/activetriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    private static String getActivetriggers() {
+        File folder = new File("/nobackup/users/schouten/Triggers/");
+        File[] listOfFiles = folder.listFiles();
+        JSONArray files = new JSONArray();
+
+        for (int i = 0; i < listOfFiles.length; i++) {
+            if (listOfFiles[i].isFile()) {
+                files.add(listOfFiles[i].getName());
+            } else if (listOfFiles[i].isDirectory()) {
+                System.out.println("Directory " + listOfFiles[i].getName());
+            }
+        }
+        return String.valueOf(files);
+    }
+
     private static void createJSONObject(int i){
         JSONObject locations = new JSONObject();
         locations.put("lat", lat.getDouble(i));
@@ -186,5 +204,20 @@ public class TriggerTest {
         locations.put("code", code.getObject(i));
         locations.put("value", data.getDouble(i));
         locarray.add(locations);
+    }
+
+    private static void removeThese( JSONArray phenomena) {
+        phenomena.remove("Station id");
+        phenomena.remove("time of measurement");
+        phenomena.remove("Station name");
+        phenomena.remove("station  latitude");
+        phenomena.remove("station longitude");
+        phenomena.remove("Station height");
+        phenomena.remove("wawa Weather Code");
+        phenomena.remove("Present Weather");
+        phenomena.remove("wawa Weather Code for Previous 10 Min Interval");
+        phenomena.remove("wawa Weather Code for Previous 10 Min Interval");
+        phenomena.remove("ADAGUC Data Products Standard");
+        phenomena.remove("ADAGUC Data Products Standard");
     }
 }
