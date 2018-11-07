@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -30,6 +31,7 @@ public class TriggerTest {
     private static String name = null;
     private static String unit = null;
     public static String triggerjsonpath = null;
+    public static String triggerPath = "/nobackup/users/schouten/Triggers/";
     private static Array
             station = null,
             data = null,
@@ -109,7 +111,7 @@ public class TriggerTest {
                     .appendValue(ChronoField.MILLI_OF_SECOND, 5)
                     .toFormatter();
 
-            triggerjsonpath = "/nobackup/users/schouten/Triggers/trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
+            triggerjsonpath = triggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
 
             json.put("locations", locarray);
             json.put("phenomenon", phenomenon);
@@ -182,7 +184,7 @@ public class TriggerTest {
 
     @RequestMapping(path="/activetriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     private static String getActivetriggers() {
-        File folder = new File("/nobackup/users/schouten/Triggers/");
+        File folder = new File(triggerPath);
         File[] listOfFiles = folder.listFiles();
         JSONArray files = new JSONArray();
 
@@ -194,6 +196,18 @@ public class TriggerTest {
             }
         }
         return String.valueOf(files);
+    }
+
+    @RequestMapping(path="gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    private static String getTriggers() throws IOException {
+        String trigger = "";
+        List triggerList = Collections.singletonList(getActivetriggers());
+        System.out.println(triggerList);
+        for(int i = 0; i < getActivetriggers().length(); i++) {
+            trigger = Tools.readFile(triggerPath + triggerList.get(i));
+            System.out.println(trigger);
+        }
+        return getActivetriggers();
     }
 
     private static void createJSONObject(int i){
