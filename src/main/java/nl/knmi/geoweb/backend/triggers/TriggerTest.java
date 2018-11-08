@@ -21,7 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,6 +41,7 @@ public class TriggerTest {
     private static boolean printed = false;
     private static boolean jsoncreated = false;
     private static JSONArray locarray = null;
+    private static JSONArray files = null;
 
     @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static void addTrigger(@RequestBody String payload) throws IOException, InvalidRangeException {
@@ -182,32 +183,23 @@ public class TriggerTest {
         return String.valueOf(unit);
     }
 
-    @RequestMapping(path="/activetriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    private static String getActivetriggers() {
+    @RequestMapping(path="gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    private static String getTriggers() throws IOException {
+        String trigger;
+        ArrayList triggerInfoList = new ArrayList();
         File folder = new File(triggerPath);
         File[] listOfFiles = folder.listFiles();
-        JSONArray files = new JSONArray();
-
+        files = new JSONArray();
         for (int i = 0; i < listOfFiles.length; i++) {
             if (listOfFiles[i].isFile()) {
                 files.add(listOfFiles[i].getName());
-            } else if (listOfFiles[i].isDirectory()) {
-                System.out.println("Directory " + listOfFiles[i].getName());
             }
         }
-        return String.valueOf(files);
-    }
-
-    @RequestMapping(path="gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    private static String getTriggers() throws IOException {
-        String trigger = "";
-        List triggerList = Collections.singletonList(getActivetriggers());
-        System.out.println(triggerList);
-        for(int i = 0; i < getActivetriggers().length(); i++) {
-            trigger = Tools.readFile(triggerPath + triggerList.get(i));
-            System.out.println(trigger);
+        for(int i = 0; i < files.size(); i++) {
+            trigger = Tools.readFile(triggerPath + files.get(i));
+            triggerInfoList.add(trigger);
         }
-        return getActivetriggers();
+        return String.valueOf(triggerInfoList);
     }
 
     private static void createJSONObject(int i){
