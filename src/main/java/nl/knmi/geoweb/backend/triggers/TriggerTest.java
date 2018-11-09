@@ -31,7 +31,7 @@ public class TriggerTest {
     private static String name = null;
     private static String unit = null;
     public static String triggerjsonpath = null;
-    public static String triggerPath = "/nobackup/users/schouten/Triggers/";
+    public static String triggerPath = "/nobackup/users/schouten/Triggers/ActiveTriggers/";
     private static Array
             station = null,
             data = null,
@@ -43,8 +43,93 @@ public class TriggerTest {
     private static JSONArray locarray = null;
     private static JSONArray files = null;
 
+//    @RequestMapping(path= "/triggercalculate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+//    public static void calculateTrigger(@RequestBody String payload) throws IOException, InvalidRangeException {
+//
+//        org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
+//        System.out.println(payload);
+//
+//        String path = triggerInfo.getString("serviceurl");
+//        String par = triggerInfo.getString("parameter");
+//        String operator = triggerInfo.getString("operator");
+//        Double limit = triggerInfo.getDouble("limit");
+//
+//        NetcdfFile hdf = NetcdfDataset.open(path);
+//
+//        station = hdf.readSection("stationname");
+//        Group find = hdf.getRootGroup();
+//        String variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
+//        data = hdf.readSection(String.valueOf(variable));
+//        lat = hdf.readSection("lat");
+//        lon = hdf.readSection("lon");
+//        code = hdf.readSection("station");
+//        name = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "long_name", "long_name");
+//        unit = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
+//
+//        JSONObject json = new JSONObject();
+//
+//        locarray = new JSONArray();
+//
+//        JSONObject phenomenon = new JSONObject();
+//        phenomenon.put("parameter", variable);
+//        phenomenon.put("long_name", name);
+//        phenomenon.put("operator", operator);
+//        phenomenon.put("limit", limit);
+//        phenomenon.put("unit", unit);
+//
+//        if(operator.equals("higher")) {
+//            for(int i = 0; i < station.getSize(); i++) {
+//                if (data.getDouble(i) >= limit) {
+//                    printed = true;
+//                    createJSONObject(i);
+//                    jsoncreated = true;
+//                }
+//            }
+//        }
+//        else if(operator.equals("lower")){
+//            for(int i = 0; i < station.getSize(); i++) {
+//                if (data.getDouble(i) <= limit && data.getDouble(i) >= -100) {
+//                    printed = true;
+//                    createJSONObject(i);
+//                    jsoncreated = true;
+//                }
+//            }
+//        }
+//        if(!printed){
+//            printed = true;
+//        }
+//
+//        if(jsoncreated) {
+//            // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
+//
+//            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+//                    .appendValue(ChronoField.YEAR, 4)
+//                    .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+//                    .appendValue(ChronoField.DAY_OF_MONTH, 2)
+//                    .appendValue(ChronoField.HOUR_OF_DAY, 2)
+//                    .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+//                    .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+//                    .appendValue(ChronoField.MILLI_OF_SECOND, 5)
+//                    .toFormatter();
+//
+//            triggerjsonpath = triggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
+//
+//            json.put("locations", locarray);
+//            json.put("phenomenon", phenomenon);
+//
+//            // Creating the json file with a try catch
+//
+//            try (FileWriter file = new FileWriter(triggerjsonpath)) {
+//                file.write(json.toJSONString());
+//                file.flush();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
     @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public static void addTrigger(@RequestBody String payload) throws IOException, InvalidRangeException {
+    public static void addTrigger(@RequestBody String payload) throws IOException {
 
         org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
         System.out.println(payload);
@@ -56,75 +141,40 @@ public class TriggerTest {
 
         NetcdfFile hdf = NetcdfDataset.open(path);
 
-        station = hdf.readSection("stationname");
         Group find = hdf.getRootGroup();
         String variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
-        data = hdf.readSection(String.valueOf(variable));
-        lat = hdf.readSection("lat");
-        lon = hdf.readSection("lon");
-        code = hdf.readSection("station");
-        name = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "long_name", "long_name");
         unit = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
 
-        JSONObject json = new JSONObject();
-
-        locarray = new JSONArray();
-
-        JSONObject phenomenon = new JSONObject();
+        JSONObject json = new JSONObject();JSONObject phenomenon = new JSONObject();
         phenomenon.put("parameter", variable);
-        phenomenon.put("long_name", name);
+        phenomenon.put("long_name", par);
         phenomenon.put("operator", operator);
         phenomenon.put("limit", limit);
         phenomenon.put("unit", unit);
 
-        if(operator.equals("higher")) {
-            for(int i = 0; i < station.getSize(); i++) {
-                if (data.getDouble(i) >= limit) {
-                    printed = true;
-                    createJSONObject(i);
-                    jsoncreated = true;
-                }
-            }
-        }
-        else if(operator.equals("lower")){
-            for(int i = 0; i < station.getSize(); i++) {
-                if (data.getDouble(i) <= limit && data.getDouble(i) >= -100) {
-                    printed = true;
-                    createJSONObject(i);
-                    jsoncreated = true;
-                }
-            }
-        }
-        if(!printed){
-            printed = true;
-        }
+        // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
 
-        if(jsoncreated) {
-            // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+                .appendValue(ChronoField.YEAR, 4)
+                .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+                .appendValue(ChronoField.DAY_OF_MONTH, 2)
+                .appendValue(ChronoField.HOUR_OF_DAY, 2)
+                .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
+                .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
+                .appendValue(ChronoField.MILLI_OF_SECOND, 5)
+                .toFormatter();
 
-            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                    .appendValue(ChronoField.YEAR, 4)
-                    .appendValue(ChronoField.MONTH_OF_YEAR, 2)
-                    .appendValue(ChronoField.DAY_OF_MONTH, 2)
-                    .appendValue(ChronoField.HOUR_OF_DAY, 2)
-                    .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-                    .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-                    .appendValue(ChronoField.MILLI_OF_SECOND, 5)
-                    .toFormatter();
+        triggerjsonpath = triggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
 
-            triggerjsonpath = triggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
+        json.put("phenomenon", phenomenon);
 
-            json.put("locations", locarray);
-            json.put("phenomenon", phenomenon);
+        // Creating the json file with a try catch
 
-            // Creating the json file with a try catch
-
-            try (FileWriter file = new FileWriter(triggerjsonpath)) {
-                file.write(json.toJSONString());
-                file.flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        try (FileWriter file = new FileWriter(triggerjsonpath)) {
+            file.write(json.toJSONString());
+            file.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -202,15 +252,15 @@ public class TriggerTest {
         return String.valueOf(triggerInfoList);
     }
 
-    private static void createJSONObject(int i){
-        JSONObject locations = new JSONObject();
-        locations.put("lat", lat.getDouble(i));
-        locations.put("lon", lon.getDouble(i));
-        locations.put("name", station.getObject(i));
-        locations.put("code", code.getObject(i));
-        locations.put("value", data.getDouble(i));
-        locarray.add(locations);
-    }
+//    private static void createJSONObject(int i){
+//        JSONObject locations = new JSONObject();
+//        locations.put("lat", lat.getDouble(i));
+//        locations.put("lon", lon.getDouble(i));
+//        locations.put("name", station.getObject(i));
+//        locations.put("code", code.getObject(i));
+//        locations.put("value", data.getDouble(i));
+//        locarray.add(locations);
+//    }
 
     private static void removeThese( JSONArray phenomena) {
         phenomena.remove("Station id");
