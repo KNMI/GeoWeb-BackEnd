@@ -30,6 +30,7 @@ public class TriggerTest {
 
     private static String name = null;
     private static String unit = null;
+    private static String variable = null;
     public static String triggerjsonpath = null;
     public static String triggerPath = "/nobackup/users/schouten/Triggers/ActiveTriggers/";
     private static Array
@@ -138,19 +139,25 @@ public class TriggerTest {
         String par = triggerInfo.getString("parameter");
         String operator = triggerInfo.getString("operator");
         Double limit = triggerInfo.getDouble("limit");
+        String source = triggerInfo.getString("source");
 
         NetcdfFile hdf = NetcdfDataset.open(path);
 
         Group find = hdf.getRootGroup();
-        String variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
-        unit = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
 
-        JSONObject json = new JSONObject();JSONObject phenomenon = new JSONObject();
+        if(source.equals("OBS")) {
+            variable = hdf.findVariableByAttribute(find, "long_name", par).getName();
+            unit = hdf.findAttValueIgnoreCase(hdf.findVariable(variable), "units", "units");
+        }
+
+        JSONObject json = new JSONObject();
+        JSONObject phenomenon = new JSONObject();
         phenomenon.put("parameter", variable);
         phenomenon.put("long_name", par);
         phenomenon.put("operator", operator);
         phenomenon.put("limit", limit);
         phenomenon.put("unit", unit);
+        phenomenon.put("source", source);
 
         // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
 
