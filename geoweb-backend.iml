@@ -127,5 +127,9 @@
     <orderEntry type="library" name="Maven: commons-codec:commons-codec:1.10" level="project" />
     <orderEntry type="library" name="slf4j-simple-1.7.25" level="project" />
     <orderEntry type="library" name="netcdfAll-4.6.11" level="project" />
+    <orderEntry type="library" name="Java EE 6-Java EE 6" level="project" />
+    <orderEntry type="library" name="spring-webflux-5.0.2.RELEASE" level="project" />
+    <orderEntry type="library" name="reactor-core-3.2.2.RELEASE" level="project" />
+    <orderEntry type="library" name="commons-io-2.6" level="project" />
   </component>
 </module>
