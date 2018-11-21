@@ -69,7 +69,7 @@ public class SigmetServicesTest {
 			+"\"status\":\"concept\","
 			+"\"validdate\":\"2017-03-24T15:56:16Z\","
 			+"\"validdate_end\":\"2017-03-24T15:56:16Z\","
-			+"\"firname\":\"FIR AMSTERDAM\","
+			+"\"firname\":\"AMSTERDAM FIR\","
 			+"\"location_indicator_icao\":\"EHAA\","
 			+"\"location_indicator_mwo\":\"EHDB\"}";
 
@@ -84,7 +84,7 @@ public class SigmetServicesTest {
 			+"\"status\":\"concept\","
 			+"\"validdate\":\"%DATETIME%\","
 			+"\"validdate_end\":\"%DATETIME_END%\","
-			+"\"firname\":\"FIR AMSTERDAM\","
+			+"\"firname\":\"AMSTERDAM FIR\","
 			+"\"location_indicator_icao\":\"EHAA\","
 			+"\"location_indicator_mwo\":\"EHDB\"}";
 
@@ -171,7 +171,7 @@ public class SigmetServicesTest {
 		assertThat(jsonResult.get("movement_type").asText(), is("STATIONARY")); 
 		assertThat(jsonResult.get("change").asText(), is("NC"));
 		assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
-		assertThat(jsonResult.get("firname").asText(), is("FIR AMSTERDAM"));
+		assertThat(jsonResult.get("firname").asText(), is("AMSTERDAM FIR"));
 		assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
 		assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
 		assertThat(jsonResult.get("status").asText(), is("concept"));
@@ -248,7 +248,7 @@ public class SigmetServicesTest {
 	static String testFeatureFIR="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";
 	@Test
 	public void apiIntersections() throws Exception {
-		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testFeatureFIR+"}";
+		String feature="{\"firname\":\"AMSTERDAM FIR\", \"feature\":"+testFeatureFIR+"}";
 		Debug.println(feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -267,7 +267,7 @@ public class SigmetServicesTest {
 
 	@Test
 	public void apiIntersections6points() throws Exception {
-		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection6points+"}";
+		String feature="{\"firname\":\"AMSTERDAM FIR\", \"feature\":"+testIntersection6points+"}";
 		Debug.println(feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
@@ -290,7 +290,7 @@ public class SigmetServicesTest {
 
 	@Test
 	public void apiIntersections8points() throws Exception {
-		String feature="{\"firname\":\"FIR AMSTERDAM\", \"feature\":"+testIntersection8points+"}";
+		String feature="{\"firname\":\"AMSTERDAM FIR\", \"feature\":"+testIntersection8points+"}";
 		Debug.println(feature);
 		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)

@@ -6,6 +6,7 @@ import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -33,11 +34,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.JSONResponse;
+import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
@@ -48,7 +52,10 @@ import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 @RequestMapping("/sigmets")
 public class SigmetServices {
 	final static String baseUrl="/sigmets";
-
+	
+	@Autowired
+	AdminStore adminStore;
+	
 	SigmetStore sigmetStore=null;
 	private ProductExporter<Sigmet> publishSigmetStore;
 
@@ -76,7 +83,7 @@ public class SigmetServices {
 			path = "/ORG",
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
+	public ResponseEntity<String> __storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
 		Debug.println("storesigmetORG: "+sigmet);
 		Sigmet sm=null;
 		try {
@@ -104,7 +111,7 @@ public class SigmetServices {
 			} else if (sm.getStatus()==SigmetStatus.published) {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-				sm.setSequence(sigmetStore.getNextSequence());
+				sm.setSequence(sigmetStore.getNextSequence(sm));
 				Debug.println("Publishing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
@@ -134,7 +141,7 @@ public class SigmetServices {
 				cancelSigmet.setValiddate(start);
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
-				cancelSigmet.setSequence(sigmetStore.getNextSequence());
+				cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
 				Debug.println("Canceling "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
@@ -181,12 +188,13 @@ public class SigmetServices {
 			path = "",
 			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
-        Debug.println("storesigmet: "+sigmet);
+    public synchronized ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
+        Debug.println("########################################### storesigmet #######################################");
+        Debug.println(sigmet);
         Sigmet sm=null;
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
-
+            
             if (sm.getStatus()==SigmetStatus.concept) {
                 //Store
                 if (sm.getUuid()==null) {
@@ -213,7 +221,7 @@ public class SigmetServices {
             } else if (sm.getStatus()==SigmetStatus.published) {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-                sm.setSequence(sigmetStore.getNextSequence());
+                sm.setSequence(sigmetStore.getNextSequence(sm));
                 Debug.println("Publishing "+sm.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
@@ -269,7 +277,9 @@ public class SigmetServices {
                 cancelSigmet.setValiddate(start);
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
-                cancelSigmet.setSequence(sigmetStore.getNextSequence());
+                cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
+                /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
+                cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
                 Debug.println("Canceling "+sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(cancelSigmet);
@@ -314,7 +324,10 @@ public class SigmetServices {
         }
         Debug.errprintln("Unknown error");
         JSONObject obj=new JSONObject();
-        obj.put("error", "Unknown error");
+        try {
+			obj.put("error", "Unknown error");
+		} catch (JSONException e) {
+		}
         String json = obj.toString();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
     }
@@ -366,13 +379,29 @@ public class SigmetServices {
 		}
 	}
 
-	static SigmetParameters sigmetParameters;
+	
 	@RequestMapping(path="/getsigmetparameters")
-	public SigmetParameters getSigmetParameters() {
-		if (sigmetParameters==null) {
-			sigmetParameters=new SigmetParameters();
+	public ResponseEntity<String> getSigmetParameters() {
+		JSONResponse jsonResponse = new JSONResponse();
+		try {
+			/* If sigmetparameters.json is not available on disk: 
+			 * sigmetparameters.json is defined in src/main/resources/adminstore/config/sigmetparameters.json and 
+			 * is copied to disk location in adminstore
+			 */
+			
+			String validParam = sigmetObjectMapper.writeValueAsString(
+					sigmetObjectMapper.readValue(
+							adminStore.read("config", "sigmetparameters.json"),
+							SigmetParameters.class
+							)
+					);
+			return ResponseEntity.ok(validParam);
+		}catch(Exception e){
+			Debug.println(e.getMessage());
+			jsonResponse.setErrorMessage("Unable to read sigmetparameters", 400);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.getMessage());
 		}
-		return sigmetParameters;
+				
 	}
 
 	@RequestMapping(path="/putsigmetparameters")
@@ -563,7 +592,7 @@ public class SigmetServices {
 		Debug.println("getSigmetList");
 		try{
 			Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
-			Debug.println("SIGMETLIST has length of "+sigmets.length);
+//			Debug.println("SIGMETLIST has length of "+sigmets.length);
 			return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetList(sigmets,page,count)));
 		}catch(Exception e){
 			try {
