@@ -427,20 +427,23 @@ public class TriggerTest extends HttpServlet {
         int year = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.YEAR);
         int month = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.MONTH) + 1;
         int day = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.DAY_OF_MONTH);
-        int hours = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY);
+        int hour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY);
         int minutes = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.MINUTE)/10;
+        String hours = String.valueOf(hour);
+        String days = String.valueOf(day);
+        String months = String.valueOf(month);
 
         if (String.valueOf(month).length() < 2) {
-            month = Integer.parseInt("0" + month);
+            months = String.format("%02d", month);
         }
         if (String.valueOf(day).length() < 2) {
-            day = Integer.parseInt("0" + day);
+            days = String.format("%02d", day);
         }
-        if (String.valueOf(hours).length() < 2) {
-            hours = Integer.parseInt("0" + hours);
+        if (String.valueOf(hour).length() < 2) {
+            hours = String.format("%02d", hour);
         }
 
-        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + month + day + hours + minutes + "0.nc";
+        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
 
         NetcdfFile hdf;
 
@@ -448,7 +451,7 @@ public class TriggerTest extends HttpServlet {
             hdf = NetcdfDataset.open(url);
         } catch(FileNotFoundException e) {
             minutes = minutes - 1;
-            url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + month + day + hours + minutes + "0.nc";
+            url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
             hdf = NetcdfDataset.open(url);
         }
         return hdf;
