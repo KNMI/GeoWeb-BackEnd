@@ -137,6 +137,16 @@ public class TriggerTest extends HttpServlet {
         return triggerResults;
     }
 
+    private static void createJSONObject(int x){
+        JSONObject locations = new JSONObject();
+        locations.put("lat", lat.getDouble(x));
+        locations.put("lon", lon.getDouble(x));
+        locations.put("name", station.getObject(x));
+        locations.put("code", code.getObject(x));
+        locations.put("value", data.getDouble(x));
+        locarray.add(locations);
+    }
+
     @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static void addTrigger(@RequestBody String payload) throws IOException {
 
@@ -192,22 +202,7 @@ public class TriggerTest extends HttpServlet {
         }
     }
 
-    private static void createJSONObject(int x){
-        JSONObject locations = new JSONObject();
-        locations.put("lat", lat.getDouble(x));
-        locations.put("lon", lon.getDouble(x));
-        locations.put("name", station.getObject(x));
-        locations.put("code", code.getObject(x));
-        locations.put("value", data.getDouble(x));
-        locarray.add(locations);
-    }
-
-    @RequestMapping(path="/triggerget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public static String getTrigger() throws IOException {
-        String triggerFile = Tools.readFile(triggerjsonpath);
-        return triggerFile;
-    }
-
+    // Gets the parameters from a dataset when source is chosen in the Front-End
     @RequestMapping(path="/parametersget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getParameters() throws IOException, NullPointerException {
         NetcdfFile hdf = NetcdfDataset.open(setDataset());
@@ -232,6 +227,7 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(phenomena);
     }
 
+    // Gets the unit of a parameter when chosen in the Front-End
     @RequestMapping(path="/unitget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getUnit(@RequestBody String payload) throws IOException {
 
@@ -252,6 +248,7 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(unit);
     }
 
+    // Gets all active triggers that are in the active trigger path
     @RequestMapping(path="/gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     private static String getTriggers() throws IOException {
         String trigger;
@@ -271,6 +268,7 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(triggerInfoList);
     }
 
+    // Sets the dataset to use trigger calculations on with the date in the name of the dataset
     public static String setDataset() throws IOException {
         String url;
 
