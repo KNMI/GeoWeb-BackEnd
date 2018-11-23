@@ -43,6 +43,7 @@ public class TriggerTest extends HttpServlet {
     private static JSONArray locarray = null;
     private static JSONArray files = null;
 
+    // Calculating the actual trigger with the values of active triggers over the values in the latest dataset and writes it to a json file in the trigger path
     @RequestMapping(path= "/triggercalculate", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static JSONArray calculateTrigger() throws IOException, InvalidRangeException, ParseException {
 
@@ -95,7 +96,7 @@ public class TriggerTest extends HttpServlet {
                 for (int x = 0; x < station.getSize(); x++) {
                     if (data.getDouble(x) >= (double) limit) {
                         printed = true;
-                        createJSONObject(x);
+                        createLocationJSONObject(x);
                         jsoncreated = true;
                     }
                 }
@@ -103,7 +104,7 @@ public class TriggerTest extends HttpServlet {
                 for (int x = 0; x < station.getSize(); x++) {
                     if (data.getDouble(x) <= (double) limit && data.getDouble(x) >= -100) {
                         printed = true;
-                        createJSONObject(x);
+                        createLocationJSONObject(x);
                         jsoncreated = true;
                     }
                 }
@@ -137,7 +138,8 @@ public class TriggerTest extends HttpServlet {
         return triggerResults;
     }
 
-    private static void createJSONObject(int x){
+    // Creating a json object for the locations of a calculated trigger
+    private static void createLocationJSONObject(int x){
         JSONObject locations = new JSONObject();
         locations.put("lat", lat.getDouble(x));
         locations.put("lon", lon.getDouble(x));
@@ -147,6 +149,7 @@ public class TriggerTest extends HttpServlet {
         locarray.add(locations);
     }
 
+    // Creates the trigger from values set in the Front-End and adds it to the active triggers path
     @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static void addTrigger(@RequestBody String payload) throws IOException {
 
@@ -168,6 +171,7 @@ public class TriggerTest extends HttpServlet {
         }
 
         JSONObject json = new JSONObject();
+
         JSONObject phenomenon = new JSONObject();
         phenomenon.put("parameter", variable);
         phenomenon.put("long_name", par);
@@ -177,7 +181,6 @@ public class TriggerTest extends HttpServlet {
         phenomenon.put("source", source);
 
         // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
-
         DateTimeFormatter formatter = new DateTimeFormatterBuilder()
                 .appendValue(ChronoField.YEAR, 4)
                 .appendValue(ChronoField.MONTH_OF_YEAR, 2)
@@ -188,12 +191,12 @@ public class TriggerTest extends HttpServlet {
                 .appendValue(ChronoField.MILLI_OF_SECOND, 5)
                 .toFormatter();
 
-        triggerjsonpath = activeTriggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
+        // Path + name where the trigger will be saved as a json file
+        triggerjsonpath = activeTriggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";
 
         json.put("phenomenon", phenomenon);
 
         // Creating the json file with a try catch
-
         try (FileWriter file = new FileWriter(triggerjsonpath)) {
             file.write(json.toJSONString());
             file.flush();
