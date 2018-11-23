@@ -1,10 +1,6 @@
 package nl.knmi.geoweb.backend.triggers;
 
 import nl.knmi.adaguc.tools.Tools;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
-import org.apache.commons.io.monitor.FileAlterationMonitor;
-import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,7 +8,6 @@ import org.json.simple.parser.ParseException;
 import org.locationtech.jts.util.Debug;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.*;
@@ -26,20 +21,17 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/triggers")
 public class TriggerTest extends HttpServlet {
 
-    private static String name = null;
     private static String unit = null;
     private static String variable = null;
     public static String activetriggerjsonpath = null;
     public static String triggerjsonpath = null;
-    public static String activeTriggerPath = "/nobackup/users/schouten/Triggers/ActiveTriggers/";
     public static String triggerPath = "/nobackup/users/schouten/Triggers/";
+    public static String activeTriggerPath = triggerPath + "ActiveTriggers/";
     private static Array
             station = null,
             data = null,
@@ -48,11 +40,8 @@ public class TriggerTest extends HttpServlet {
             code = null;
     private static boolean printed = false;
     private static boolean jsoncreated = false;
-    private boolean changed = false;
     private static JSONArray locarray = null;
     private static JSONArray files = null;
-    private ExecutorService nonBlockingService = Executors
-            .newCachedThreadPool();
 
     @RequestMapping(path= "/triggercalculate", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static JSONArray calculateTrigger() throws IOException, InvalidRangeException, ParseException {
@@ -66,6 +55,7 @@ public class TriggerTest extends HttpServlet {
             }
         }
 
+        // Getting a list of filenames of all active triggers
         File activefolder = new File(activeTriggerPath);
         File[] listOfActiveFiles = activefolder.listFiles();
         JSONArray files = new JSONArray();
@@ -74,14 +64,18 @@ public class TriggerTest extends HttpServlet {
                 files.add(listOfActiveFiles[i].getName());
             }
         }
-        NetcdfFile hdf = setDataset();
+
+        // Reading the latest dataset
+        NetcdfFile hdf = NetcdfDataset.open(setDataset());
         station = hdf.readSection("stationname");
 
         JSONParser parser = new JSONParser();
 
         JSONArray triggerResults = new JSONArray();
 
+        // For every active trigger json file...
         for(int i = 0; i < files.size(); i++) {
+            // ...getting the json object
             JSONObject triggerFile = (JSONObject) parser.parse(new FileReader(activeTriggerPath + String.valueOf(files.get(i))));
             JSONObject phen = (JSONObject) triggerFile.get("phenomenon");
 
@@ -96,6 +90,7 @@ public class TriggerTest extends HttpServlet {
 
             locarray = new JSONArray();
 
+            // ...calculating if trigger exceeds the value in the dataset
             if (operator.equals("higher")) {
                 for (int x = 0; x < station.getSize(); x++) {
                     if (data.getDouble(x) >= (double) limit) {
@@ -118,28 +113,18 @@ public class TriggerTest extends HttpServlet {
             }
 
             if (jsoncreated) {
-                // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
 
-//                DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-//                        .appendValue(ChronoField.YEAR, 4)
-//                        .appendValue(ChronoField.MONTH_OF_YEAR, 2)
-//                        .appendValue(ChronoField.DAY_OF_MONTH, 2)
-//                        .appendValue(ChronoField.HOUR_OF_DAY, 2)
-//                        .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-//                        .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-//                        .appendValue(ChronoField.MILLI_OF_SECOND, 5)
-//                        .toFormatter();
+                // Path + name with a random UUID where the calculated trigger will be saved as a json file
+                activetriggerjsonpath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";
 
-                activetriggerjsonpath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";  // Path + name where the trigger will be saved as a json file
-
+                // ...creating the calculated trigger json object
                 if (locarray.size() != 0) {
                     JSONObject json = new JSONObject();
                     json.put("locations", locarray);
                     json.put("phenomenon", phen);
                     triggerResults.add(json);
 
-                    // Creating the json file with a try catch
-
+                    // ...writing the calculated trigger json object to a file with a try catch
                     try (FileWriter file = new FileWriter(activetriggerjsonpath)) {
                         file.write(json.toJSONString());
                         file.flush();
@@ -151,73 +136,6 @@ public class TriggerTest extends HttpServlet {
         }
         return triggerResults;
     }
-//        String path = triggerInfo.getString("serviceurl");
-//        Object par = phen.get("parameter");
-//        Object operator = phen.get("operator");
-//        Object limit = phen.get("limit");
-//
-//        NetcdfFile hdf = NetcdfDataset.open(path);
-//
-//        station = hdf.readSection("stationname");
-//        Group find = hdf.getRootGroup();
-//        String variable = hdf.findVariableByAttribute(find, "long_name", String.valueOf(par)).getName();
-//        data = hdf.readSection(String.valueOf(variable));
-//        lat = hdf.readSection("lat");
-//        lon = hdf.readSection("lon");
-//        code = hdf.readSection("station");
-//
-//        JSONObject json = new JSONObject();
-//
-//        locarray = new JSONArray();
-//
-//        if (operator.equals("higher")) {
-//            for (int x = 0; x < station.getSize(); x++) {
-//                if (data.getDouble(x) >= (double) limit) {
-//                    printed = true;
-//                    createJSONObject(x);
-//                    jsoncreated = true;
-//                }
-//            }
-//        } else if (operator.equals("lower")) {
-//            for (int x = 0; x < station.getSize(); x++) {
-//                if (data.getDouble(x) <= (double) limit && data.getDouble(x) >= -100) {
-//                    printed = true;
-//                    createJSONObject(x);
-//                    jsoncreated = true;
-//                }
-//            }
-//        }
-//        if (!printed) {
-//            printed = true;
-//        }
-//
-//        if (jsoncreated) {
-//            // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
-//
-//            DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-//                    .appendValue(ChronoField.YEAR, 4)
-//                    .appendValue(ChronoField.MONTH_OF_YEAR, 2)
-//                    .appendValue(ChronoField.DAY_OF_MONTH, 2)
-//                    .appendValue(ChronoField.HOUR_OF_DAY, 2)
-//                    .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-//                    .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-//                    .appendValue(ChronoField.MILLI_OF_SECOND, 5)
-//                    .toFormatter();
-//
-//            activetriggerjsonpath = triggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";  // Path + name where the trigger will be saved as a json file
-//
-//            json.put("locations", locarray);
-//            json.put("phenomenon", triggerFile);
-//
-//            // Creating the json file with a try catch
-//
-//            try (FileWriter file = new FileWriter(activetriggerjsonpath)) {
-//                file.write(json.toJSONString());
-//                file.flush();
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
 
     @RequestMapping(path= "/triggercreate", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static void addTrigger(@RequestBody String payload) throws IOException {
@@ -230,7 +148,7 @@ public class TriggerTest extends HttpServlet {
         Double limit = triggerInfo.getDouble("limit");
         String source = triggerInfo.getString("source");
 
-        NetcdfFile hdf = setDataset();
+        NetcdfFile hdf = NetcdfDataset.open(setDataset());
 
         Group find = hdf.getRootGroup();
 
@@ -274,6 +192,16 @@ public class TriggerTest extends HttpServlet {
         }
     }
 
+    private static void createJSONObject(int x){
+        JSONObject locations = new JSONObject();
+        locations.put("lat", lat.getDouble(x));
+        locations.put("lon", lon.getDouble(x));
+        locations.put("name", station.getObject(x));
+        locations.put("code", code.getObject(x));
+        locations.put("value", data.getDouble(x));
+        locarray.add(locations);
+    }
+
     @RequestMapping(path="/triggerget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getTrigger() throws IOException {
         String triggerFile = Tools.readFile(triggerjsonpath);
@@ -282,7 +210,7 @@ public class TriggerTest extends HttpServlet {
 
     @RequestMapping(path="/parametersget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getParameters() throws IOException, NullPointerException {
-        NetcdfFile hdf = setDataset();
+        NetcdfFile hdf = NetcdfDataset.open(setDataset());
 
         JSONArray phenomena = new JSONArray();
         Array phen = null;
@@ -300,7 +228,6 @@ public class TriggerTest extends HttpServlet {
                 phenomena.add(String.valueOf(phen).substring(0, String.valueOf(phen).length() - 1));
             }
         }
-//        removeThese(phenomena);
 
         return String.valueOf(phenomena);
     }
@@ -312,7 +239,7 @@ public class TriggerTest extends HttpServlet {
 
         String parameter = triggerInfo.getString("parameter");
 
-        NetcdfFile hdf = setDataset();
+        NetcdfFile hdf = NetcdfDataset.open(setDataset());
 
         Group find = hdf.getRootGroup();
         String variable = hdf.findVariableByAttribute(find, "long_name", parameter).getName();
@@ -344,84 +271,7 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(triggerInfoList);
     }
 
-//    @RequestMapping(path="/servlettest", produces=MediaType.TEXT_EVENT_STREAM_VALUE)
-//    public void servletTest(HttpServletResponse response) throws IOException {
-//        response.setContentType("text/event-stream");
-//        response.setCharacterEncoding("UTF-8");
-//        PrintWriter writer = response.getWriter();
-//
-//        File path = FileUtils.getFile("/nobackup/users/schouten/Triggers/ActiveTriggers");
-//        FileAlterationObserver observer = new FileAlterationObserver(path);
-//
-//        observer.addListener(new FileAlterationListenerAdaptor(){
-//
-//            @Override
-//            public void onFileCreate(File file) {
-//                changed = true;
-//            }
-//
-//        });
-//
-//        if(changed == true) {
-//            writer.write("data: A new file has been uploaded!\n\n");
-//            changed = false;
-//        }
-//
-//        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
-//
-//        try {
-//            monitor.start();
-//        } catch(IOException e) {
-//            System.out.println(e.getMessage());
-//        } catch(InterruptedException e) {
-//            System.out.println(e.getMessage());
-//        } catch (Exception e) {
-//            System.out.println(e.getMessage());
-//        }
-//
-//        writer.close();
-//    }
-
-//    @GetMapping("/sse")
-//    public SseEmitter handleSse() {
-//        File path = FileUtils.getFile("/usr/people/schouten/Documents");
-//        FileAlterationObserver observer = new FileAlterationObserver(path);
-//
-//        SseEmitter emitter = new SseEmitter();
-//
-//        observer.addListener(new FileAlterationListenerAdaptor(){
-//
-//            @Override
-//            public void onFileCreate(File file) {
-//                nonBlockingService.execute(() -> {
-//                    try {
-//                        emitter.send(file.getName());
-//                        emitter.onTimeout(() -> {
-//                            emitter.complete();
-//                        });
-//                    } catch (Exception ex) {
-//                        emitter.completeWithError(ex);
-//                    }
-//                });
-//            }
-//
-//        });
-//
-//        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
-//        try {
-//            monitor.start();
-//        } catch(IOException e) {
-//            System.out.println(e.getMessage());
-//        } catch(InterruptedException e) {
-//            System.out.println(e.getMessage());
-//        } catch (Exception e) {
-//            System.out.println(e.getMessage());
-//        }
-//
-//        return emitter;
-//    }
-
-    private static NetcdfFile setDataset() throws IOException {
+    public static String setDataset() throws IOException {
         String url;
 
         int year = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.YEAR);
@@ -442,28 +292,23 @@ public class TriggerTest extends HttpServlet {
         if (String.valueOf(hour).length() < 2) {
             hours = String.format("%02d", hour);
         }
+        if (minutes == 0) {
+            hours = String.valueOf(Integer.parseInt(hours) -1);
+            minutes = 5;
+            if (hours.equals("00")) {
+                hours = "23";
+            }
+        }
 
         url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
 
-        NetcdfFile hdf;
-
         try{
-            hdf = NetcdfDataset.open(url);
+            NetcdfDataset.open(url);
         } catch(FileNotFoundException e) {
             minutes = minutes - 1;
             url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
-            hdf = NetcdfDataset.open(url);
+            NetcdfDataset.open(url);
         }
-        return hdf;
-    }
-
-    private static void createJSONObject(int x){
-        JSONObject locations = new JSONObject();
-        locations.put("lat", lat.getDouble(x));
-        locations.put("lon", lon.getDouble(x));
-        locations.put("name", station.getObject(x));
-        locations.put("code", code.getObject(x));
-        locations.put("value", data.getDouble(x));
-        locarray.add(locations);
+        return url;
     }
 }
