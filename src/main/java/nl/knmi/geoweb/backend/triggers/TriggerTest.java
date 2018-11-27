@@ -1,11 +1,16 @@
 package nl.knmi.geoweb.backend.triggers;
 
 import nl.knmi.adaguc.tools.Tools;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
+import org.apache.commons.io.monitor.FileAlterationMonitor;
+import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.locationtech.jts.util.Debug;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ucar.ma2.Array;
@@ -125,16 +130,12 @@ public class TriggerTest extends HttpServlet {
                     json.put("phenomenon", phen);
                     triggerResults.add(json);
 
-                    // ...writing the calculated trigger json object to a file with a try catch
-                    try (FileWriter file = new FileWriter(activetriggerjsonpath)) {
-                        file.write(json.toJSONString());
-                        file.flush();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    // ...writing the calculated trigger json object to a file
+                    writeJsonFile(activetriggerjsonpath, json);
                 }
             }
         }
+        hdf.close();
         return triggerResults;
     }
 
@@ -196,8 +197,15 @@ public class TriggerTest extends HttpServlet {
 
         json.put("phenomenon", phenomenon);
 
-        // Creating the json file with a try catch
-        try (FileWriter file = new FileWriter(triggerjsonpath)) {
+        // Writing the JSON file
+        writeJsonFile(triggerjsonpath, json);
+
+        hdf.close();
+    }
+
+    // Writing the JSON file with a try catch
+    private static void writeJsonFile(String url, JSONObject json) {
+        try (FileWriter file = new FileWriter(url)) {
             file.write(json.toJSONString());
             file.flush();
         } catch (IOException e) {
@@ -227,6 +235,8 @@ public class TriggerTest extends HttpServlet {
             }
         }
 
+        hdf.close();
+
         return String.valueOf(phenomena);
     }
 
@@ -248,12 +258,17 @@ public class TriggerTest extends HttpServlet {
 
         unit.put("unit", value);
 
+        hdf.close();
+
         return String.valueOf(unit);
     }
 
     // Gets all active triggers that are in the active trigger path
     @RequestMapping(path="/gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    private static String getTriggers() throws IOException {
+    private String getTriggers() throws Exception {
+
+        reportActiveTriggers();
+
         String trigger;
         ArrayList triggerInfoList = new ArrayList();
         File folder = new File(activeTriggerPath);
@@ -271,6 +286,68 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(triggerInfoList);
     }
 
+    @Autowired
+    WebSocketListener listener;
+
+    // Checks every half a second (500 ms) if new file is added to active trigger path
+    public void reportActiveTriggers() throws Exception {
+        File path = FileUtils.getFile(activeTriggerPath);
+        FileAlterationObserver observer = new FileAlterationObserver(path);
+
+        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
+
+        observer.addListener(new FileAlterationListenerAdaptor() {
+
+            @Override
+            public void onFileCreate(File file) {
+                System.out.println("Created: " + file.getName());
+                listener.pushSystemStatusToWebSocket("Active Triggers");
+                try {
+                    monitor.stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFileDelete(File file) {
+                System.out.println("Deleted: " + file.getName());
+                listener.pushSystemStatusToWebSocket("Active Triggers");
+                try {
+                    monitor.stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFileChange(File file) {
+                System.out.println("Changed: " + file.getName());
+                listener.pushSystemStatusToWebSocket("Active Triggers");
+                try {
+                    monitor.stop();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        });
+
+        try {
+            monitor.start();
+            Thread.sleep(500);
+        } catch(IOException e) {
+            System.out.println(e.getMessage());
+            monitor.stop();
+        } catch(InterruptedException e) {
+            System.out.println(e.getMessage());
+            monitor.stop();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            monitor.stop();
+        }
+    }
+
     // Sets the dataset to use trigger calculations on with the date in the name of the dataset
     public static String setDataset() throws IOException {
         String url;
@@ -280,6 +357,11 @@ public class TriggerTest extends HttpServlet {
         int day = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.DAY_OF_MONTH);
         int hour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY);
         int minutes = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.MINUTE)/10;
+
+        if (minutes == 0) {
+            hour = hour -1;
+        }
+
         String hours = String.valueOf(hour);
         String days = String.valueOf(day);
         String months = String.valueOf(month);
@@ -294,7 +376,6 @@ public class TriggerTest extends HttpServlet {
             hours = String.format("%02d", hour);
         }
         if (minutes == 0) {
-            hours = String.valueOf(Integer.parseInt(hours) -1);
             minutes = 5;
             if (hours.equals("00")) {
                 hours = "23";
@@ -303,13 +384,18 @@ public class TriggerTest extends HttpServlet {
 
         url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
 
+        NetcdfFile hdf;
+
         try{
-            NetcdfDataset.open(url);
+            hdf = NetcdfDataset.open(url);
         } catch(FileNotFoundException e) {
             minutes = minutes - 1;
             url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
-            NetcdfDataset.open(url);
+            hdf = NetcdfDataset.open(url);
         }
+
+        hdf.close();
+
         return url;
     }
 }
