@@ -18,32 +18,32 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/triggers") 
-public class TriggerServices {
-	TriggerStore triggerStore;	
+public class OldTriggerServices {
+	OldTriggerStore oldTriggerStore;
 	
-	TriggerServices (final TriggerStore triggerStore) throws IOException {
-		this.triggerStore = triggerStore;
+	OldTriggerServices(final OldTriggerStore oldTriggerStore) throws IOException {
+		this.oldTriggerStore = oldTriggerStore;
 	}
 	
 	@RequestMapping("/gettriggers")
-	public List<Trigger> getTriggers(@RequestParam("startdate")@DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate, 
-			                  @RequestParam("duration")Integer duration) {
-		List<Trigger>triggers=triggerStore.getLastTriggers(startDate, duration);
-		for (Trigger trigger: triggers) {
+	public List<OldTrigger> getTriggers(@RequestParam("startdate")@DateTimeFormat(pattern="yyyy-MM-dd'T'HH:mm:ss'Z'") Date startDate,
+										@RequestParam("duration")Integer duration) {
+		List<OldTrigger> oldTriggers = oldTriggerStore.getLastTriggers(startDate, duration);
+		for (OldTrigger oldTrigger : oldTriggers) {
 			List<String>presets=new ArrayList<String>();
 			for (int i=1; i<=3; i++) {
-				presets.add(trigger.getPhenomenon().getSource()+"_preset_"+i);
+				presets.add(oldTrigger.getPhenomenon().getSource()+"_preset_"+i);
 			}
-			trigger.setPresets(presets);
+			oldTrigger.setPresets(presets);
 		}
-		return triggers;
+		return oldTriggers;
 	}
 
     @RequestMapping(path="/addtrigger", method=RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> addTrigger(@RequestBody Trigger.TriggerTransport transport) {
-    	Trigger trig=new Trigger(transport);
+    public ResponseEntity<String> addTrigger(@RequestBody OldTrigger.TriggerTransport transport) {
+    	OldTrigger trig=new OldTrigger(transport);
     	try {
-			triggerStore.storeTrigger(trig);
+			oldTriggerStore.storeTrigger(trig);
 	    	return ResponseEntity.status(HttpStatus.OK).body("OK");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block

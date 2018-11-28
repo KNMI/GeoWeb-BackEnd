@@ -21,15 +21,11 @@ import ucar.nc2.dataset.NetcdfDataset;
 import javax.servlet.http.HttpServlet;
 import java.io.*;
 import java.io.FileWriter;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
 import java.util.*;
 
 @RestController
 @RequestMapping("/triggers")
-public class TriggerTest extends HttpServlet {
+public class TriggerService extends HttpServlet {
 
     private static String unit = null;
     private static String variable = null;
@@ -48,11 +44,15 @@ public class TriggerTest extends HttpServlet {
     private static JSONArray locarray = null;
     private static JSONArray files = null;
 
+    private static Dataset dataset;
+
+    @Autowired
+    WebSocketListener listener;
+
     // Calculating the actual trigger with the values of active triggers over the values in the latest dataset and writes it to a json file in the trigger path
-    @RequestMapping(path= "/triggercalculate", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static JSONArray calculateTrigger() throws IOException, InvalidRangeException, ParseException {
 
-        // Everytime new triggers are calculated the old ones get deleted
+        // Everytime new triggers are calculated the old ones are deleted
         File folder = new File(triggerPath);
         File[] listOfFiles = folder.listFiles();
         for (int i = 0; i < listOfFiles.length; i++) {
@@ -72,7 +72,7 @@ public class TriggerTest extends HttpServlet {
         }
 
         // Reading the latest dataset
-        NetcdfFile hdf = NetcdfDataset.open(setDataset());
+        NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
         station = hdf.readSection("stationname");
 
         JSONParser parser = new JSONParser();
@@ -162,7 +162,7 @@ public class TriggerTest extends HttpServlet {
         Double limit = triggerInfo.getDouble("limit");
         String source = triggerInfo.getString("source");
 
-        NetcdfFile hdf = NetcdfDataset.open(setDataset());
+        NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
 
         Group find = hdf.getRootGroup();
 
@@ -181,19 +181,8 @@ public class TriggerTest extends HttpServlet {
         phenomenon.put("unit", unit);
         phenomenon.put("source", source);
 
-        // Setting a format of the date and time with only numbers (to put in the name of the trigger file)
-        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
-                .appendValue(ChronoField.YEAR, 4)
-                .appendValue(ChronoField.MONTH_OF_YEAR, 2)
-                .appendValue(ChronoField.DAY_OF_MONTH, 2)
-                .appendValue(ChronoField.HOUR_OF_DAY, 2)
-                .appendValue(ChronoField.MINUTE_OF_HOUR, 2)
-                .appendValue(ChronoField.SECOND_OF_MINUTE, 2)
-                .appendValue(ChronoField.MILLI_OF_SECOND, 5)
-                .toFormatter();
-
         // Path + name where the trigger will be saved as a json file
-        triggerjsonpath = activeTriggerPath + "trigger_" + LocalDateTime.now().format(formatter) + ".json";
+        triggerjsonpath = activeTriggerPath + "trigger_" + UUID.randomUUID() + ".json";
 
         json.put("phenomenon", phenomenon);
 
@@ -204,8 +193,8 @@ public class TriggerTest extends HttpServlet {
     }
 
     // Writing the JSON file with a try catch
-    private static void writeJsonFile(String url, JSONObject json) {
-        try (FileWriter file = new FileWriter(url)) {
+    private static void writeJsonFile(String path, JSONObject json) {
+        try (FileWriter file = new FileWriter(path)) {
             file.write(json.toJSONString());
             file.flush();
         } catch (IOException e) {
@@ -216,7 +205,7 @@ public class TriggerTest extends HttpServlet {
     // Gets the parameters from a dataset when source is chosen in the Front-End
     @RequestMapping(path="/parametersget", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getParameters() throws IOException, NullPointerException {
-        NetcdfFile hdf = NetcdfDataset.open(setDataset());
+        NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
 
         JSONArray phenomena = new JSONArray();
         Array phen = null;
@@ -248,7 +237,7 @@ public class TriggerTest extends HttpServlet {
 
         String parameter = triggerInfo.getString("parameter");
 
-        NetcdfFile hdf = NetcdfDataset.open(setDataset());
+        NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
 
         Group find = hdf.getRootGroup();
         String variable = hdf.findVariableByAttribute(find, "long_name", parameter).getName();
@@ -286,10 +275,7 @@ public class TriggerTest extends HttpServlet {
         return String.valueOf(triggerInfoList);
     }
 
-    @Autowired
-    WebSocketListener listener;
-
-    // Checks every half a second (500 ms) if new file is added to active trigger path
+    // Checks if new file is added to active trigger path
     public void reportActiveTriggers() throws Exception {
         File path = FileUtils.getFile(activeTriggerPath);
         FileAlterationObserver observer = new FileAlterationObserver(path);
@@ -301,7 +287,7 @@ public class TriggerTest extends HttpServlet {
             @Override
             public void onFileCreate(File file) {
                 System.out.println("Created: " + file.getName());
-                listener.pushSystemStatusToWebSocket("Active Triggers");
+                listener.pushMessageToWebSocket("Active Triggers");
                 try {
                     monitor.stop();
                 } catch (Exception e) {
@@ -312,7 +298,7 @@ public class TriggerTest extends HttpServlet {
             @Override
             public void onFileDelete(File file) {
                 System.out.println("Deleted: " + file.getName());
-                listener.pushSystemStatusToWebSocket("Active Triggers");
+                listener.pushMessageToWebSocket("Active Triggers");
                 try {
                     monitor.stop();
                 } catch (Exception e) {
@@ -323,7 +309,7 @@ public class TriggerTest extends HttpServlet {
             @Override
             public void onFileChange(File file) {
                 System.out.println("Changed: " + file.getName());
-                listener.pushSystemStatusToWebSocket("Active Triggers");
+                listener.pushMessageToWebSocket("Active Triggers");
                 try {
                     monitor.stop();
                 } catch (Exception e) {
@@ -346,56 +332,5 @@ public class TriggerTest extends HttpServlet {
             System.out.println(e.getMessage());
             monitor.stop();
         }
-    }
-
-    // Sets the dataset to use trigger calculations on with the date in the name of the dataset
-    public static String setDataset() throws IOException {
-        String url;
-
-        int year = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.YEAR);
-        int month = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.MONTH) + 1;
-        int day = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.DAY_OF_MONTH);
-        int hour = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.HOUR_OF_DAY);
-        int minutes = Calendar.getInstance(TimeZone.getDefault()).get(Calendar.MINUTE)/10;
-
-        if (minutes == 0) {
-            hour = hour -1;
-        }
-
-        String hours = String.valueOf(hour);
-        String days = String.valueOf(day);
-        String months = String.valueOf(month);
-
-        if (String.valueOf(month).length() < 2) {
-            months = String.format("%02d", month);
-        }
-        if (String.valueOf(day).length() < 2) {
-            days = String.format("%02d", day);
-        }
-        if (String.valueOf(hour).length() < 2) {
-            hours = String.format("%02d", hour);
-        }
-        if (minutes == 0) {
-            minutes = 5;
-            if (hours.equals("00")) {
-                hours = "23";
-            }
-        }
-
-        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
-
-        NetcdfFile hdf;
-
-        try{
-            hdf = NetcdfDataset.open(url);
-        } catch(FileNotFoundException e) {
-            minutes = minutes - 1;
-            url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
-            hdf = NetcdfDataset.open(url);
-        }
-
-        hdf.close();
-
-        return url;
     }
 }

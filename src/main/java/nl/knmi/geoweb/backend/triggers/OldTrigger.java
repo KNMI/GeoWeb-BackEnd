@@ -12,7 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Trigger {
+public class OldTrigger {
 	@Getter
 	public static class TriggerPhenomenon {
 		private String parameter;
@@ -54,11 +54,11 @@ public class Trigger {
 	private Date triggerdate;
 	private TriggerPhenomenon phenomenon;
 	
-	public Trigger() {
+	public OldTrigger() {
 		this.locations=new ArrayList<TriggerLocation>();
 	}
 	
-	public Trigger(TriggerPhenomenon phenomenon, List<TriggerLocation>triggerLocations, Date triggerdate, String uuid){
+	public OldTrigger(TriggerPhenomenon phenomenon, List<TriggerLocation>triggerLocations, Date triggerdate, String uuid){
 		this.uuid=UUID.randomUUID().toString();	
 		this.locations=triggerLocations;
 		this.phenomenon=phenomenon;
@@ -66,7 +66,7 @@ public class Trigger {
 		this.uuid=uuid;
 		 
 	}
-	public Trigger(TriggerTransport transport) {
+	public OldTrigger(TriggerTransport transport) {
 		this(transport.getPhenomenon(), transport.getLocations(), transport.getTriggerdate(), UUID.randomUUID().toString());
 		
 	}

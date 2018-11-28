@@ -31,12 +31,12 @@ import nl.knmi.adaguc.tools.Tools;
 
 @Getter
 @Component
-public class TriggerStore {
+public class OldTriggerStore {
 	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	private String directory;
 
-	public TriggerStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+	public OldTriggerStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/triggers";
 		Debug.println("TRIGGER STORE at " + dir);
 		File f = new File(dir);
@@ -45,21 +45,21 @@ public class TriggerStore {
 			Debug.println("Creating triggerdir at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Trigger directory location is not a directory");
-			throw new NotDirectoryException("Trigger directory location is not a directory");
+			Debug.errprintln("OldTrigger directory location is not a directory");
+			throw new NotDirectoryException("OldTrigger directory location is not a directory");
 		}
 		this.directory=dir;
 	}
 
-	public List<Trigger> getLastTriggers(Date startDate, int duration) {
-		List<Trigger> triggers=new ArrayList<Trigger>();
+	public List<OldTrigger> getLastTriggers(Date startDate, int duration) {
+		List<OldTrigger> oldTriggers =new ArrayList<OldTrigger>();
 		Date endDate=new Date(startDate.getTime()+duration*1000);
 		try (DirectoryStream<Path> files = Files.newDirectoryStream(Paths.get(directory),
 				new DirectoryStream.Filter<Path>() {
 			@Override
 			public boolean accept(Path entry) throws IOException {
 				if (entry.getFileName().toString().startsWith("trigger_")) {
-					Trigger trig=loadTriggerFromFile(entry.toString());
+					OldTrigger trig=loadTriggerFromFile(entry.toString());
 					Date trigdt=trig.getTriggerdate();
 					return !startDate.after(trigdt)&&endDate.after(trigdt);
 				}
@@ -68,22 +68,22 @@ public class TriggerStore {
 		})
 				){
 			for (Path path : files) {
-				Trigger trig=this.loadTriggerFromFile(path.toString());
-				triggers.add(trig);
+				OldTrigger trig=this.loadTriggerFromFile(path.toString());
+				oldTriggers.add(trig);
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return triggers;
+		return oldTriggers;
 	}
 
-	public void storeTrigger(Trigger trigger) throws FileNotFoundException {
+	public void storeTrigger(OldTrigger oldTrigger) throws FileNotFoundException {
 		String fn=this.directory+"/"+"trigger_"+UUID.randomUUID()+".json";
 		ObjectMapper om =new ObjectMapper();
 		String json="";
 		try {
-			json=om.writeValueAsString(trigger);
+			json=om.writeValueAsString(oldTrigger);
 		} catch (JsonProcessingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -97,15 +97,15 @@ public class TriggerStore {
 	}
 
 
-	public Trigger loadTriggerFromFile(String fn) throws IOException {
+	public OldTrigger loadTriggerFromFile(String fn) throws IOException {
 		String json=new String(Files.readAllBytes(Paths.get(fn)));
 		return loadJsonTrigger(json);
 
 	}
-	public Trigger loadJsonTrigger(String json) {
+	public OldTrigger loadJsonTrigger(String json) {
 		ObjectMapper om=new ObjectMapper();
 		try {
-			return om.readValue(json, Trigger.class);
+			return om.readValue(json, OldTrigger.class);
 		} catch (JsonParseException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

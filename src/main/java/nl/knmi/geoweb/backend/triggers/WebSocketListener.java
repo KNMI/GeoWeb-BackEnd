@@ -13,11 +13,10 @@ public class WebSocketListener {
     @Autowired
     private SimpMessagingTemplate webSocket;
 
-
     @Async
-    @MessageMapping("/websockettest")
+    @MessageMapping("/websocket")
     @SendTo("/trigger/messages")
-    public void pushSystemStatusToWebSocket (String newStatus){
+    public void pushMessageToWebSocket (String newStatus){
 
         webSocket.convertAndSend("/trigger/messages", newStatus);
 
