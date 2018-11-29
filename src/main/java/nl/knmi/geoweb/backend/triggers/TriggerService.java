@@ -21,6 +21,9 @@ import ucar.nc2.dataset.NetcdfDataset;
 import javax.servlet.http.HttpServlet;
 import java.io.*;
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 @RestController
@@ -33,6 +36,7 @@ public class TriggerService extends HttpServlet {
     public static String triggerjsonpath = null;
     public static String triggerPath = "/nobackup/users/schouten/Triggers/";
     public static String activeTriggerPath = triggerPath + "ActiveTriggers/";
+    public static String inactiveTriggerPath = triggerPath + "InactiveTriggers/";
     private static Array
             station = null,
             data = null,
@@ -73,6 +77,7 @@ public class TriggerService extends HttpServlet {
 
         // Reading the latest dataset
         NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
+
         station = hdf.readSection("stationname");
 
         JSONParser parser = new JSONParser();
@@ -173,6 +178,9 @@ public class TriggerService extends HttpServlet {
 
         JSONObject json = new JSONObject();
 
+        // Set random UUID to put in trigger file name and to identify trigger
+        UUID randomUUID = UUID.randomUUID();
+
         JSONObject phenomenon = new JSONObject();
         phenomenon.put("parameter", variable);
         phenomenon.put("long_name", par);
@@ -180,9 +188,10 @@ public class TriggerService extends HttpServlet {
         phenomenon.put("limit", limit);
         phenomenon.put("unit", unit);
         phenomenon.put("source", source);
+        phenomenon.put("UUID", randomUUID.toString());
 
         // Path + name where the trigger will be saved as a json file
-        triggerjsonpath = activeTriggerPath + "trigger_" + UUID.randomUUID() + ".json";
+        triggerjsonpath = activeTriggerPath + "trigger_" + randomUUID + ".json";
 
         json.put("phenomenon", phenomenon);
 
@@ -192,8 +201,24 @@ public class TriggerService extends HttpServlet {
         hdf.close();
     }
 
-    // Writing the JSON file with a try catch
+    // JSON file writer with path and JSON object
     private static void writeJsonFile(String path, JSONObject json) {
+
+        // Checking if required paths exist, if they don't exist they are created
+        Path triggerpath = Paths.get(triggerPath);
+        Path activepath = Paths.get(activeTriggerPath);
+        Path inactivepath = Paths.get(inactiveTriggerPath);
+        if (Files.notExists(triggerpath)) {
+            new File(triggerPath).mkdir();
+        }
+        if (Files.notExists(activepath)) {
+            new File(activeTriggerPath).mkdir();
+        }
+        if (Files.notExists(inactivepath)) {
+            new File(inactiveTriggerPath).mkdir();
+        }
+
+        // Writing the json file to path
         try (FileWriter file = new FileWriter(path)) {
             file.write(json.toJSONString());
             file.flush();
@@ -254,8 +279,9 @@ public class TriggerService extends HttpServlet {
 
     // Gets all active triggers that are in the active trigger path
     @RequestMapping(path="/gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    private String getTriggers() throws Exception {
+    public String getTriggers() throws Exception {
 
+        // Starting the listener for file changes in the active trigger path
         reportActiveTriggers();
 
         String trigger;
@@ -263,14 +289,16 @@ public class TriggerService extends HttpServlet {
         File folder = new File(activeTriggerPath);
         File[] listOfFiles = folder.listFiles();
         files = new JSONArray();
-        for (int i = 0; i < listOfFiles.length; i++) {
-            if (listOfFiles[i].isFile()) {
-                files.add(listOfFiles[i].getName());
+        if (listOfFiles != null) {
+            for (int i = 0; i < listOfFiles.length; i++) {
+                if (listOfFiles[i].isFile()) {
+                    files.add(listOfFiles[i].getName());
+                }
             }
-        }
-        for(int i = 0; i < files.size(); i++) {
-            trigger = Tools.readFile(activeTriggerPath + files.get(i));
-            triggerInfoList.add(trigger);
+            for (int i = 0; i < files.size(); i++) {
+                trigger = Tools.readFile(activeTriggerPath + files.get(i));
+                triggerInfoList.add(trigger);
+            }
         }
         return String.valueOf(triggerInfoList);
     }
@@ -280,7 +308,6 @@ public class TriggerService extends HttpServlet {
         File path = FileUtils.getFile(activeTriggerPath);
         FileAlterationObserver observer = new FileAlterationObserver(path);
 
-        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
 
         observer.addListener(new FileAlterationListenerAdaptor() {
 
@@ -288,40 +315,26 @@ public class TriggerService extends HttpServlet {
             public void onFileCreate(File file) {
                 System.out.println("Created: " + file.getName());
                 listener.pushMessageToWebSocket("Active Triggers");
-                try {
-                    monitor.stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
 
             @Override
             public void onFileDelete(File file) {
                 System.out.println("Deleted: " + file.getName());
                 listener.pushMessageToWebSocket("Active Triggers");
-                try {
-                    monitor.stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
 
             @Override
             public void onFileChange(File file) {
                 System.out.println("Changed: " + file.getName());
                 listener.pushMessageToWebSocket("Active Triggers");
-                try {
-                    monitor.stop();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
 
         });
 
+        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
+
         try {
             monitor.start();
-            Thread.sleep(500);
         } catch(IOException e) {
             System.out.println(e.getMessage());
             monitor.stop();
