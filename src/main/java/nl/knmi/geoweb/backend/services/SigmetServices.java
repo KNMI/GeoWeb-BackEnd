@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import nl.knmi.geoweb.backend.product.sigmet.*;
 import org.geojson.Feature;
@@ -426,16 +427,20 @@ public class SigmetServices {
 		String TAC = "unable to create TAC";
 		try {
 			Sigmet sigmet = sigmetObjectMapper.readValue(sigmetStr, Sigmet.class);
+
 			Feature fir=sigmet.getFirFeature();
 			if (fir==null) {
+				Debug.println("Adding fir geometry for "+sigmet.getLocation_indicator_icao()+" automatically");
 			    fir=firStore.lookup(sigmet.getLocation_indicator_icao(), true);
                 sigmet.setFirFeature(fir);
             }
 			if (fir!=null) {
 				TAC = sigmet.toTAC(fir);
 			}
-		} catch (Exception e) {
-			Debug.printStackTrace(e);
+		} catch (InvalidFormatException e) {
+			String json = new JSONObject().
+					put("message", "Unable to parse sigmet").toString();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 		}
 
         try {
