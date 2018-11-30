@@ -281,9 +281,6 @@ public class TriggerService extends HttpServlet {
     @RequestMapping(path="/gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public String getTriggers() throws Exception {
 
-        // Starting the listener for file changes in the active trigger path
-        reportActiveTriggers();
-
         String trigger;
         ArrayList triggerInfoList = new ArrayList();
         File folder = new File(activeTriggerPath);
@@ -301,49 +298,5 @@ public class TriggerService extends HttpServlet {
             }
         }
         return String.valueOf(triggerInfoList);
-    }
-
-    // Checks if new file is added to active trigger path
-    public void reportActiveTriggers() throws Exception {
-        File path = FileUtils.getFile(activeTriggerPath);
-        FileAlterationObserver observer = new FileAlterationObserver(path);
-
-
-        observer.addListener(new FileAlterationListenerAdaptor() {
-
-            @Override
-            public void onFileCreate(File file) {
-                System.out.println("Created: " + file.getName());
-                listener.pushMessageToWebSocket("Active Triggers");
-            }
-
-            @Override
-            public void onFileDelete(File file) {
-                System.out.println("Deleted: " + file.getName());
-                listener.pushMessageToWebSocket("Active Triggers");
-            }
-
-            @Override
-            public void onFileChange(File file) {
-                System.out.println("Changed: " + file.getName());
-                listener.pushMessageToWebSocket("Active Triggers");
-            }
-
-        });
-
-        FileAlterationMonitor monitor = new FileAlterationMonitor(500, observer);
-
-        try {
-            monitor.start();
-        } catch(IOException e) {
-            System.out.println(e.getMessage());
-            monitor.stop();
-        } catch(InterruptedException e) {
-            System.out.println(e.getMessage());
-            monitor.stop();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            monitor.stop();
-        }
     }
 }
