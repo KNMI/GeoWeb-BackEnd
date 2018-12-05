@@ -1,10 +1,6 @@
 package nl.knmi.geoweb.backend.triggers;
 
 import nl.knmi.adaguc.tools.Tools;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
-import org.apache.commons.io.monitor.FileAlterationMonitor;
-import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -34,7 +30,7 @@ public class TriggerService extends HttpServlet {
     private static String variable = null;
     public static String activetriggerjsonpath = null;
     public static String triggerjsonpath = null;
-    public static String triggerPath = "/nobackup/users/schouten/Triggers/";
+    public static String triggerPath = "/nobackup/users/schouten/Triggers/";        // Home directory of the triggers
     public static String activeTriggerPath = triggerPath + "ActiveTriggers/";
     public static String inactiveTriggerPath = triggerPath + "InactiveTriggers/";
     private static Array
@@ -75,72 +71,76 @@ public class TriggerService extends HttpServlet {
             }
         }
 
-        // Reading the latest dataset
-        NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
-
-        station = hdf.readSection("stationname");
-
-        JSONParser parser = new JSONParser();
-
         JSONArray triggerResults = new JSONArray();
 
-        // For every active trigger json file...
-        for(int i = 0; i < files.size(); i++) {
-            // ...getting the json object
-            JSONObject triggerFile = (JSONObject) parser.parse(new FileReader(activeTriggerPath + String.valueOf(files.get(i))));
-            JSONObject phen = (JSONObject) triggerFile.get("phenomenon");
+        // If there are active triggers
+        if (files.size() > 0) {
+            // Reading the latest dataset
+            NetcdfFile hdf = NetcdfDataset.open(dataset.setDataset());
 
-            Object par = phen.get("parameter");
-            Object operator = phen.get("operator");
-            Object limit = phen.get("limit");
+            station = hdf.readSection("stationname");
 
-            data = hdf.readSection(String.valueOf(par));
-            lat = hdf.readSection("lat");
-            lon = hdf.readSection("lon");
-            code = hdf.readSection("station");
+            JSONParser parser = new JSONParser();
 
-            locarray = new JSONArray();
 
-            // ...calculating if trigger exceeds the value in the dataset
-            if (operator.equals("higher")) {
-                for (int x = 0; x < station.getSize(); x++) {
-                    if (data.getDouble(x) >= (double) limit) {
-                        printed = true;
-                        createLocationJSONObject(x);
-                        jsoncreated = true;
+            // For every active trigger json file...
+            for (int i = 0; i < files.size(); i++) {
+                // ...getting the json object
+                JSONObject triggerFile = (JSONObject) parser.parse(new FileReader(activeTriggerPath + String.valueOf(files.get(i))));
+                JSONObject phen = (JSONObject) triggerFile.get("phenomenon");
+
+                Object par = phen.get("parameter");
+                Object operator = phen.get("operator");
+                Object limit = phen.get("limit");
+
+                data = hdf.readSection(String.valueOf(par));
+                lat = hdf.readSection("lat");
+                lon = hdf.readSection("lon");
+                code = hdf.readSection("station");
+
+                locarray = new JSONArray();
+
+                // ...calculating if trigger exceeds the value in the dataset
+                if (operator.equals("higher")) {
+                    for (int x = 0; x < station.getSize(); x++) {
+                        if (data.getDouble(x) >= (double) limit) {
+                            printed = true;
+                            createLocationJSONObject(x);
+                            jsoncreated = true;
+                        }
+                    }
+                } else if (operator.equals("lower")) {
+                    for (int x = 0; x < station.getSize(); x++) {
+                        if (data.getDouble(x) <= (double) limit && data.getDouble(x) >= -100) {
+                            printed = true;
+                            createLocationJSONObject(x);
+                            jsoncreated = true;
+                        }
                     }
                 }
-            } else if (operator.equals("lower")) {
-                for (int x = 0; x < station.getSize(); x++) {
-                    if (data.getDouble(x) <= (double) limit && data.getDouble(x) >= -100) {
-                        printed = true;
-                        createLocationJSONObject(x);
-                        jsoncreated = true;
+                if (!printed) {
+                    printed = true;
+                }
+
+                if (jsoncreated) {
+
+                    // Path + name with a random UUID where the calculated trigger will be saved as a json file
+                    activetriggerjsonpath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";
+
+                    // ...creating the calculated trigger json object
+                    if (locarray.size() != 0) {
+                        JSONObject json = new JSONObject();
+                        json.put("locations", locarray);
+                        json.put("phenomenon", phen);
+                        triggerResults.add(json);
+
+                        // ...writing the calculated trigger json object to a file
+                        writeJsonFile(activetriggerjsonpath, json);
                     }
                 }
             }
-            if (!printed) {
-                printed = true;
-            }
-
-            if (jsoncreated) {
-
-                // Path + name with a random UUID where the calculated trigger will be saved as a json file
-                activetriggerjsonpath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";
-
-                // ...creating the calculated trigger json object
-                if (locarray.size() != 0) {
-                    JSONObject json = new JSONObject();
-                    json.put("locations", locarray);
-                    json.put("phenomenon", phen);
-                    triggerResults.add(json);
-
-                    // ...writing the calculated trigger json object to a file
-                    writeJsonFile(activetriggerjsonpath, json);
-                }
-            }
+            hdf.close();
         }
-        hdf.close();
         return triggerResults;
     }
 
