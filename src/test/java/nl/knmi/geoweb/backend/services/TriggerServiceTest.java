@@ -79,17 +79,17 @@ public class TriggerServiceTest {
         Debug.println("getParameters() result:"+responseBody);
     }
 
-//    static String testUnit = "{\"parameter\":\"ta\"}";
-//    @Test
-//    public void apiTestGetUnit() throws Exception {
-//        MvcResult result = mockMvc.perform(post("/triggers/unitget")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testUnit))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andReturn();
-//        String responseBody = result.getResponse().getContentAsString();
-//        Debug.println(responseBody);
-//    }
+    static String testUnit = "{\"parameter\":\"ta\"}";
+    @Test
+    public void apiTestGetUnit() throws Exception {
+        MvcResult result = mockMvc.perform(post("/triggers/unitget?parameter=ta")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        Debug.println(responseBody);
+    }
 
 //    @Test
 //    public void apiTestGetTriggers() throws Exception {
