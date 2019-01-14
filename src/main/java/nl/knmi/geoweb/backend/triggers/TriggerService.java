@@ -6,7 +6,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.locationtech.jts.util.Debug;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ucar.ma2.Array;
@@ -28,8 +27,8 @@ public class TriggerService extends HttpServlet {
 
     private static String unit = null;
     private static String variable = null;
-    public static String activetriggerjsonpath = null;
-    public static String triggerjsonpath = null;
+    public static String activeTriggerJsonPath = null;
+    public static String triggerJsonPath = null;
     public static String triggerPath = "/nobackup/users/schouten/Triggers/";        // Home directory of the triggers
     public static String activeTriggerPath = triggerPath + "ActiveTriggers/";
     public static String inactiveTriggerPath = triggerPath + "InactiveTriggers/";
@@ -40,14 +39,11 @@ public class TriggerService extends HttpServlet {
             lon = null,
             code = null;
     private static boolean printed = false;
-    private static boolean jsoncreated = false;
-    private static JSONArray locarray = null;
+    private static boolean jsonCreated = false;
+    private static JSONArray locArray = null;
     private static JSONArray files = null;
 
     private static Dataset dataset;
-
-    @Autowired
-    WebSocketListener listener;
 
     // Calculating the actual trigger with the values of active triggers over the values in the latest dataset and writes it to a json file in the trigger path
     public static JSONArray calculateTrigger() throws IOException, InvalidRangeException, ParseException {
@@ -98,7 +94,7 @@ public class TriggerService extends HttpServlet {
                 lon = hdf.readSection("lon");
                 code = hdf.readSection("station");
 
-                locarray = new JSONArray();
+                locArray = new JSONArray();
 
                 // ...calculating if trigger exceeds the value in the dataset
                 if (operator.equals("higher")) {
@@ -106,7 +102,7 @@ public class TriggerService extends HttpServlet {
                         if (data.getDouble(x) >= (double) limit) {
                             printed = true;
                             createLocationJSONObject(x);
-                            jsoncreated = true;
+                            jsonCreated = true;
                         }
                     }
                 } else if (operator.equals("lower")) {
@@ -114,7 +110,7 @@ public class TriggerService extends HttpServlet {
                         if (data.getDouble(x) <= (double) limit && data.getDouble(x) >= -100) {
                             printed = true;
                             createLocationJSONObject(x);
-                            jsoncreated = true;
+                            jsonCreated = true;
                         }
                     }
                 }
@@ -122,20 +118,20 @@ public class TriggerService extends HttpServlet {
                     printed = true;
                 }
 
-                if (jsoncreated) {
+                if (jsonCreated) {
 
                     // Path + name with a random UUID where the calculated trigger will be saved as a json file
-                    activetriggerjsonpath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";
+                    activeTriggerJsonPath = triggerPath + "trigger_" + UUID.randomUUID() + ".json";
 
                     // ...creating the calculated trigger json object
-                    if (locarray.size() != 0) {
+                    if (locArray.size() != 0) {
                         JSONObject json = new JSONObject();
-                        json.put("locations", locarray);
+                        json.put("locations", locArray);
                         json.put("phenomenon", phen);
                         triggerResults.add(json);
 
                         // ...writing the calculated trigger json object to a file
-                        writeJsonFile(activetriggerjsonpath, json);
+                        writeJsonFile(activeTriggerJsonPath, json);
                     }
                 }
             }
@@ -152,7 +148,7 @@ public class TriggerService extends HttpServlet {
         locations.put("name", station.getObject(x));
         locations.put("code", code.getObject(x));
         locations.put("value", data.getDouble(x));
-        locarray.add(locations);
+        locArray.add(locations);
     }
 
     // Creates the trigger from values set in the Front-End and adds it to the active triggers path
@@ -191,12 +187,12 @@ public class TriggerService extends HttpServlet {
         phenomenon.put("UUID", randomUUID.toString());
 
         // Path + name where the trigger will be saved as a json file
-        triggerjsonpath = activeTriggerPath + "trigger_" + randomUUID + ".json";
+        triggerJsonPath = activeTriggerPath + "trigger_" + randomUUID + ".json";
 
         json.put("phenomenon", phenomenon);
 
         // Writing the JSON file
-        writeJsonFile(triggerjsonpath, json);
+        writeJsonFile(triggerJsonPath, json);
 
         hdf.close();
     }
@@ -297,6 +293,7 @@ public class TriggerService extends HttpServlet {
                 triggerInfoList.add(trigger);
             }
         }
+        System.out.println(String.valueOf(triggerInfoList));
         return String.valueOf(triggerInfoList);
     }
 }

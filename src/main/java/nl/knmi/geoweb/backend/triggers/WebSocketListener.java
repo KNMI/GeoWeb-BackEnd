@@ -16,9 +16,9 @@ public class WebSocketListener {
     @Async
     @MessageMapping("/websocket")
     @SendTo("/trigger/messages")
-    public void pushMessageToWebSocket (String newStatus){
+    public void pushMessageToWebSocket (String message){
 
-        webSocket.convertAndSend("/trigger/messages", newStatus);
+        webSocket.convertAndSend("/trigger/messages", message);
 
     }
 
