@@ -56,6 +56,18 @@ public class TriggerServiceTest {
             "\"operator\":\"higher\"}}]";
 
     @Test
+    public void apiTestCalculateTrigger() throws Exception {
+        MvcResult result = mockMvc.perform(get("/triggers/calculatetrigger")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content("[]"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+
+        String responseBody = result.getResponse().getContentAsString();
+        Debug.println("calculateTrigger() result:"+responseBody);
+    }
+
+    @Test
     public void apiTestGetParameters() throws Exception {
         MvcResult result = mockMvc.perform(get("/triggers/parametersget")
                 .contentType(MediaType.APPLICATION_JSON_UTF8).content("[]"))

@@ -46,6 +46,7 @@ public class TriggerService extends HttpServlet {
     private static Dataset dataset;
 
     // Calculating the actual trigger with the values of active triggers over the values in the latest dataset and writes it to a json file in the trigger path
+    @RequestMapping(path="/calculatetrigger", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static JSONArray calculateTrigger() throws IOException, InvalidRangeException, ParseException {
 
         // Everytime new triggers are calculated the old ones are deleted
