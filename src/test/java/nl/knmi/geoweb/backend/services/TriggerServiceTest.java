@@ -1,6 +1,7 @@
 package nl.knmi.geoweb.backend.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import nl.knmi.adaguc.tools.Debug;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -46,69 +48,58 @@ public class TriggerServiceTest {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
-    static String activeTriggerTest = "[{\"phenomenon\":" +
-            "{\"unit\":\"degrees Celsius\"," +
-            "\"parameter\":\"ta\"," +
-            "\"limit\":4.1," +
-            "\"source\":\"OBS\"," +
-            "\"UUID\":\"2e531025-946d-4da8-ba41-5befdac70435\"," +
-            "\"long_name\":\"Air Temperature 1 Min Average\"," +
-            "\"operator\":\"higher\"}}]";
-
     @Test
     public void apiTestCalculateTrigger() throws Exception {
-        MvcResult result = mockMvc.perform(get("/triggers/calculatetrigger")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content("[]"))
+        MvcResult result = mockMvc.perform(get("/triggers/calculatetrigger"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 
-        String responseBody = result.getResponse().getContentAsString();
-        Debug.println("calculateTrigger() result:"+responseBody);
+        String responseArray = result.getResponse().getContentAsString();
+        String responseBody = responseArray.substring(1);
+        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        assertThat(jsonResult.has("locations"), is(true));
+        assertThat(jsonResult.has("phenomenon"), is(true));
+        Debug.println("calculateTrigger() result:" + responseBody);
     }
 
     @Test
     public void apiTestGetParameters() throws Exception {
-        MvcResult result = mockMvc.perform(get("/triggers/parametersget")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content("[]"))
+        MvcResult result = mockMvc.perform(get("/triggers/parametersget"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
 
         String responseBody = result.getResponse().getContentAsString();
-        Debug.println("getParameters() result:"+responseBody);
+        Debug.println("getParameters() result:" + responseBody);
     }
 
-    static String testUnit = "{\"parameter\":\"ta\"}";
+    static String testUnit = "{\"parameter\":\"Air Temperature 1 Min Average\"}";
     @Test
     public void apiTestGetUnit() throws Exception {
-        MvcResult result = mockMvc.perform(post("/triggers/unitget?parameter=ta")
-                .contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
+        MvcResult result = mockMvc.perform(post("/triggers/unitget")
+                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testUnit))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
         String responseBody = result.getResponse().getContentAsString();
-        Debug.println(responseBody);
+        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        assertThat(jsonResult.has("unit"), is(true));
+        assertThat(jsonResult.get("unit").asText(), is("degrees Celsius"));
+        Debug.println("getUnit() result: " + responseBody);
     }
 
-//    @Test
-//    public void apiTestGetTriggers() throws Exception {
-//        MvcResult result = mockMvc.perform(get("/triggers/gettriggers")
-//                .contentType(MediaType.APPLICATION_JSON_UTF8).content(activeTriggerTest))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-//                .andReturn();
-//
-//        String responseBody = result.getResponse().getContentAsString();
-////        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-////        assertThat(jsonResult.get("unit").asText(), is("degrees Celsius"));
-////        assertThat(jsonResult.get("parameter").asText(), is("ta"));
-////        assertThat(jsonResult.get("limit").asDouble(), is(4.1));
-////        assertThat(jsonResult.get("source").asText(), is("OBS"));
-////        assertThat(jsonResult.get("UUID").asText(), is("2e531025-946d-4da8-ba41-5befdac70435"));
-////        assertThat(jsonResult.get("long_name").asText(), is("Air Temperature 1 Min Average"));
-////        assertThat(jsonResult.get("operator").asText(), is("higher"));
-////        assertThat(jsonResult.has("phenomenon"), is(true));
-//        Debug.println("getTriggers() result:"+responseBody);
-//    }
+    @Test
+    public void apiTestGetTriggers() throws Exception {
+        MvcResult result = mockMvc.perform(get("/triggers/gettriggers"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andReturn();
+
+        String responseArray = result.getResponse().getContentAsString();
+        String responseBody = responseArray.substring(1);
+        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        assertThat(jsonResult.has("phenomenon"), is(true));
+        Debug.println("getTriggers() result:"+responseBody);
+    }
 }

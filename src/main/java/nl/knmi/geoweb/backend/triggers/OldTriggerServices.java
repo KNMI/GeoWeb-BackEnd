@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/triggers") 
+@RequestMapping("/triggersold")
 public class OldTriggerServices {
 	OldTriggerStore oldTriggerStore;
 	

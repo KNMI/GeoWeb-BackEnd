@@ -254,7 +254,6 @@ public class TriggerService extends HttpServlet {
     // Gets the unit of a parameter when chosen in the Front-End
     @RequestMapping(path="/unitget", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public static String getUnit(@RequestBody String payload) throws IOException {
-
         org.json.JSONObject triggerInfo = new org.json.JSONObject(payload);
 
         String parameter = triggerInfo.getString("parameter");
@@ -276,7 +275,7 @@ public class TriggerService extends HttpServlet {
 
     // Gets all active triggers that are in the active trigger path
     @RequestMapping(path="/gettriggers", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public String getTriggers() throws Exception {
+    public String getTriggers() throws IOException {
 
         String trigger;
         ArrayList triggerInfoList = new ArrayList();
@@ -294,7 +293,6 @@ public class TriggerService extends HttpServlet {
                 triggerInfoList.add(trigger);
             }
         }
-        System.out.println(String.valueOf(triggerInfoList));
         return String.valueOf(triggerInfoList);
     }
 }
