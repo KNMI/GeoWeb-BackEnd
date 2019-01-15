@@ -100,6 +100,6 @@ public class TriggerServiceTest {
         String responseBody = responseArray.substring(1);
         ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
         assertThat(jsonResult.has("phenomenon"), is(true));
-        Debug.println("getTriggers() result:"+responseBody);
+        Debug.println("getTriggers() result:" + responseBody);
     }
 }
