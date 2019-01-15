@@ -1,3 +1,4 @@
 language: java
-sudo: false
+jdk: -openjdk8
+sudo: true
 script: mvn clean verify
