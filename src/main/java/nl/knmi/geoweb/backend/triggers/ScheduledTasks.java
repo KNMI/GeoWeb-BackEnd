@@ -2,13 +2,19 @@ package nl.knmi.geoweb.backend.triggers;
 
 import org.json.JSONObject;
 import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import ucar.ma2.InvalidRangeException;
 
 import java.io.IOException;
 
 @Component
+@RequestMapping("/demotask")
 public class ScheduledTasks {
 
     private TriggerService triggerService;
@@ -44,6 +50,17 @@ public class ScheduledTasks {
             }
         }
 
+    }
+
+    //For Demo Purposes
+    @RequestMapping(path="/demo", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public void demoShow() throws ParseException, InvalidRangeException, IOException {
+        System.out.println("TEST");
+        JSONArray triggers = triggerService.calculateTrigger();
+        System.out.println(triggers);
+        JSONObject json = new JSONObject();
+        json.put("Notifications", triggers);
+        listener.pushMessageToWebSocket(String.valueOf(json));
     }
 
     // Check if new dataset is available

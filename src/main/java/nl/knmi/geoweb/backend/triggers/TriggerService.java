@@ -295,4 +295,19 @@ public class TriggerService extends HttpServlet {
         }
         return String.valueOf(triggerInfoList);
     }
+
+    @RequestMapping(path= "/triggerdelete", method= RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public static void deleteTrigger(@RequestBody String payload) throws IOException {
+        org.json.JSONObject trigger = new org.json.JSONObject(payload);
+
+        File folder = new File(activeTriggerPath);
+        File[] listOfFiles = folder.listFiles();
+        for (int i = 0; i < listOfFiles.length; i++) {
+            org.json.JSONObject file = new org.json.JSONObject(Tools.readFile(String.valueOf(listOfFiles[i])));
+            org.json.JSONObject phen = file.getJSONObject("phenomenon");
+            if (phen.getString("UUID").equals(trigger.getString("uuid"))) {
+                listOfFiles[i].delete();
+            }
+        }
+    }
 }
