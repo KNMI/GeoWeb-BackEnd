@@ -79,11 +79,6 @@ public class TafServices {
         tafStr = URLDecoder.decode(tafStr, "UTF8");
         /* Add TAC */
         String TAC = "unable to create TAC";
-        try {
-            TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
-        } catch (Exception e) {
-            Debug.printStackTrace(e);
-        }
 
         try {
             TafValidationResult jsonValidation = tafValidator.validate(tafStr);
@@ -97,6 +92,13 @@ public class TafServices {
                         .put("message", "TAF is not valid").toString();
                 return ResponseEntity.ok(finalJson);
             } else {
+                /* Add TAC */
+                try {
+                    TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
+
+                } catch (Exception e) {
+                    Debug.printStackTrace(e);
+                }
                 // If there is already a taf published for this location and airport; only for type==normal
                 Taf taf = tafObjectMapper.readValue(tafStr, Taf.class);
                 Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());

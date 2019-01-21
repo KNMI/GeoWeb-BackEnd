@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import nl.knmi.geoweb.backend.product.sigmet.*;
 import org.geojson.Feature;
@@ -83,7 +84,7 @@ public class SigmetServices {
 			path = "/ORG",
 			method = RequestMethod.POST, 
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-	public ResponseEntity<String> storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
+	public ResponseEntity<String> __storeJSONSigmetORG(@RequestBody String sigmet) { // throws IOException {
 		Debug.println("storesigmetORG: "+sigmet);
 		Sigmet sm=null;
 		try {
@@ -111,7 +112,7 @@ public class SigmetServices {
 			} else if (sm.getStatus()==SigmetStatus.published) {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-				sm.setSequence(sigmetStore.getNextSequence());
+				sm.setSequence(sigmetStore.getNextSequence(sm));
 				Debug.println("Publishing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
@@ -141,7 +142,7 @@ public class SigmetServices {
 				cancelSigmet.setValiddate(start);
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
-				cancelSigmet.setSequence(sigmetStore.getNextSequence());
+				cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
 				Debug.println("Canceling "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
@@ -188,13 +189,13 @@ public class SigmetServices {
 			path = "",
 			method = RequestMethod.POST,
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
+    public synchronized ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
         Debug.println("########################################### storesigmet #######################################");
         Debug.println(sigmet);
         Sigmet sm=null;
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
-
+            
             if (sm.getStatus()==SigmetStatus.concept) {
                 //Store
                 if (sm.getUuid()==null) {
@@ -221,7 +222,7 @@ public class SigmetServices {
             } else if (sm.getStatus()==SigmetStatus.published) {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-                sm.setSequence(sigmetStore.getNextSequence());
+                sm.setSequence(sigmetStore.getNextSequence(sm));
                 Debug.println("Publishing "+sm.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
@@ -277,7 +278,9 @@ public class SigmetServices {
                 cancelSigmet.setValiddate(start);
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
-                cancelSigmet.setSequence(sigmetStore.getNextSequence());
+                cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
+                /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
+                cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
                 Debug.println("Canceling "+sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(cancelSigmet);
@@ -424,16 +427,20 @@ public class SigmetServices {
 		String TAC = "unable to create TAC";
 		try {
 			Sigmet sigmet = sigmetObjectMapper.readValue(sigmetStr, Sigmet.class);
+
 			Feature fir=sigmet.getFirFeature();
 			if (fir==null) {
+				Debug.println("Adding fir geometry for "+sigmet.getLocation_indicator_icao()+" automatically");
 			    fir=firStore.lookup(sigmet.getLocation_indicator_icao(), true);
                 sigmet.setFirFeature(fir);
             }
 			if (fir!=null) {
 				TAC = sigmet.toTAC(fir);
 			}
-		} catch (Exception e) {
-			Debug.printStackTrace(e);
+		} catch (InvalidFormatException e) {
+			String json = new JSONObject().
+					put("message", "Unable to parse sigmet").toString();
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
 		}
 
         try {
@@ -590,7 +597,7 @@ public class SigmetServices {
 		Debug.println("getSigmetList");
 		try{
 			Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
-			Debug.println("SIGMETLIST has length of "+sigmets.length);
+//			Debug.println("SIGMETLIST has length of "+sigmets.length);
 			return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetList(sigmets,page,count)));
 		}catch(Exception e){
 			try {
