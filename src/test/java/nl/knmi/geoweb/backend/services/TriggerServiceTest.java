@@ -58,6 +58,7 @@ public class TriggerServiceTest {
         Tools.writeFile("/tmp/triggering/ActiveTriggers/trigger.json", trigger);
 
         copyResource("triggering/kmds_alle_stations_10001_201901231450.nc", new File("/tmp/triggering/kmds_alle_stations_10001_201901231450.nc"));
+        Debug.println("TEST");
     }
 
     public void copyResource(String resourceName, File destination) throws IOException {

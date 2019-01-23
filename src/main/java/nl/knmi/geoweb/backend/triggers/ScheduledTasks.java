@@ -19,21 +19,21 @@ public class ScheduledTasks {
 
     private TriggerService triggerService;
     private Dataset dataset;
-    private String oldurl;
+    private String oldurl = "";
 
-    {
-        try {
-            oldurl = dataset.setDataset();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    {
+//        try {
+//            oldurl = dataset.setDataset();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @Autowired
     WebSocketListener listener;
 
     // Checks every 1 minute (60000 ms) if new dataset is available
-    @Scheduled(fixedRate = 60000)
+//    @Scheduled(fixedRate = 60000, initialDelay = 10000)
     public void reportNotifications() throws Exception {
 
         String url = dataset.setDataset();
