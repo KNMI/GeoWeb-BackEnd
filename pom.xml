@@ -107,6 +107,19 @@
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
 			<version>1.0.12</version>
 		</dependency>
+		<dependency>
+			<groupId>edu.ucar</groupId>
+			<artifactId>cdm</artifactId>
+			<version>4.6.11</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>1.7.25</version>
+			<scope>runtime</scope>
+		</dependency>
 	 	<!-- <dependency>
 			<groupId>nl.knmi.adaguc.tools</groupId>
 			<artifactId>adaguc-services-tools</artifactId>
@@ -181,6 +194,11 @@
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
+		</repository>
+		<repository>
+			<id>unidata-all</id>
+			<name>Unidata All</name>
+			<url>https://artifacts.unidata.ucar.edu/repository/unidata-all/</url>
 		</repository>
 
 	</repositories>

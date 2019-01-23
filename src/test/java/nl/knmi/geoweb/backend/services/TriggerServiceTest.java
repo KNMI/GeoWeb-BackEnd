@@ -4,11 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -19,6 +21,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.annotation.Resource;
+
+import java.io.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
@@ -44,8 +48,29 @@ public class TriggerServiceTest {
     private ObjectMapper objectMapper;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
+
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+
+        String trigger = Tools.readResource("triggering/trigger_test.json");
+        Tools.mkdir("/tmp/triggering");
+        Tools.mkdir("/tmp/triggering/ActiveTriggers");
+        Tools.writeFile("/tmp/triggering/ActiveTriggers/trigger.json", trigger);
+
+        copyResource("triggering/kmds_alle_stations_10001_201901231450.nc", new File("/tmp/triggering/kmds_alle_stations_10001_201901231450.nc"));
+    }
+
+    public void copyResource(String resourceName, File destination) throws IOException {
+        ClassPathResource resource = new ClassPathResource(resourceName);
+
+        InputStream inputStream = resource.getInputStream();
+        byte[] buffer = new byte[inputStream.available()];
+        inputStream.read(buffer);
+        inputStream.close();
+
+        OutputStream outStream = new FileOutputStream(destination);
+        outStream.write(buffer);
+        outStream.close();
     }
 
     @Test

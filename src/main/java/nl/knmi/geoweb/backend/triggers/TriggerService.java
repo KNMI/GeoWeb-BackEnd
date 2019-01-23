@@ -29,7 +29,7 @@ public class TriggerService extends HttpServlet {
     private static String variable = null;
     public static String activeTriggerJsonPath = null;
     public static String triggerJsonPath = null;
-    public static String triggerPath = "/nobackup/users/schouten/Triggers/";        // Home directory of the triggers
+    public static String triggerPath = "/tmp/triggering/";        // Home directory of the triggers
     public static String activeTriggerPath = triggerPath + "ActiveTriggers/";
     public static String inactiveTriggerPath = triggerPath + "InactiveTriggers/";
     private static Array

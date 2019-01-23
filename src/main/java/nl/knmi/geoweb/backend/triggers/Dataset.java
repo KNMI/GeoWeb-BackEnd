@@ -44,7 +44,8 @@ public class Dataset {
             }
         }
 
-        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
+//        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
+        url = "/tmp/triggering/kmds_alle_stations_10001_201901231450.nc";
 
         NetcdfFile hdf;
 
@@ -52,7 +53,8 @@ public class Dataset {
             hdf = NetcdfDataset.open(url);
         } catch(FileNotFoundException e) {
             minutes = minutes - 1;
-            url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
+//        url = "http://birdexp07.knmi.nl/geoweb/data/OBS/kmds_alle_stations_10001_" + year + months + days + hours + minutes + "0.nc";
+            url = "/tmp/triggering/kmds_alle_stations_10001_201901231450.nc";
             hdf = NetcdfDataset.open(url);
         }
 
