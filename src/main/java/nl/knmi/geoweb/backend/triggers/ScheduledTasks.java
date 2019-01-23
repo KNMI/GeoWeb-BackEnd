@@ -52,17 +52,6 @@ public class ScheduledTasks {
 
     }
 
-    //For Demo Purposes
-    @RequestMapping(path="/demo", method= RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public void demoShow() throws ParseException, InvalidRangeException, IOException {
-        System.out.println("TEST");
-        JSONArray triggers = triggerService.calculateTrigger();
-        System.out.println(triggers);
-        JSONObject json = new JSONObject();
-        json.put("Notifications", triggers);
-        listener.pushMessageToWebSocket(String.valueOf(json));
-    }
-
     // Check if new dataset is available
     private Boolean didItChange(String url) throws IOException {
         if (!oldurl.equals(url)){

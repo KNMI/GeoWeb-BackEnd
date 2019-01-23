@@ -112,7 +112,7 @@ public class SigmetServices {
 			} else if (sm.getStatus()==SigmetStatus.published) {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-				sm.setSequence(sigmetStore.getNextSequence(sm));
+				sm.setSequence(sigmetStore.getNextSequence());
 				Debug.println("Publishing "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(sm);
@@ -142,7 +142,7 @@ public class SigmetServices {
 				cancelSigmet.setValiddate(start);
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
-				cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
+				cancelSigmet.setSequence(sigmetStore.getNextSequence());
 				Debug.println("Canceling "+sm.getUuid());
 				try{
 					sigmetStore.storeSigmet(cancelSigmet);
@@ -222,7 +222,7 @@ public class SigmetServices {
             } else if (sm.getStatus()==SigmetStatus.published) {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
-                sm.setSequence(sigmetStore.getNextSequence(sm));
+                sm.setSequence(sigmetStore.getNextSequence());
                 Debug.println("Publishing "+sm.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
@@ -278,7 +278,7 @@ public class SigmetServices {
                 cancelSigmet.setValiddate(start);
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
-                cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
+                cancelSigmet.setSequence(sigmetStore.getNextSequence());
                 /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
                 cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
                 Debug.println("Canceling "+sm.getUuid());
