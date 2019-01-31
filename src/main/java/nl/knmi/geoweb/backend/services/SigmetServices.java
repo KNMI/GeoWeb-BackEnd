@@ -45,7 +45,7 @@ import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
-import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetStatus;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 
 
@@ -90,7 +90,7 @@ public class SigmetServices {
 		try {
 			sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
 
-			if (sm.getStatus()==SigmetStatus.concept) {
+			if (sm.getStatus()==SigmetAirmetStatus.concept) {
 				//Store
 				if (sm.getUuid()==null) {
 					sm.setUuid(UUID.randomUUID().toString());
@@ -109,7 +109,7 @@ public class SigmetServices {
 					} catch (JSONException e1) {
 					}
 				}
-			} else if (sm.getStatus()==SigmetStatus.published) {
+			} else if (sm.getStatus()==SigmetAirmetStatus.published) {
 				//publish
 				sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
 				sm.setSequence(sigmetStore.getNextSequence(sm));
@@ -129,13 +129,13 @@ public class SigmetServices {
 					} catch (JSONException e1) {
 					}
 				}
-			} else if (sm.getStatus()==SigmetStatus.canceled) {
+			} else if (sm.getStatus()==SigmetAirmetStatus.canceled) {
 				//cancel
 				Sigmet toBeCancelled = sigmetStore.getByUuid(sm.getUuid()); //Has to have status published and an uuid
 				Sigmet cancelSigmet = new Sigmet(toBeCancelled);
-				toBeCancelled.setStatus(SigmetStatus.canceled);
+				toBeCancelled.setStatus(SigmetAirmetStatus.canceled);
 				cancelSigmet.setUuid(UUID.randomUUID().toString());
-				cancelSigmet.setStatus(SigmetStatus.published);
+				cancelSigmet.setStatus(SigmetAirmetStatus.published);
 				cancelSigmet.setCancels(toBeCancelled.getSequence());
 				cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
 				OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
@@ -196,7 +196,7 @@ public class SigmetServices {
         try {
             sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
             
-            if (sm.getStatus()==SigmetStatus.concept) {
+            if (sm.getStatus()==SigmetAirmetStatus.concept) {
                 //Store
                 if (sm.getUuid()==null) {
                     sm.setUuid(UUID.randomUUID().toString());
@@ -219,7 +219,7 @@ public class SigmetServices {
                     } catch (JSONException e1) {
                     }
                 }
-            } else if (sm.getStatus()==SigmetStatus.published) {
+            } else if (sm.getStatus()==SigmetAirmetStatus.published) {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
                 sm.setSequence(sigmetStore.getNextSequence(sm));
@@ -265,13 +265,13 @@ public class SigmetServices {
                     } catch (JSONException e1) {
                     }
                 }
-            } else if (sm.getStatus()==SigmetStatus.canceled) {
+            } else if (sm.getStatus()==SigmetAirmetStatus.canceled) {
                 //cancel
                 Sigmet toBeCancelled = sigmetStore.getByUuid(sm.getUuid()); //Has to have status published and an uuid
                 Sigmet cancelSigmet = new Sigmet(toBeCancelled);
-                toBeCancelled.setStatus(SigmetStatus.canceled);
+                toBeCancelled.setStatus(SigmetAirmetStatus.canceled);
                 cancelSigmet.setUuid(UUID.randomUUID().toString());
-                cancelSigmet.setStatus(SigmetStatus.published);
+                cancelSigmet.setStatus(SigmetAirmetStatus.published);
                 cancelSigmet.setCancels(toBeCancelled.getSequence());
                 cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
                 OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
@@ -368,7 +368,7 @@ public class SigmetServices {
 		if (sigmet == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("SIGMET with uuid %s does not exist", uuid));
 		}
-		boolean sigmetIsInConcept = sigmet.getStatus() == SigmetStatus.concept;
+		boolean sigmetIsInConcept = sigmet.getStatus() == SigmetAirmetStatus.concept;
 		if (sigmetIsInConcept != true) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("SIGMET with uuid %s is not in concept. Cannot delete.", uuid));
 		}
@@ -591,7 +591,7 @@ public class SigmetServices {
 			path = "",
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> getSigmetList(@RequestParam(value="active", required=true) Boolean active, 
-			@RequestParam(value="status", required=false) SigmetStatus status,
+			@RequestParam(value="status", required=false) SigmetAirmetStatus status,
 			@RequestParam(value="page", required=false) Integer page,
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getSigmetList");

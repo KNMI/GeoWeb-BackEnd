@@ -51,6 +51,7 @@ import nl.knmi.geoweb.backend.product.airmet.AirmetValidationResult;
 import nl.knmi.geoweb.backend.product.airmet.AirmetValidator;
 import nl.knmi.geoweb.backend.product.airmet.ObscuringPhenomenonList;
 import nl.knmi.geoweb.backend.product.airmet.converter.AirmetConverter;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
 @RestController
 @RequestMapping("/airmets")
@@ -94,7 +95,7 @@ public class AirmetServices {
         try {
             am = airmetObjectMapper.readValue(airmet, Airmet.class);
             
-            if (am.getStatus()==AirmetStatus.concept) {
+            if (am.getStatus()== SigmetAirmetStatus.concept) {
                 //Store
                 if (am.getUuid()==null) {
                     am.setUuid(UUID.randomUUID().toString());
@@ -117,7 +118,7 @@ public class AirmetServices {
                     } catch (JSONException e1) {
                     }
                 }
-            } else if (am.getStatus()==AirmetStatus.published) {
+            } else if (am.getStatus()==SigmetAirmetStatus.published) {
                 //publish
                 am.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
                 am.setSequence(airmetStore.getNextSequence(am));
@@ -163,13 +164,13 @@ public class AirmetServices {
                     } catch (JSONException e1) {
                     }
                 }
-            } else if (am.getStatus()==AirmetStatus.canceled) {
+            } else if (am.getStatus()==SigmetAirmetStatus.canceled) {
                 //cancel
                 Airmet toBeCancelled = airmetStore.getByUuid(am.getUuid()); //Has to have status published and an uuid
                 Airmet cancelAirmet = new Airmet(toBeCancelled);
-                toBeCancelled.setStatus(AirmetStatus.canceled);
+                toBeCancelled.setStatus(SigmetAirmetStatus.canceled);
                 cancelAirmet.setUuid(UUID.randomUUID().toString());
-                cancelAirmet.setStatus(AirmetStatus.published);
+                cancelAirmet.setStatus(SigmetAirmetStatus.published);
 ///                cancelAirmet.setCancels(toBeCancelled.getSequence());
 ///                cancelAirmet.setCancelsStart(toBeCancelled.getValiddate());
                 OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
@@ -264,7 +265,7 @@ public class AirmetServices {
 		if (airmet == null) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("AIRMET with uuid %s does not exist", uuid));
 		}
-		boolean airmetIsInConcept = airmet.getStatus() == AirmetStatus.concept;
+		boolean airmetIsInConcept = airmet.getStatus() == SigmetAirmetStatus.concept;
 		if (airmetIsInConcept != true) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("AIRMET with uuid %s is not in concept. Cannot delete.", uuid));
 		}
@@ -278,9 +279,8 @@ public class AirmetServices {
 
 	@RequestMapping(path="/getobscuringphenomena")
 	public ResponseEntity<String> getObscuringPhenomena() {
-		ObscuringPhenomenonList list=new ObscuringPhenomenonList();
 		try {
-			return ResponseEntity.ok(airmetObjectMapper.writeValueAsString(new ObscuringPhenomenonList().getObscuringPhenomena()));
+			return ResponseEntity.ok(airmetObjectMapper.writeValueAsString(ObscuringPhenomenonList.getAllObscuringPhenomena()));
 		}catch(Exception e){}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	}
@@ -495,7 +495,7 @@ public class AirmetServices {
 			path = "",
 			produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> getAirmetList(@RequestParam(value="active", required=true) Boolean active,
-			@RequestParam(value="status", required=false) AirmetStatus status,
+			@RequestParam(value="status", required=false) SigmetAirmetStatus status,
 			@RequestParam(value="page", required=false) Integer page,
 			@RequestParam(value="count", required=false) Integer count) {
 		Debug.println("getAirmetList");
