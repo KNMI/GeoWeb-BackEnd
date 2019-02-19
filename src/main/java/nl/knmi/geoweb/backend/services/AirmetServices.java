@@ -171,8 +171,8 @@ public class AirmetServices {
                 toBeCancelled.setStatus(SigmetAirmetStatus.canceled);
                 cancelAirmet.setUuid(UUID.randomUUID().toString());
                 cancelAirmet.setStatus(SigmetAirmetStatus.published);
-///                cancelAirmet.setCancels(toBeCancelled.getSequence());
-///                cancelAirmet.setCancelsStart(toBeCancelled.getValiddate());
+				cancelAirmet.setCancels(toBeCancelled.getSequence());
+				cancelAirmet.setCancelsStart(toBeCancelled.getValiddate());
                 OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
                 cancelAirmet.setValiddate(start);
                 cancelAirmet.setValiddate_end(toBeCancelled.getValiddate_end());
