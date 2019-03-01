@@ -138,8 +138,14 @@ public class SigmetServices {
 				cancelSigmet.setStatus(SigmetAirmetStatus.published);
 				cancelSigmet.setCancels(toBeCancelled.getSequence());
 				cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
-				OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
-				cancelSigmet.setValiddate(start);
+				OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z"));
+				OffsetDateTime start = toBeCancelled.getValiddate();
+				if (now.isBefore(start)) {
+					cancelSigmet.setValiddate(start);
+				}
+				else {
+					cancelSigmet.setValiddate(now);
+				}
 				cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
 				cancelSigmet.setIssuedate(start);
 				cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
@@ -274,8 +280,14 @@ public class SigmetServices {
                 cancelSigmet.setStatus(SigmetAirmetStatus.published);
                 cancelSigmet.setCancels(toBeCancelled.getSequence());
                 cancelSigmet.setCancelsStart(toBeCancelled.getValiddate());
-                OffsetDateTime start = OffsetDateTime.now(ZoneId.of("Z"));
-                cancelSigmet.setValiddate(start);
+				OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z"));
+				OffsetDateTime start = toBeCancelled.getValiddate();
+				if (now.isBefore(start)) {
+					cancelSigmet.setValiddate(start);
+				}
+				else {
+					cancelSigmet.setValiddate(now);
+				}
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelSigmet.setIssuedate(start);
                 cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
