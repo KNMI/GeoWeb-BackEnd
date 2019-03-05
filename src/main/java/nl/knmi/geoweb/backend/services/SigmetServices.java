@@ -178,7 +178,7 @@ public class SigmetServices {
                     cancelSigmet.setValiddate(now);
                 }
                 cancelSigmet.setValiddate_end(toBeCancelled.getValiddate_end());
-                cancelSigmet.setIssuedate(start);
+                cancelSigmet.setIssuedate(now);
                 cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
                 /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
                 cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());

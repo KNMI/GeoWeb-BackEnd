@@ -182,7 +182,7 @@ public class AirmetServices {
                     cancelAirmet.setValiddate(now);
                 }
                 cancelAirmet.setValiddate_end(toBeCancelled.getValiddate_end());
-                cancelAirmet.setIssuedate(start);
+                cancelAirmet.setIssuedate(now);
                 cancelAirmet.setSequence(airmetStore.getNextSequence(cancelAirmet));
                 Debug.println("Canceling "+am.getUuid());
                 try{
