@@ -6,13 +6,11 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.PropertySource;
 
 import nl.knmi.adaguc.tools.Debug;
 
 @SpringBootApplication
 @EnableAutoConfiguration
-@PropertySource("classpath:application.properties")
 public class GeoWebBackEndApplication extends SpringBootServletInitializer {
 	
 	@Value("${info.version}")
