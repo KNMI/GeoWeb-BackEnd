@@ -40,7 +40,7 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class,TafServicesTestContext.class})
+@SpringBootTest(classes= {TestWebConfig.class})
 @DirtiesContext
 public class TafServicesTest {
 	/** Entry point for Spring MVC testing support. */

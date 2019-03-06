@@ -43,7 +43,6 @@ import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.airmet.Airmet;
-import nl.knmi.geoweb.backend.product.airmet.Airmet.AirmetStatus;
 import nl.knmi.geoweb.backend.product.airmet.AirmetParameters;
 import nl.knmi.geoweb.backend.product.airmet.AirmetPhenomenaMapping;
 import nl.knmi.geoweb.backend.product.airmet.AirmetStore;

@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.2.BUILD-SNAPSHOT</version>
+		<version>2.1.3.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -25,7 +25,6 @@
 	</properties>
 
 	<dependencies>
-
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -42,11 +41,16 @@
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>com.vaadin.external.google</groupId>
+					<artifactId>android-json</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -58,6 +62,7 @@
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
+			<version>20180813</version>
 		</dependency>
 		<dependency>
 			<groupId>de.grundid.opendatalab</groupId>
@@ -74,7 +79,6 @@
 			<artifactId>jackson-datatype-jdk8</artifactId>
 		</dependency>
 
-
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
@@ -84,7 +88,7 @@
 			<!-- <groupId>com.github.ernstdevreede</groupId> -->
 			<groupId>com.github.KNMI</groupId>
 			<artifactId>geoweb-aviation-messageconverter</artifactId>
-			<version>1.49.4-SNAPSHOT</version>
+			<version>1.50.1-SNAPSHOT</version>
 		</dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.github.java-json-tools/json-schema-validator -->
@@ -107,12 +111,13 @@
 			<artifactId>nl.knmi.adaguc.tools</artifactId>
 			<version>1.0.12</version>
 		</dependency>
-	 	<!-- <dependency>
+
+		<!-- <dependency>
 			<groupId>nl.knmi.adaguc.tools</groupId>
 			<artifactId>adaguc-services-tools</artifactId>
 			<version>1.0.9</version>
 		</dependency>-->
-		
+
 		<!-- <dependency> <groupId>com.github.maartenplieger</groupId> <artifactId>nl.knmi.adaguc.config</artifactId> 
 			<version>1.0.1</version> </dependency> -->
 

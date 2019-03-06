@@ -34,7 +34,6 @@ import nl.knmi.adaguc.tools.Debug;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-//@WebMvcTest(SigmetServices.class)
 @DirtiesContext
 public class AirmetServicesTest {
 	/** Entry point for Spring MVC testing support. */

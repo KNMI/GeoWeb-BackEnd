@@ -15,14 +15,12 @@ import java.io.File;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 import java.util.UUID;
 
 import javax.annotation.Resource;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -39,26 +37,20 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import fi.fmi.avi.model.taf.TAF;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class,TafServicesTestContext.class})
+@SpringBootTest(classes= {TestWebConfig.class})
 @DirtiesContext
 public class TafServicesLifeCycleTest {
 	/** Entry point for Spring MVC testing support. */
 	private MockMvc mockMvc;
-
-	//    @Autowired
-	//    TafStore tafStore;
 
 	/** The Spring web application context. */
 	@Resource
@@ -101,7 +93,7 @@ public class TafServicesLifeCycleTest {
 
 	private String publishAndFail(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
-		MvcResult result = mockMvc.perform(post("/tafs")
+		mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
 				//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 				.andExpect(status().is4xxClientError()).andReturn();

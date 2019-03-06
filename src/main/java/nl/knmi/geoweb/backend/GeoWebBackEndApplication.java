@@ -5,15 +5,12 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import nl.knmi.adaguc.tools.Debug;
 @SpringBootApplication
 @EnableAutoConfiguration
-@ComponentScan({"nl.knmi.geoweb.backend"})
 public class GeoWebBackEndApplication extends SpringBootServletInitializer {
 	
 	@Value("${info.version}")
