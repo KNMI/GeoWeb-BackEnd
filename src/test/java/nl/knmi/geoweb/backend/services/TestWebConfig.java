@@ -2,7 +2,7 @@ package nl.knmi.geoweb.backend.services;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @TestConfiguration
-@ComponentScan({ "nl.knmi.geoweb.iwxxm_2_1.converter" })
+@Import(nl.knmi.geoweb.iwxxm_2_1.converter.conf.GeoWebConverterConfig.class)
 @EnableWebMvc
 public class TestWebConfig implements WebMvcConfigurer {
 
