@@ -269,7 +269,9 @@ public class TafServices {
 
                         if (taf.metadata.getType() == TAFReportType.amendment) { //Only change validityTime for amendments
                             Instant iValidityStart = Instant.now().truncatedTo(ChronoUnit.HOURS);
-                            taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
+                            if (taf.getMetadata().getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("UTC")))) {
+                                taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
+                            }
                         }
                         taf.getMetadata().setIssueTime(null);
                         previousTaf.getMetadata().setPreviousMetadata(null); //Wipe previousMetadata of previousTaf object
@@ -287,7 +289,13 @@ public class TafServices {
                 } else if (taf.getMetadata().getStatus().equals(TAFReportPublishedConcept.published)) {
                     if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation()) &&
                             previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
-
+                        
+                        if (taf.metadata.getType() == TAFReportType.amendment) { //Only change validityTime for amendments
+                            Instant iValidityStart = Instant.now().truncatedTo(ChronoUnit.HOURS);
+                            if (taf.getMetadata().getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("UTC")))) {
+                                taf.getMetadata().setValidityStart(iValidityStart.atOffset(ZoneOffset.of("Z")));
+                            }
+                        }
                         if (previousTaf.getMetadata().getValidityEnd().isAfter(OffsetDateTime.now(ZoneId.of("UTC")))) {
                             taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS));
                             previousTaf.getMetadata().setPreviousMetadata(null); //Wipe previousMetadata of previousTaf object
