@@ -2,16 +2,17 @@ package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
 import java.net.URLDecoder;
-import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import nl.knmi.geoweb.backend.product.sigmet.*;
+
 import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
 import org.json.JSONException;
@@ -34,19 +35,20 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import lombok.Getter;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
-import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
+import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetParameters;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetPhenomenaMapping;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetValidationResult;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetValidator;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
 
 @RestController
@@ -214,12 +216,6 @@ public class SigmetServices {
                 } catch (JSONException e1) {
                 }
             }
-        } catch (JsonParseException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-        } catch (JsonMappingException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
         } catch (IOException e2) {
             // TODO Auto-generated catch block
             e2.printStackTrace();

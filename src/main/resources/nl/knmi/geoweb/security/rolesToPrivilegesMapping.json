@@ -1,0 +1,43 @@
+[
+  {
+    "roleName": "settings_read_only",
+    "privileges": [
+      "TAF_settings_read",
+      "SIGMET_settings_read",
+      "AIRMET_settings_read"
+    ]
+  },
+  {
+    "roleName": "settings_full",
+    "privileges": [
+      "TAF_settings_read",
+      "SIGMET_settings_read",
+      "AIRMET_settings_read",
+      "TAF_settings_edit",
+      "SIGMET_settings_edit",
+      "AIRMET_settings_edit"
+    ]
+  },
+  {
+    "roleName": "product_read_only",
+    "privileges": [
+      "TAF_read",
+      "SIGMET_read",
+      "AIRMET_read"
+    ]
+  },
+  {
+    "roleName": "production_full",
+    "privileges": [
+      "TAF_read",
+      "SIGMET_read",
+      "AIRMET_read",
+      "TAF_settings_read",
+      "SIGMET_settings_read",
+      "AIRMET_settings_read",
+      "TAF_edit",
+      "SIGMET_edit",
+      "AIRMET_edit"
+    ]
+  }
+]

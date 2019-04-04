@@ -1,41 +1,40 @@
 package nl.knmi.geoweb.backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.Banner;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.DefaultApplicationArguments;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import nl.knmi.adaguc.tools.Debug;
 
 @SpringBootApplication
-@EnableAutoConfiguration
-@PropertySource("classpath:application.properties")
-public class GeoWebBackEndApplication extends SpringBootServletInitializer {
+public class GeoWebBackEndApplication implements ApplicationRunner {
+
+	@Value("${geoweb.backendVersion}")
+	private String backendVersion;
+
+	@Value("${geoweb.messageConverterVersion}")
+	private String messageConverterVersion;
+
+	private static final Logger log = LoggerFactory.getLogger(GeoWebBackEndApplication.class);
 	
-	@Value("${info.version}")
-	private String infoVersion;
-
-	@RequestMapping(path = "/")
-	String home() {
-		Debug.println(infoVersion);
-		return "GeoWeb Backend version [" + infoVersion + "]";
+	public static void main(String[] args) throws Exception {
+		boolean hasClientSecret = new DefaultApplicationArguments(args).containsOption("security.oauth2.client.clientSecret");
+		if (!hasClientSecret) {
+			Exception noClientSecretException = new Exception("No OpenId Connect client secret provided");
+			log.error(
+					"The client secret MUST be provided as command line argument (param: security.oauth2.client.clientSecret)",
+					noClientSecretException);
+			throw noClientSecretException;
+		}
+		SpringApplication.run(GeoWebBackEndApplication.class, args);
 	}
-
-	public static void main(String[] args) {
-		configureApplication(new SpringApplicationBuilder()).run(args);
-	}
-
+	
 	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application)  {
-		Debug.println(infoVersion);
-		return application.sources(GeoWebBackEndApplication.class).properties();
-	}
-
-	private static SpringApplicationBuilder configureApplication(SpringApplicationBuilder builder){
-		return builder.sources(GeoWebBackEndApplication.class).bannerMode(Banner.Mode.OFF);
+  public void run(ApplicationArguments args) {
+		log.info("Version BackEnd: " + backendVersion);
+		log.info("Version MessageConverter: " + messageConverterVersion);
 	}
 }

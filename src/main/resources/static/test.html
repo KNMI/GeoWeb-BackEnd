@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Spring Security Principal and Authorities extractor</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <script type="text/javascript">
+        async function init() {
+            const list = document.querySelector('ul');
+            const response = await fetch('/logout/options');
+            const options = await response.json();
+            Object.entries(options).forEach((option) => {
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                const label = document.createTextNode(option[0]);
+                link.setAttribute('href', option[1]);
+                link.appendChild(label);
+                item.appendChild(link);
+                list.appendChild(item);
+            });
+        }
+    </script>
+</head>
+
+<body onLoad=init()>
+    <div class="container">
+        <div class="col-sm-12">
+            <h1>Secured Page, only accessible for privilege TEST</h1>
+        </div>
+        <div class="col-sm-12">
+            <br />
+            <label>Logout from:</label>
+            <ul></ul>
+        </div>
+    </div>
+</body>
+
+</html>

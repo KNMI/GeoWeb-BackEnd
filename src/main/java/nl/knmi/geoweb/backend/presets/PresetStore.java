@@ -63,7 +63,7 @@ public class PresetStore {
 	private String userDir;
 
 
-	public PresetStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+	public PresetStore(@Value(value = "${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/presets";
 		Debug.println("PRESET STORE at " + dir);
 		File f = new File(dir);
