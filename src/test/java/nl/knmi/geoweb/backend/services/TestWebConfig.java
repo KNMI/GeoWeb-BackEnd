@@ -14,7 +14,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableWebMvc
 public class TestWebConfig implements WebMvcConfigurer {
 
-	@Value("${productstorelocation}")
+	@Value("${geoweb.products.storeLocation}")
 	private String storeLocation;
 
 	@Override

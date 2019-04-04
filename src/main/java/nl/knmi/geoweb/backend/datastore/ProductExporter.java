@@ -3,17 +3,14 @@ package nl.knmi.geoweb.backend.datastore;
 import java.io.File;
 import java.io.IOException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.IExportable;
 import nl.knmi.geoweb.backend.product.ProductConverter;
-import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
-import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebConverter;
 
 @Component
 public class ProductExporter<P> {
@@ -24,7 +21,7 @@ public class ProductExporter<P> {
 		this("/tmp/exports");
 	}
 
-	ProductExporter(@Value(value = "${productexportlocation}") String productexportlocation) {
+	ProductExporter(@Value(value = "${geoweb.products.exportLocation}") String productexportlocation) {
 		if (productexportlocation == null || productexportlocation.length() == 0) {
 			productexportlocation = "/tmp/exports";
 		}

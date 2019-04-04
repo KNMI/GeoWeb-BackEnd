@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <title>GeoWeb SpringSecurity POC</title>
+    <meta name="description" content="A sample / test how to implement Spring Boot Security" />
+    <meta name="viewport" content="width=device-width" />
+    <base href="/" />
+    <script type="text/javascript">
+        async function init() {
+            const list = document.querySelector('ul');
+            const response = await fetch('/login/options');
+            const options = await response.json();
+            Object.entries(options).forEach((option) => {
+                const item = document.createElement('li');
+                const link = document.createElement('a');
+                const label = document.createTextNode(option[0]);
+                link.setAttribute('href', option[1]);
+                link.appendChild(label);
+                item.appendChild(link);
+                list.appendChild(item);
+            });
+        }
+    </script>
+</head>
+
+<body onLoad=init()>
+    <h1>GeoWeb SpringSecurity POC</h1>
+
+    <div>
+        <label>Login with:</label>
+        <ul></ul>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,21 @@
+security:
+    oauth2:
+      client:
+        clientId: ${client.id}
+        accessTokenUri: ${client.openIdUrl}/token
+        userAuthorizationUri: ${client.openIdUrl}/auth
+        scope:
+          - openid
+          - profile
+          - email
+      resource:
+        userInfoUri: ${client.openIdUrl}/userinfo
+        tokenInfoUri: ${client.openIdUrl}/token/introspect
+
+client:
+  realm: GeoWeb
+  name: Keycloak
+  id: GeoWeb-POC-SpringSecurity-wim
+  issuerUri: https://auth-acpt.knmi.nl/auth/realms/${client.realm}
+  openIdUrl: ${client.issuerUri}/protocol/openid-connect
+  logoutUri: ${client.openIdUrl}/logout?redirect_uri=

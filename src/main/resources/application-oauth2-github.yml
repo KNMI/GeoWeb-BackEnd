@@ -1,0 +1,22 @@
+security:
+    oauth2:
+      client:
+        clientId: ${client.id}
+        accessTokenUri: ${client.issuerUri}/access_token
+        userAuthorizationUri: ${client.issuerUri}/authorize
+        scope:
+          - openid
+          - profile
+          - email
+      resource:
+        userInfoUri: https://api.github.com/user
+
+client:
+  realm: GeoWeb
+  name: Github
+  id: 89a7c4facbb3434d599d
+  issuerUri: https://github.com/login/oauth
+  logoutUri: ${client.issuerUri}/logout?redirect_uri=
+
+server:
+  port: 8082
