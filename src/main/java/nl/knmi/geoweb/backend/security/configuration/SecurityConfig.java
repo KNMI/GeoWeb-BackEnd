@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.PrincipalExtractor;
@@ -30,6 +31,7 @@ import nl.knmi.geoweb.backend.security.extractors.keycloak.KeycloakAuthoritiesEx
 import nl.knmi.geoweb.backend.security.extractors.keycloak.KeycloakPrincipalExtractor;
 import nl.knmi.geoweb.backend.security.models.Privilege;
 
+@Profile("!test")
 @Configuration
 @EnableOAuth2Sso
 public class SecurityConfig extends WebSecurityConfigurerAdapter {

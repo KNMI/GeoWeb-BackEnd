@@ -37,6 +37,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
@@ -52,29 +53,30 @@ import nl.knmi.geoweb.backend.product.airmet.ObscuringPhenomenonList;
 import nl.knmi.geoweb.backend.product.airmet.converter.AirmetConverter;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
+@Slf4j
 @RestController
 @RequestMapping("/airmets")
 public class AirmetServices {
     final static String baseUrl="/airmets";
 
     @Autowired
-    AdminStore adminStore;
+    private AdminStore adminStore;
 
-    AirmetStore airmetStore=null;
-    private ProductExporter<Airmet> publishAirmetStore;
+    @Autowired
+    private AirmetStore airmetStore;
 
+    @Autowired
     private AirmetValidator airmetValidator;
 
-    AirmetServices(final AirmetStore airmetStore, final AirmetValidator airmetValidator, final ProductExporter<Airmet> publishAirmetStore) throws IOException {
-        Debug.println("INITING AirmetServices...");
-        this.airmetStore = airmetStore;
-        this.airmetValidator=airmetValidator;
-        this.publishAirmetStore=publishAirmetStore;
-    }
+    @Autowired
+    private ProductExporter<Airmet> publishAirmetStore;
 
     @Autowired
     @Qualifier("airmetObjectMapper")
     private ObjectMapper airmetObjectMapper;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     AirmetConverter airmetConverter;
@@ -215,12 +217,6 @@ public class AirmetServices {
                 } catch (JSONException e1) {
                 }
             }
-        } catch (JsonParseException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
-        } catch (JsonMappingException e2) {
-            // TODO Auto-generated catch block
-            e2.printStackTrace();
         } catch (IOException e2) {
             // TODO Auto-generated catch block
             e2.printStackTrace();
@@ -235,8 +231,13 @@ public class AirmetServices {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
     }
 
-    @RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(path="/{uuid}",
+            method = RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Airmet getAirmetAsJson(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+        String startTimestamp = "2019-02-12T08:00:00Z";
+        OffsetDateTime start = OffsetDateTime.parse(startTimestamp);
+        log.info(objectMapper.writeValueAsString(start));
         return airmetStore.getByUuid(uuid);
     }
 

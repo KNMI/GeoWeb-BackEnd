@@ -15,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -289,7 +290,7 @@ public class TafServices {
                 } else if (taf.getMetadata().getStatus().equals(TAFReportPublishedConcept.published)) {
                     if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation()) &&
                             previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
-                        
+
                         if (taf.metadata.getType() == TAFReportType.amendment) { //Only change validityTime for amendments
                             Instant iValidityStart = Instant.now().truncatedTo(ChronoUnit.HOURS);
                             if (taf.getMetadata().getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("UTC")))) {
@@ -325,7 +326,7 @@ public class TafServices {
                         Debug.errprintln("Error: COR/AMD do not match with previousTaf");
                     }
                 }
-                
+
                 json = new JSONObject().
                 		put("succeeded", false).
                 		put("message", "Unable to store taf with uuid " + taf.metadata.getUuid()).

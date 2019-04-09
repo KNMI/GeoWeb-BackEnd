@@ -19,7 +19,7 @@ public class GeoWebBackEndApplication implements ApplicationRunner {
 	private String messageConverterVersion;
 
 	private static final Logger log = LoggerFactory.getLogger(GeoWebBackEndApplication.class);
-	
+
 	public static void main(String[] args) throws Exception {
 		boolean hasClientSecret = new DefaultApplicationArguments(args).containsOption("security.oauth2.client.clientSecret");
 		if (!hasClientSecret) {
@@ -31,7 +31,7 @@ public class GeoWebBackEndApplication implements ApplicationRunner {
 		}
 		SpringApplication.run(GeoWebBackEndApplication.class, args);
 	}
-	
+
 	@Override
   public void run(ApplicationArguments args) {
 		log.info("Version BackEnd: " + backendVersion);

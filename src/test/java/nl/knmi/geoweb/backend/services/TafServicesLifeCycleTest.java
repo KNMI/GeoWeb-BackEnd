@@ -46,7 +46,7 @@ import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class})
+@SpringBootTest
 @DirtiesContext
 public class TafServicesLifeCycleTest {
 	/** Entry point for Spring MVC testing support. */
@@ -68,8 +68,8 @@ public class TafServicesLifeCycleTest {
 	@Before
 	public void setUp() {
 		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		for(File file: new File("/tmp/tafs").listFiles()) 
-		    if (!file.isDirectory()) 
+		for(File file: new File("/tmp/tafs").listFiles())
+		    if (!file.isDirectory())
 		        file.delete();
 	}
 
@@ -78,7 +78,7 @@ public class TafServicesLifeCycleTest {
 		MvcResult result = mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
 				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();	
+				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
@@ -97,7 +97,7 @@ public class TafServicesLifeCycleTest {
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
 				//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 				.andExpect(status().is4xxClientError()).andReturn();
-		
+
 		return "FAIL";
 	}
 
@@ -166,8 +166,8 @@ public class TafServicesLifeCycleTest {
 			actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
 		}
-		
-		
+
+
 		return tafObj;
 	}
 
@@ -198,7 +198,7 @@ public class TafServicesLifeCycleTest {
 		Debug.println("EQ: "+baseTaf.equals(storedTaf));
 		assertEquals(baseTaf, storedTaf);
 		storedTaf.getMetadata().setBaseTime(baseTime);
-		
+
 		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
 		Debug.println("Amending unpublished base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
@@ -216,7 +216,7 @@ public class TafServicesLifeCycleTest {
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		String publishedUuid=storeTaf(storedTaf);
 		Debug.println("published: "+publishedUuid);
-		
+
 		//Make another amendment with a new UUID.
 		Debug.println("Amending published base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
@@ -326,7 +326,7 @@ public class TafServicesLifeCycleTest {
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) tafObjectMapper.readTree(responseBody);
 		int tafCount = jsonResult.get("ntafs").asInt();
-		mockMvc.perform(delete("/tafs/" + uuid))                
+		mockMvc.perform(delete("/tafs/" + uuid))
 		.andExpect(status().isOk())
 		.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 		.andReturn();

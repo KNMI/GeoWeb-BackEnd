@@ -40,16 +40,16 @@ import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class})
+@SpringBootTest
 @DirtiesContext
 public class TafServicesTest {
 	/** Entry point for Spring MVC testing support. */
     private MockMvc mockMvc;
-    
+
     /** The Spring web application context. */
     @Resource
     private WebApplicationContext webApplicationContext;
-    
+
     /** The {@link ObjectMapper} instance to be used. */
     @Autowired
     @Qualifier("tafObjectMapper")
@@ -80,12 +80,12 @@ public class TafServicesTest {
 		tafJson.set("changegroups", (JsonNode)objectMapper.readTree("[]"));
 		return tafJson.toString();
 	}
-	
+
 	private String addTaf() throws Exception {
 		MvcResult result = mockMvc.perform(post("/tafs")
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(getValidTaf()))
 				.andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();	
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
@@ -95,7 +95,7 @@ public class TafServicesTest {
         String uuid = jsonResult.get("uuid").asText();
         return uuid;
 	}
-	 
+
 	@Test
 	public void addTAFTest () throws Exception {
 		Debug.println("get inactive tafs");
@@ -103,7 +103,7 @@ public class TafServicesTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
-		
+
 		String responseBody = result.getResponse().getContentAsString();
 		Debug.println("resp: "+responseBody);
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
@@ -117,12 +117,12 @@ public class TafServicesTest {
 		String uuid = addTaf();
 		Debug.println("Add taff done: "+ uuid);
 		assert(uuid != null);
-		
+
 		result = mockMvc.perform(get("/tafs?active=false"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
-		
+
 		responseBody = result.getResponse().getContentAsString();
 		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		System.err.println("After add: "+jsonResult);
@@ -132,7 +132,7 @@ public class TafServicesTest {
         Debug.println("" + new_tafs + " === " + tafs);
         assert(new_tafs == tafs + 1);
 	}
-	
+
 	@Test
 	public void getTafList () throws Exception {
 		String uuid=addTaf();
@@ -141,7 +141,7 @@ public class TafServicesTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
-		
+
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectMapper om=new ObjectMapper();
 		ObjectNode jsonResult = (ObjectNode) om.readTree(responseBody);
@@ -155,7 +155,7 @@ public class TafServicesTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andReturn();
-		
+
 		responseBody = result.getResponse().getContentAsString();
 		Debug.println("getTafList:"+responseBody);
 		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
@@ -167,7 +167,7 @@ public class TafServicesTest {
         assert(ntafs>=jsonResult.get("ntafs").asInt());
 
 	}
-	
+
 	@Test
 	public void removeTaf () throws Exception {
 		String uuid = addTaf();
@@ -180,7 +180,7 @@ public class TafServicesTest {
 		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 		int tafCount = jsonResult.get("ntafs").asInt();
 
-		mockMvc.perform(delete("/tafs/" + uuid))                
+		mockMvc.perform(delete("/tafs/" + uuid))
 			.andExpect(status().isOk())
 	        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 	        .andReturn();
@@ -193,5 +193,5 @@ public class TafServicesTest {
 		int newTafCount = jsonResult.get("ntafs").asInt();
 		assert(newTafCount == tafCount - 1);
 	}
-	
+
 }
