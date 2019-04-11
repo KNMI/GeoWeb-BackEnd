@@ -16,7 +16,6 @@ import nl.knmi.geoweb.backend.product.ProductConverter;
 public class ProductExporter<P> {
 	private File path;
 	
-	
 	ProductExporter () {
 		this("/tmp/exports");
 	}

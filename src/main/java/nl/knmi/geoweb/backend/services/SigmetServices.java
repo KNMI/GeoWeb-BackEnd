@@ -50,7 +50,6 @@ import nl.knmi.geoweb.backend.product.sigmet.SigmetValidator;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
-
 @RestController
 @RequestMapping("/sigmets")
 public class SigmetServices {
