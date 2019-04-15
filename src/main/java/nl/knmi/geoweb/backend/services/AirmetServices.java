@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -89,12 +90,11 @@ public class AirmetServices {
             path = "",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public synchronized ResponseEntity<String> storeJSONAirmet(@RequestBody String airmet) { // throws IOException {
+    public synchronized ResponseEntity<String> storeJSONAirmet(@RequestBody JsonNode airmet) { // throws IOException {
         Debug.println("########################################### storeairmet #######################################");
-        Debug.println(airmet);
         Airmet am=null;
         try {
-            am = airmetObjectMapper.readValue(airmet, Airmet.class);
+            am = airmetObjectMapper.treeToValue(airmet, Airmet.class);
 
             if (am.getStatus()== SigmetAirmetStatus.concept) {
                 //Store

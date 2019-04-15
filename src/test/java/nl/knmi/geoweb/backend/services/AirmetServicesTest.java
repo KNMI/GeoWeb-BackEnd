@@ -19,6 +19,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -59,6 +60,14 @@ public class AirmetServicesTest {
     + " \"properties\": {\"selectionType\": \"box\",\"featureFunction\": \"start\"},\"geometry\": {\"type\": \"Polygon\","
     + " \"coordinates\": [[[5.1618,51.4414],[5.1618,51.7424],[5.8444,51.7424],[5.8444,51.4414],[5.1618,51.4414]]]}}]}\"";
 
+    String uuid = "b6ea2637-4652-42cc-97ac-4e34548d3cc7";
+    String phenomenon = "OCNL_TSGR";
+    String startTimestamp = "2019-02-12T08:00:00Z";
+    OffsetDateTime start = OffsetDateTime.parse(startTimestamp);
+    OffsetDateTime end = OffsetDateTime.parse("2019-02-12T11:00:00Z");
+
+    private Airmet airmet;
+
     private MockMvc mockMvc;
 
     /** The Spring web application context. */
@@ -71,9 +80,6 @@ public class AirmetServicesTest {
     private ObjectMapper airmetObjectMapper;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     AirmetStore airmetStore;
 
     // @Autowired
@@ -81,6 +87,21 @@ public class AirmetServicesTest {
 
     @Before
     public void setUp() {
+        Airmet am = new Airmet("AMSTERDAM FIR", "EHAA", "EHDB", uuid);
+        am.setStatus(SigmetAirmetStatus.concept);
+        am.setType(SigmetAirmetType.normal);
+        am.setPhenomenon(Airmet.Phenomenon.getPhenomenon(phenomenon));
+        am.setValiddate(start);
+        am.setValiddate_end(end);
+        am.setObs_or_forecast(new ObsFc(true));
+        am.setChange(SigmetAirmetChange.INTSF);
+        am.setMovement_type(Airmet.AirmetMovementType.MOVEMENT);
+        am.setMovement(new SigmetAirmetMovement("NNE", 4, "KT"));
+        am.setLevelinfo(new SigmetAirmetLevel(
+                new SigmetAirmetLevel.SigmetAirmetPart(SigmetAirmetLevel.SigmetAirmetLevelUnit.FL, 30),
+                SigmetAirmetLevel.SigmetAirmetLevelMode.ABV));
+        am.setGeojson(mapJsonToGeoObject(testGeoJsonBox));
+        airmet = am;
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
     }
 
@@ -121,31 +142,8 @@ public class AirmetServicesTest {
     @Test
     public void serviceTestGetAirmetByUUID() throws Exception {
         // given
-        String uuid = "b6ea2637-4652-42cc-97ac-4e34548d3cc7";
-        String phenomenon = "OCNL_TSGR";
-        String startTimestamp = "2019-02-12T08:00:00Z";
-        OffsetDateTime start = OffsetDateTime.parse(startTimestamp);
-        OffsetDateTime end = OffsetDateTime.parse("2019-02-12T11:00:00Z");
-        Airmet am = new Airmet("AMSTERDAM FIR", "EHAA", "EHDB", uuid);
-        am.setStatus(SigmetAirmetStatus.concept);
-        am.setType(SigmetAirmetType.normal);
-        am.setPhenomenon(Airmet.Phenomenon.getPhenomenon(phenomenon));
-        am.setValiddate(start);
-        am.setValiddate_end(end);
-        am.setObs_or_forecast(new ObsFc(true));
-        am.setChange(SigmetAirmetChange.INTSF);
-        am.setMovement_type(Airmet.AirmetMovementType.MOVEMENT);
-        am.setMovement(new SigmetAirmetMovement("NNE", 4, "KT"));
-        am.setLevelinfo(new SigmetAirmetLevel(
-                new SigmetAirmetLevel.SigmetAirmetPart(SigmetAirmetLevel.SigmetAirmetLevelUnit.FL, 30),
-                SigmetAirmetLevel.SigmetAirmetLevelMode.ABV));
-        am.setGeojson(mapJsonToGeoObject(testGeoJsonBox));
-
-        log.info(airmetObjectMapper.writeValueAsString(start));
-        log.info(objectMapper.writeValueAsString(start));
-
         // when
-        when(airmetStore.getByUuid(any(String.class))).thenReturn(am);
+        when(airmetStore.getByUuid(any(String.class))).thenReturn(airmet);
 
         // then
         MvcResult result = mockMvc.perform(get("/airmets/" + uuid))
@@ -168,14 +166,30 @@ public class AirmetServicesTest {
         assertThat(jsonResult.get("sequence").asInt(), is(-1));
     }
 
+    @Test
+    public void serviceTestPostEmptyAirmet() throws Exception {
+        // given
+        // when
+        // then
+        MvcResult result = mockMvc.perform(post("/airmets").contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        log.info(responseBody);
+        JsonNode jsonResult = airmetObjectMapper.readTree(responseBody);
+        log.info(jsonResult.toString());
+        assertThat(jsonResult.has("error"), is(true));
+        assertThat(jsonResult.get("error").asText().length(), not(0));
+    }
+
+    // RequestPostProcessor bearerToken = authHelper.addBearerToken("test",
+    // "ROLE_USER");
+    // ResultActions resultActions =
+    // restMvc.perform(post("/hello").with(bearerToken));
 
     @Test
     public void apiTestStoreAirmetEmptyHasErrorMsg() throws Exception {
-        // RequestPostProcessor bearerToken = authHelper.addBearerToken("test",
-        // "ROLE_USER");
-        // ResultActions resultActions =
-        // restMvc.perform(post("/hello").with(bearerToken));
-        MvcResult result = mockMvc.perform(post("/airmets").contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
+        MvcResult result = mockMvc.perform(post("/airmets").contentType(MediaType.APPLICATION_JSON_UTF8).content(""))
                 .andExpect(status().isMethodNotAllowed())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
         String responseBody = result.getResponse().getContentAsString();
