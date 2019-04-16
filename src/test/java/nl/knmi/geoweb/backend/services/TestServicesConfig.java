@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Profile;
 
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
-import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.backend.product.airmet.AirmetStore;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
 @Profile("test")
 @Configuration
@@ -20,6 +20,12 @@ public class TestServicesConfig {
     @Primary
     public AirmetStore getAirmetStore() {
         return mock(AirmetStore.class);
+    }
+
+    @Bean
+    @Primary
+    public SigmetStore getSigmetStore() {
+        return mock(SigmetStore.class);
     }
 
     @Bean

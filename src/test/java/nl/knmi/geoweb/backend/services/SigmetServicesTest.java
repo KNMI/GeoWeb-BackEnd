@@ -3,261 +3,334 @@ package nl.knmi.geoweb.backend.services;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import javax.annotation.Resource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.geojson.Feature;
+import org.geojson.GeoJsonObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.geoweb.backend.ApplicationConfig;
+import nl.knmi.geoweb.backend.aviation.FIRStore;
+import nl.knmi.geoweb.backend.datastore.ProductExporter;
+import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
+import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
+import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
+import nl.knmi.geoweb.backend.product.sigmetairmet.ObsFc;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetChange;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetLevel;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetMovement;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
+import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-//@WebMvcTest(SigmetServices.class)
-@DirtiesContext
+@Import(ApplicationConfig.class)
 public class SigmetServicesTest {
-	/** Entry point for Spring MVC testing support. */
-	private MockMvc mockMvc;
+    private String testGeoJsonBox = "{\"type\": \"FeatureCollection\",\"features\":[{\"type\": \"Feature\",\"id\": \"feb7bb38-a341-438d-b8f5-aa83685a0062\","
+            + " \"properties\": {\"selectionType\": \"box\",\"featureFunction\": \"start\"},\"geometry\": {\"type\": \"Polygon\","
+            + " \"coordinates\": [[[5.1618,51.4414],[5.1618,51.7424],[5.8444,51.7424],[5.8444,51.4414],[5.1618,51.4414]]]}}]}\"";
 
-	/** The Spring web application context. */
-	@Resource
-	private WebApplicationContext webApplicationContext;
+	static String uuid = "b6ea2637-4652-42cc-97ac-4e34548d3cc7";
+    static String phenomenon = "OBSC_TS";
+    static String startTimestamp = "2019-02-12T08:00:00Z";
+    OffsetDateTime start = OffsetDateTime.parse(startTimestamp);
+    OffsetDateTime end = OffsetDateTime.parse("2019-02-12T11:00:00Z");
 
-	/** The {@link ObjectMapper} instance to be used. */
-	@Autowired
-	private ObjectMapper objectMapper;
+    private Sigmet sigmet;
+
+    private MockMvc mockMvc;
+
+    /** The Spring web application context. */
+    @Autowired
+    private WebApplicationContext webApplicationContext;
+
+    /** The {@link ObjectMapper} instance to be used. */
+    @Autowired
+    @Qualifier("sigmetObjectMapper")
+    private ObjectMapper sigmetObjectMapper;
+
+    @Autowired
+    SigmetStore sigmetStore;
+
+    @Autowired
+    FIRStore firStore;
+
+    @Autowired
+    private ProductExporter<Sigmet> sigmetExporter;
 
 	@Before
 	public void setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        Sigmet sm = new Sigmet("AMSTERDAM FIR", "EHAA", "EHDB", uuid);
+        sm.setStatus(SigmetAirmetStatus.concept);
+        sm.setType(SigmetAirmetType.normal);
+        sm.setPhenomenon(Sigmet.Phenomenon.getPhenomenon(phenomenon));
+        sm.setValiddate(start);
+        sm.setValiddate_end(end);
+        sm.setObs_or_forecast(new ObsFc(true));
+        sm.setChange(SigmetAirmetChange.NC);
+        sm.setMovement_type(Sigmet.SigmetMovementType.STATIONARY);
+        sm.setMovement(new SigmetAirmetMovement("NNE", 4, "KT"));
+        sm.setLevelinfo(new SigmetAirmetLevel(
+                new SigmetAirmetLevel.SigmetAirmetPart(SigmetAirmetLevel.SigmetAirmetLevelUnit.FL, 100),
+                SigmetAirmetLevel.SigmetAirmetLevelMode.ABV));
+        sm.setGeojson(mapJsonToGeoObject(testGeoJsonBox));
+        sigmet = sm;
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        reset(sigmetStore);
+        reset(firStore);
+        reset(sigmetExporter);
 	}
 
 	static String features="["
 			+"{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"box\"}, \"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-4,52],[4.5,52],[4.5,55.3],[-4,55.3],[-4,52]]]}}"
 			+ ",{\"type\":\"Feature\",\"id\":\"geom-2\", \"properties\":{\"featureFunction\":\"intersection\", \"selectionType\":\"poly\", \"relatesTo\":\"geom-1\"}, \"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[-4,52],[4.5,52],[4.5,56],[-4,56],[-4,52]]]}}"
 			+"]";
-	
+
 	static String testSigmet="{\"geojson\":"
 			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//+"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
 			+"\"phenomenon\":\"OBSC_TS\","
-			+"\"obs_or_forecast\":{\"obs\":true},"
-			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
+            +"\"obs_or_forecast\":{\"obs\":true},"
+            + "\"uuid\": \"" + uuid + "\","
+			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"ABV\"},"
 			+"\"movement_type\":\"STATIONARY\","
 			+"\"change\":\"NC\","
 			+"\"status\":\"concept\","
-			+"\"validdate\":\"2017-03-24T15:56:16Z\","
+			+ "\"validdate\":\"" + startTimestamp + "\","
 			+"\"validdate_end\":\"2017-03-24T15:56:16Z\","
 			+"\"firname\":\"AMSTERDAM FIR\","
 			+"\"location_indicator_icao\":\"EHAA\","
 			+"\"location_indicator_mwo\":\"EHDB\"}";
 
-	static String testSigmetWithDate="{\"geojson\":"
-			+"{\"type\":\"FeatureCollection\",\"features\":"+features+"},"
-			//"[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
-			+"\"phenomenon\":\"OBSC_TS\","
-			+"\"obs_or_forecast\":{\"obs\":true},"
-			+"\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
-			+"\"movement_type\":\"STATIONARY\","
-			+"\"change\":\"NC\","
-			+"\"status\":\"concept\","
-			+"\"validdate\":\"%DATETIME%\","
-			+"\"validdate_end\":\"%DATETIME_END%\","
-			+"\"firname\":\"AMSTERDAM FIR\","
-			+"\"location_indicator_icao\":\"EHAA\","
-			+"\"location_indicator_mwo\":\"EHDB\"}";
+    static String testFeatureFIR = "{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";
 
-	@Test
-	public void apiTestStoreSigmetEmptyHasErrorMsg () throws Exception {
-		MvcResult result = mockMvc.perform(post("/sigmets")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
-				.andExpect(status().isMethodNotAllowed())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();
-		String responseBody = result.getResponse().getContentAsString();
-		Debug.println(responseBody);
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		assertThat(jsonResult.has("error"), is(true));
-		assertThat(jsonResult.get("error").asText().length(), not(0));
-	}
+    private GeoJsonObject mapJsonToGeoObject(String json) {
+        GeoJsonObject result;
+        try {
+            result = sigmetObjectMapper.readValue(json, GeoJsonObject.class);
+        } catch (IOException e) {
+            result = null;
+        }
+        return result;
+    }
 
-	public String apiTestStoreSigmetOK(String sigmetText) throws Exception {
-		MvcResult result = mockMvc.perform(post("/sigmets/")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(sigmetText))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();	
-		String responseBody =  result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		assertThat(jsonResult.has("error"), is(false));
-		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.get("succeeded").asText(), is("true"));
-		assertThat(jsonResult.get("message").asText().length(), not(0));
-		assertThat(jsonResult.get("sigmetjson").asText().length(), not(0));
-		String uuid = jsonResult.get("uuid").asText();
-		Debug.println("Sigmet uuid = " + uuid);
-		return uuid;
-	}
+    @Test
+    public void serviceTestPostEmptySigmet() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(post("/sigmets").contentType(MediaType.APPLICATION_JSON_UTF8).content("{}"))
+                .andExpect(status().isMethodNotAllowed())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error", is("empty sigmet")));
 
-	public ObjectNode getSigmetList() throws Exception {
-		/*getsigmetlist*/
-		MvcResult result = mockMvc.perform(get("/sigmets/?active=false")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();
+        verifyNoMoreInteractions(sigmetStore);
+    }
 
-		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("getSigmetList() result:"+responseBody);
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		assertThat(jsonResult.has("page"), is(true));
-		assertThat(jsonResult.has("npages"), is(true));
-		assertThat(jsonResult.has("sigmets"), is(true));
-		assertThat(jsonResult.has("nsigmets"), is(true));
-		return jsonResult;
-	}
+    @Test
+    public void serviceTestPostCorrectSigmet() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(post("/sigmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
+                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.message", is("sigmet " + uuid + " stored")))
+                .andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(jsonPath("$.sigmetjson.uuid", is(uuid)))
+                .andExpect(jsonPath("$.sigmetjson.validdate", is(startTimestamp)));
 
-	@Test
-	public void apiTestGetSigmetListIncrement () throws Exception {
-		apiTestStoreSigmetOK(testSigmet);
-		ObjectNode jsonResult = getSigmetList();
-		int currentNrOfSigmets = jsonResult.get("nsigmets").asInt();
-		apiTestStoreSigmetOK(testSigmet);
-		jsonResult = getSigmetList();
-		int newNrOfSigmets = jsonResult.get("nsigmets").asInt();
-		assertThat(newNrOfSigmets, is(currentNrOfSigmets + 1));
-	}
+        verify(sigmetStore, times(1)).storeSigmet(any(Sigmet.class));
+        verifyNoMoreInteractions(sigmetStore);
+    }
 
-	@Test
-	public void apiTestGetSigmetByUUID () throws Exception {
-		String sigmetUUID = apiTestStoreSigmetOK(testSigmet);
+    @Test
+    public void serviceTestGetSigmetList() throws Exception {
+        // given
+        // when
+        when(sigmetStore.getSigmets(false, null))
+                .thenReturn(new Sigmet[] { sigmet })
+                .thenReturn(new Sigmet[] { sigmet, new Sigmet(sigmet) })
+                .thenReturn(new Sigmet[] { sigmet, new Sigmet(sigmet), new Sigmet(sigmet) });
+        // then
+        mockMvc.perform(get("/sigmets/?active=false")).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.page", is(0)))
+                .andExpect(jsonPath("$.count", is(0)))
+                .andExpect(jsonPath("$.nsigmets", is(1)))
+                .andExpect(jsonPath("$.sigmets[0].uuid", is(uuid)));
+        mockMvc.perform(get("/sigmets/?active=false"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.nsigmets", is(2)));
+        mockMvc.perform(get("/sigmets/?active=false"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.nsigmets", is(3)));
 
-		/*getsigmet by uuid*/
-		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//                .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();
+        verify(sigmetStore, times(3)).getSigmets(anyBoolean(), isNull());
+        verifyNoMoreInteractions(sigmetStore);
+    }
 
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		assertThat(jsonResult.get("uuid").asText(), is(sigmetUUID));
-		assertThat(jsonResult.get("phenomenon").asText(), is("OBSC_TS"));
-		assertThat(jsonResult.get("obs_or_forecast").get("obs").asBoolean(), is(true));
-		assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("value").asDouble(), is(100.0));
-		assertThat(jsonResult.get("levelinfo").get("levels").get(0).get("unit").asText(), is("FL"));
-		assertThat(jsonResult.get("levelinfo").get("mode").asText(), is("AT"));
-		assertThat(jsonResult.get("movement_type").asText(), is("STATIONARY")); 
-		assertThat(jsonResult.get("change").asText(), is("NC"));
-		assertThat(jsonResult.get("validdate").asText(), is("2017-03-24T15:56:16Z"));
-		assertThat(jsonResult.get("firname").asText(), is("AMSTERDAM FIR"));
-		assertThat(jsonResult.get("location_indicator_icao").asText(), is("EHAA"));
-		assertThat(jsonResult.get("location_indicator_mwo").asText(), is("EHDB"));
-		assertThat(jsonResult.get("status").asText(), is("concept"));
-		assertThat(jsonResult.get("sequence").asInt(), is(-1));
-		assertThat(jsonResult.has("geojson"), is(true));
-		Debug.println(responseBody);	
-	}
+    @Test
+    public void serviceTestGetSigmetByUUID() throws Exception {
+        // given
+        // when
+        when(sigmetStore.getByUuid(any(String.class))).thenReturn(sigmet);
 
-	private String fixDate(String testSigmetWithDate) {
-		String now = OffsetDateTime.now(ZoneId.of("UTC")).format(DateTimeFormatter.ISO_INSTANT);
-		String end = OffsetDateTime.now(ZoneId.of("UTC")).plusHours(2).format(DateTimeFormatter.ISO_INSTANT);
-		return testSigmetWithDate.replaceFirst("%DATETIME%", now).replaceFirst("%DATETIME_END%", end);
-	}
-	
-	@Test
-	public void apiTestPublishSigmet () throws Exception {
-		String currentTestSigmet=fixDate(testSigmetWithDate);
-		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
-		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();
+        // then
+        mockMvc.perform(get("/sigmets/" + uuid)).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.uuid", is(uuid)))
+                .andExpect(jsonPath("$.phenomenon", is(phenomenon)))
+                .andExpect(jsonPath("$.obs_or_forecast.obs", is(true)))
+                .andExpect(jsonPath("$.levelinfo.levels[0].value", is(100)))
+                .andExpect(jsonPath("$.levelinfo.levels[0].unit", is("FL")))
+                .andExpect(jsonPath("$.levelinfo.mode", is("ABV")))
+                .andExpect(jsonPath("$.movement_type", is("STATIONARY")))
+                .andExpect(jsonPath("$.change", is("NC")))
+                .andExpect(jsonPath("$.validdate", is(startTimestamp)))
+                .andExpect(jsonPath("$.firname", is("AMSTERDAM FIR")))
+                .andExpect(jsonPath("$.location_indicator_icao", is("EHAA")))
+                .andExpect(jsonPath("$.location_indicator_mwo", is("EHDB")))
+                .andExpect(jsonPath("$.status", is("concept")))
+                .andExpect(jsonPath("$.sequence", is(-1)))
+                .andExpect(jsonPath("$.geojson").exists());
 
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		jsonResult.put("status",  "published");
-		Debug.println("After setting status=published: "+jsonResult.toString());
+        verify(sigmetStore, times(1)).getByUuid(any(String.class));
+        verifyNoMoreInteractions(sigmetStore);
+    }
 
-		result = mockMvc.perform(post("/sigmets/")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();	
-		responseBody =  result.getResponse().getContentAsString();
-		Debug.println("After publish: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-	}
-	
-	@Test
-	public void apiTestCancelSigmet () throws Exception {
-		String currentTestSigmet=fixDate(testSigmetWithDate);
-		String sigmetUUID = apiTestStoreSigmetOK(currentTestSigmet);
-		MvcResult result = mockMvc.perform(get("/sigmets/"+sigmetUUID))
-				//              .contentType(MediaType.APPLICATION_JSON_UTF8).content(testSigmet))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();
+    @Test
+    public void serviceTestPublishSigmet() throws Exception {
+        // given
+        String adjustedSigmet = testSigmet.replace("\"status\":\"concept\"", "\"status\":\"published\"");
 
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		jsonResult.put("status",  "published");
-		result = mockMvc.perform(post("/sigmets/")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();	
-		responseBody =  result.getResponse().getContentAsString();		
-		
-		
-		jsonResult.put("status",  "canceled");
-		Debug.println("After setting status=canceled: "+jsonResult.toString());
+        // when
+        when(sigmetExporter.export(any(Sigmet.class), any(SigmetConverter.class), any(ObjectMapper.class))).thenReturn("OK");
+        when(firStore.lookup(anyString(), anyBoolean())).thenReturn(new Feature());
+        when(sigmetStore.isPublished(anyString())).thenReturn(false);
+        when(sigmetStore.getNextSequence(any(Sigmet.class))).thenReturn(1);
 
-		result = mockMvc.perform(post("/sigmets/")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(jsonResult.toString()))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-				.andReturn();	
-		responseBody =  result.getResponse().getContentAsString();
-		Debug.println("After cancel: "+responseBody);
-		//ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-	}
-	
-	static String testFeatureFIR="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{\"featureFunction\":\"start\", \"selectionType\":\"fir\"}}";
+        // then
+        mockMvc.perform(post("/sigmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedSigmet))
+                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist()).andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(jsonPath("$.message", is("sigmet " + uuid + " published")))
+                .andExpect(jsonPath("$.uuid", is(uuid))).andExpect(jsonPath("$.sigmetjson.uuid", is(uuid)))
+                .andExpect(jsonPath("$.sigmetjson.status", is("published")))
+                .andExpect(jsonPath("$.sigmetjson.sequence", is(1)));
+
+        verify(sigmetExporter, times(1)).export(any(Sigmet.class), any(SigmetConverter.class), any(ObjectMapper.class));
+        verify(firStore, times(1)).lookup(anyString(), anyBoolean());
+        verify(sigmetStore, times(1)).isPublished(any(String.class));
+        verify(sigmetStore, times(1)).getNextSequence(any(Sigmet.class));
+        verify(sigmetStore, times(1)).storeSigmet(any(Sigmet.class));
+        verifyNoMoreInteractions(sigmetExporter);
+        verifyNoMoreInteractions(firStore);
+        verifyNoMoreInteractions(sigmetStore);
+    }
+
+    @Test
+    public void serviceTestPublishAlreadyPublishedSigmet() throws Exception {
+        // given
+        String adjustedAirmet = testSigmet.replace("\"status\":\"concept\"", "\"status\":\"published\"");
+
+        // when
+        when(firStore.lookup(anyString(), anyBoolean())).thenReturn(new Feature());
+        when(sigmetStore.isPublished(anyString())).thenReturn(true);
+        when(sigmetStore.getNextSequence(any(Sigmet.class))).thenReturn(1);
+
+        // then
+        mockMvc.perform(post("/sigmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedAirmet))
+                .andExpect(status().isBadRequest()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist()).andExpect(jsonPath("$.succeeded", is("false")))
+                .andExpect(jsonPath("$.message", is("sigmet " + uuid + " is already published")))
+                .andExpect(jsonPath("$.uuid", is(uuid))).andExpect(jsonPath("$.sigmetjson.uuid", is(uuid)))
+                .andExpect(jsonPath("$.sigmetjson.status", is("published")))
+                .andExpect(jsonPath("$.sigmetjson.sequence", is(1)));
+
+        verify(firStore, times(1)).lookup(anyString(), anyBoolean());
+        verify(sigmetStore, times(1)).isPublished(any(String.class));
+        verify(sigmetStore, times(1)).getNextSequence(any(Sigmet.class));
+        verifyNoMoreInteractions(sigmetExporter);
+        verifyNoMoreInteractions(firStore);
+        verifyNoMoreInteractions(sigmetStore);
+    }
+
+    @Test
+    public void serviceTestCancelSigmet() throws Exception {
+        // given
+        String adjustedSigmet = testSigmet.replace("\"status\":\"concept\"", "\"status\":\"canceled\"");
+
+        // when
+        when(sigmetExporter.export(any(Sigmet.class), any(SigmetConverter.class), any(ObjectMapper.class))).thenReturn("OK");
+        when(firStore.lookup(anyString(), anyBoolean())).thenReturn(new Feature());
+        when(sigmetStore.getByUuid(any(String.class))).thenReturn(sigmet);
+        when(sigmetStore.getNextSequence(any(Sigmet.class))).thenReturn(1);
+
+        // then
+        mockMvc.perform(post("/sigmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedSigmet))
+                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist()).andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(jsonPath("$.message", is("sigmet " + uuid + " canceled")))
+                .andExpect(jsonPath("$.uuid", is(uuid))).andExpect(jsonPath("$.sigmetjson.uuid", is(uuid)))
+                .andExpect(jsonPath("$.sigmetjson.status", is("canceled")));
+
+        verify(sigmetExporter, times(1)).export(any(Sigmet.class), any(SigmetConverter.class), any(ObjectMapper.class));
+        verify(firStore, times(1)).lookup(anyString(), anyBoolean());
+        verify(sigmetStore, times(1)).getByUuid(anyString());
+        verify(sigmetStore, times(1)).getNextSequence(any(Sigmet.class));
+        verify(sigmetStore, times(2)).storeSigmet(any(Sigmet.class));
+        verifyNoMoreInteractions(sigmetExporter);
+        verifyNoMoreInteractions(firStore);
+        verifyNoMoreInteractions(sigmetStore);
+    }
+
+
 	@Test
 	public void apiIntersections() throws Exception {
 		String feature="{\"firname\":\"AMSTERDAM FIR\", \"feature\":"+testFeatureFIR+"}";
-		Debug.println(feature);
-		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
+		mockMvc.perform(post("/sigmets/sigmetintersections")
 				.contentType(MediaType.APPLICATION_JSON_UTF8)
 				.content(feature))
 				.andExpect(status().isOk())
 				.andReturn();
-		
-		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("After sigmetintersections: "+responseBody);
 	}
 
 	static String testIntersection6points="{\"type\":\"Feature\", \"id\":\"geom-1\", \"properties\":{" +
@@ -269,9 +342,9 @@ public class SigmetServicesTest {
 	public void apiIntersections6points() throws Exception {
 		String feature="{\"firname\":\"AMSTERDAM FIR\", \"feature\":"+testIntersection6points+"}";
 		Debug.println(feature);
-		MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
-				.contentType(MediaType.APPLICATION_JSON_UTF8)
-				.content(feature))
+        MvcResult result = mockMvc.perform(post("/sigmets/sigmetintersections")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(feature))
 				.andExpect(status().isOk())
 				.andReturn();
 

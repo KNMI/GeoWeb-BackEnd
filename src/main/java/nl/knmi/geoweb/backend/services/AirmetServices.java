@@ -39,7 +39,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
@@ -77,9 +76,6 @@ public class AirmetServices {
     private ObjectMapper airmetObjectMapper;
 
     @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
     AirmetConverter airmetConverter;
 
     @Autowired
@@ -91,7 +87,7 @@ public class AirmetServices {
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public synchronized ResponseEntity<JSONObject> storeJSONAirmet(@RequestBody JsonNode airmet) { // throws IOException {
-        Debug.println("########################################### storeairmet #######################################");
+        log.debug("########################################### storeairmet #######################################");
         Airmet am=null;
         try {
             am = airmetObjectMapper.treeToValue(airmet, Airmet.class);
@@ -101,7 +97,7 @@ public class AirmetServices {
                 if (am.getUuid()==null) {
                     am.setUuid(UUID.randomUUID().toString());
                 }
-                Debug.println("Storing "+am.getUuid());
+                log.debug("Storing "+am.getUuid());
                 try{
                     airmetStore.storeAirmet(am);
                     JSONObject airmetJson= new JSONObject(am.toJSON(airmetObjectMapper));
@@ -123,7 +119,7 @@ public class AirmetServices {
                 //publish
                 am.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
                 am.setSequence(airmetStore.getNextSequence(am));
-                Debug.println("Publishing "+am.getUuid());
+                log.debug("Publishing "+am.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(am.getLocation_indicator_icao(), true);
 
@@ -156,7 +152,7 @@ public class AirmetServices {
                         }
                     }
                 }catch(Exception e){
-                    Debug.printStackTrace(e);
+                    e.printStackTrace();
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
@@ -184,14 +180,15 @@ public class AirmetServices {
                 cancelAirmet.setValiddate_end(toBeCancelled.getValiddate_end());
                 cancelAirmet.setIssuedate(now);
                 cancelAirmet.setSequence(airmetStore.getNextSequence(cancelAirmet));
-                Debug.println("Canceling "+am.getUuid());
+                log.debug("Canceling "+am.getUuid());
                 try{
                     airmetStore.storeAirmet(cancelAirmet);
                     airmetStore.storeAirmet(toBeCancelled);
                     cancelAirmet.setFirFeature(firStore.lookup(cancelAirmet.getLocation_indicator_icao(), true));
                     publishAirmetStore.export(cancelAirmet, airmetConverter, airmetObjectMapper);
                     JSONObject airmetJson = new JSONObject(am.toJSON(airmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
+                    JSONObject json = new JSONObject()
+                            .put("succeeded", "true").
                             put("message","airmet "+am.getUuid()+" canceled").
                             put("uuid",am.getUuid()).
                             put("airmetjson", airmetJson).
@@ -218,7 +215,7 @@ public class AirmetServices {
             // TODO Auto-generated catch block
             e2.printStackTrace();
         }
-        Debug.errprintln("Unknown error");
+        log.debug("Unknown error");
         JSONObject obj=new JSONObject();
         try {
             obj.put("error", "Unknown error");
@@ -231,9 +228,6 @@ public class AirmetServices {
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Airmet getAirmetAsJson(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
-        String startTimestamp = "2019-02-12T08:00:00Z";
-        OffsetDateTime start = OffsetDateTime.parse(startTimestamp);
-        log.info(objectMapper.writeValueAsString(start));
         return airmetStore.getByUuid(uuid);
     }
 
@@ -304,7 +298,7 @@ public class AirmetServices {
             );
             return ResponseEntity.ok(validParam);
         }catch(Exception e){
-            Debug.println(e.getMessage());
+            log.debug(e.getMessage());
             jsonResponse.setErrorMessage("Unable to read airmetparameters", 400);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.getMessage());
         }
@@ -336,7 +330,7 @@ public class AirmetServices {
 
             Feature fir=airmet.getFirFeature();
             if (fir==null) {
-                Debug.println("Adding fir geometry for "+airmet.getLocation_indicator_icao()+" automatically");
+                log.debug("Adding fir geometry for "+airmet.getLocation_indicator_icao()+" automatically");
                 fir=firStore.lookup(airmet.getLocation_indicator_icao(), true);
                 airmet.setFirFeature(fir);
             }
@@ -364,7 +358,7 @@ public class AirmetServices {
                 return ResponseEntity.ok(json);
             }
         } catch (Exception e) {
-            Debug.printStackTrace(e);
+            e.printStackTrace();
             String json = new JSONObject().
                     put("message", "Unable to validate airmet").toString();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
@@ -386,14 +380,14 @@ public class AirmetServices {
     public ResponseEntity<String> AirmetIntersections(@RequestBody AirmetFeature feature) throws IOException {
         String FIRName=feature.getFirname();
         Feature FIR=firStore.lookup(FIRName, true);
-        Debug.println("AirmetIntersections for "+FIRName+" "+FIR);
+        log.debug("AirmetIntersections for "+FIRName+" "+FIR);
 
         if (FIR!=null) {
             GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
             GeoJsonReader reader=new GeoJsonReader(gf);
 
             String FIRs=airmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
-            Debug.println("FIRs:"+FIRs);
+            log.debug("FIRs:"+FIRs);
 
             String message=null;
             Feature f=feature.getFeature();
@@ -404,7 +398,7 @@ public class AirmetServices {
                 ff.setProperty("selectionType", "poly");
             }else {
                 String os=airmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-                Debug.println("Feature os: "+os);
+                log.debug("Feature os: "+os);
                 try {
                     Geometry geom_fir=reader.read(FIRs);
                     Geometry geom_s=reader.read(os);
@@ -422,12 +416,12 @@ public class AirmetServices {
                         }
                     }catch (Exception e){}
                 } catch (org.locationtech.jts.io.ParseException e1) {
-                    // TODO Auto-generated catch block
+                    // TODO: Auto-generated catch block
                     e1.printStackTrace();
-                    Debug.println("Error with os:"+os);
+                    log.debug("Error with os:"+os);
                 }
             }
-            //		Debug.println(sm.dumpAirmetGeometryInfo());
+            //		log.debug(sm.dumpAirmetGeometryInfo());
             JSONObject json;
             try {
                 //				json = new JSONObject().put("message","feature "+featureId+" intersected").
@@ -439,7 +433,7 @@ public class AirmetServices {
                 }
                 return ResponseEntity.ok(json.toString());
             } catch (JSONException e) {
-                // TODO Auto-generated catch block
+                // TODO: Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -500,7 +494,7 @@ public class AirmetServices {
                                                 @RequestParam(value="status", required=false) SigmetAirmetStatus status,
                                                 @RequestParam(value="page", required=false) Integer page,
                                                 @RequestParam(value="count", required=false) Integer count) {
-        Debug.println("getAirmetList");
+        log.debug("getAirmetList");
         try{
             Airmet[] airmets=airmetStore.getAirmets(active, status);
             return ResponseEntity.ok(airmetObjectMapper.convertValue(new AirmetList(airmets, page, count), JSONObject.class));
@@ -509,7 +503,7 @@ public class AirmetServices {
                 JSONObject obj=new JSONObject();
                 obj.put("error",e.getMessage());
                 String json = obj.toString();
-                Debug.errprintln("Method not allowed" + json);
+                log.debug("Method not allowed" + json);
                 return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
             } catch (JSONException e1) {
             }

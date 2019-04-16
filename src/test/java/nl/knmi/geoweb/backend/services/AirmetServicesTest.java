@@ -32,7 +32,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -54,11 +53,10 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 @RunWith(SpringRunner.class)
 @SpringBootTest
 @Import(ApplicationConfig.class)
-@DirtiesContext
 public class AirmetServicesTest {
     private String testGeoJsonBox = "{\"type\": \"FeatureCollection\",\"features\":[{\"type\": \"Feature\",\"id\": \"feb7bb38-a341-438d-b8f5-aa83685a0062\","
-    + " \"properties\": {\"selectionType\": \"box\",\"featureFunction\": \"start\"},\"geometry\": {\"type\": \"Polygon\","
-    + " \"coordinates\": [[[5.1618,51.4414],[5.1618,51.7424],[5.8444,51.7424],[5.8444,51.4414],[5.1618,51.4414]]]}}]}\"";
+            + " \"properties\": {\"selectionType\": \"box\",\"featureFunction\": \"start\"},\"geometry\": {\"type\": \"Polygon\","
+            + " \"coordinates\": [[[5.1618,51.4414],[5.1618,51.7424],[5.8444,51.7424],[5.8444,51.4414],[5.1618,51.4414]]]}}]}\"";
 
     static String uuid = "b6ea2637-4652-42cc-97ac-4e34548d3cc7";
     static String phenomenon = "OCNL_TSGR";
@@ -120,21 +118,16 @@ public class AirmetServicesTest {
             + "]";
 
     static String testAirmet = "{\"geojson\":" + "{\"type\":\"FeatureCollection\",\"features\":" + features + "},"
-            + "\"phenomenon\":\"" + phenomenon + "\"," + "\"obs_or_forecast\":{\"obs\":true}," + "\"uuid\": \"" + uuid + "\","
+            + "\"phenomenon\":\"" + phenomenon + "\","
+            + "\"obs_or_forecast\":{\"obs\":true},"
+            + "\"uuid\": \"" + uuid + "\","
             + "\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
-            + "\"movement_type\":\"STATIONARY\"," + "\"change\":\"NC\"," + "\"status\":\"concept\","
-            + "\"validdate\":\"" + startTimestamp + "\"," + "\"validdate_end\":\"2017-03-24T15:56:16Z\","
-            + "\"firname\":\"AMSTERDAM FIR\"," + "\"location_indicator_icao\":\"EHAA\","
-            + "\"location_indicator_mwo\":\"EHDB\"}";
-
-    static String testAirmetWithDate = "{\"geojson\":" + "{\"type\":\"FeatureCollection\",\"features\":" + features
-            + "},"
-            // "[{\"type\":\"Feature\",\"geometry\":{\"type\":\"Polygon\",\"coordinates\":[[[4.44963571205923,52.75852934878266],[1.4462013467168233,52.00458561642831],[5.342222631879865,50.69927379063084],[7.754619712476178,50.59854892065259],[8.731640530117685,52.3196364467871],[8.695454573908739,53.50720041878871],[6.847813968390116,54.08633053026368],[3.086939481359807,53.90252679590722]]]}}]},"
-            + "\"phenomenon\":\"OCNL_TS\"," + "\"obs_or_forecast\":{\"obs\":true},"
-            + "\"levelinfo\":{\"levels\":[{\"value\":100.0,\"unit\":\"FL\"}], \"mode\": \"AT\"},"
-            + "\"movement_type\":\"STATIONARY\"," + "\"change\":\"NC\"," + "\"status\":\"concept\","
-            + "\"validdate\":\"%DATETIME%\"," + "\"validdate_end\":\"%DATETIME_END%\","
-            + "\"firname\":\"AMSTERDAM FIR\"," + "\"location_indicator_icao\":\"EHAA\","
+            + "\"movement_type\":\"STATIONARY\","
+            + "\"change\":\"NC\"," + "\"status\":\"concept\","
+            + "\"validdate\":\"" + startTimestamp + "\","
+            + "\"validdate_end\":\"2017-03-24T15:56:16Z\","
+            + "\"firname\":\"AMSTERDAM FIR\","
+            + "\"location_indicator_icao\":\"EHAA\","
             + "\"location_indicator_mwo\":\"EHDB\"}";
 
     private GeoJsonObject mapJsonToGeoObject(String json) {
@@ -204,12 +197,14 @@ public class AirmetServicesTest {
     public void serviceTestGetAirmetList() throws Exception {
         // given
         // when
-        when(airmetStore.getAirmets(false, null)).thenReturn(new Airmet[] { airmet })
+        when(airmetStore.getAirmets(false, null))
+                .thenReturn(new Airmet[] { airmet })
                 .thenReturn(new Airmet[] { airmet, new Airmet(airmet) })
                 .thenReturn(new Airmet[] { airmet, new Airmet(airmet), new Airmet(airmet) });
         // then
         mockMvc.perform(get("/airmets/?active=false"))
-                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.error").doesNotExist())
                 .andExpect(jsonPath("$.page", is(0)))
                 .andExpect(jsonPath("$.count", is(0)))

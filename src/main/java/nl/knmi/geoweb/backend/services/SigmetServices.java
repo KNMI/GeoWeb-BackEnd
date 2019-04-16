@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -36,7 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
@@ -50,26 +51,23 @@ import nl.knmi.geoweb.backend.product.sigmet.SigmetValidator;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
-
+@Slf4j
 @RestController
 @RequestMapping("/sigmets")
 public class SigmetServices {
-    final static String baseUrl="/sigmets";
+    final static String baseUrl = "/airmets";
 
     @Autowired
-    AdminStore adminStore;
+    private AdminStore adminStore;
 
-    SigmetStore sigmetStore=null;
-    private ProductExporter<Sigmet> publishSigmetStore;
+    @Autowired
+    private SigmetStore sigmetStore;
 
+    @Autowired
     private SigmetValidator sigmetValidator;
 
-    SigmetServices (final SigmetStore sigmetStore, final SigmetValidator sigmetValidator, final ProductExporter<Sigmet> publishSigmetStore) throws IOException {
-        Debug.println("INITING SigmetServices...");
-        this.sigmetStore = sigmetStore;
-        this.sigmetValidator=sigmetValidator;
-        this.publishSigmetStore=publishSigmetStore;
-    }
+    @Autowired
+    private ProductExporter<Sigmet> publishSigmetStore;
 
     @Autowired
     @Qualifier("sigmetObjectMapper")
@@ -86,33 +84,32 @@ public class SigmetServices {
             path = "",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public synchronized ResponseEntity<String> storeJSONSigmet(@RequestBody String sigmet) { // throws IOException {
-        Debug.println("########################################### storesigmet #######################################");
-        Debug.println(sigmet);
+    public synchronized ResponseEntity<JSONObject> storeJSONSigmet(@RequestBody JsonNode sigmet) { // throws IOException {
+        log.debug("########################################### storesigmet #######################################");
         Sigmet sm=null;
         try {
-            sm = sigmetObjectMapper.readValue(sigmet, Sigmet.class);
+            sm = sigmetObjectMapper.treeToValue(sigmet, Sigmet.class);
 
             if (sm.getStatus()==SigmetAirmetStatus.concept) {
                 //Store
                 if (sm.getUuid()==null) {
                     sm.setUuid(UUID.randomUUID().toString());
                 }
-                Debug.println("Storing "+sm.getUuid());
+                log.debug("Storing "+sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(sm);
                     JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
-                            put("message","sigmet "+sm.getUuid()+" stored").
-                            put("uuid",sm.getUuid()).
-                            put("sigmetjson", sigmetJson.toString());
-                    return ResponseEntity.ok(json.toString());
+                    JSONObject json = new JSONObject()
+                            .put("succeeded", "true")
+                            .put("message","sigmet "+sm.getUuid()+" stored")
+                            .put("uuid",sm.getUuid())
+                            .put("sigmetjson", sigmetJson);
+                    return ResponseEntity.ok(json);
                 }catch(Exception e){
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -120,7 +117,7 @@ public class SigmetServices {
                 //publish
                 sm.setIssuedate(OffsetDateTime.now(ZoneId.of("Z")));
                 sm.setSequence(sigmetStore.getNextSequence(sm));
-                Debug.println("Publishing "+sm.getUuid());
+                log.debug("Publishing "+sm.getUuid());
                 try{
                     Feature firFeature=firStore.lookup(sm.getLocation_indicator_icao(), true);
 
@@ -132,8 +129,8 @@ public class SigmetServices {
                             JSONObject json = new JSONObject().put("succeeded", "false").
                                     put("message", "sigmet " + sm.getUuid() + " is already published").
                                     put("uuid", sm.getUuid()).
-                                    put("sigmetjson", sigmetJson.toString());
-                            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                                    put("sigmetjson", sigmetJson);
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
                         } else {
                             String result = publishSigmetStore.export(sm, sigmetConverter, sigmetObjectMapper);
                             if (result.equals("OK")) {
@@ -142,23 +139,22 @@ public class SigmetServices {
                                 JSONObject json = new JSONObject().put("succeeded", "true").
                                         put("message", "sigmet " + sm.getUuid() + " published").
                                         put("uuid", sm.getUuid()).
-                                        put("sigmetjson", sigmetJson.toString());
-                                return ResponseEntity.ok(json.toString());
+                                        put("sigmetjson", sigmetJson);
+                                return ResponseEntity.ok(json);
                             } else {
                                 JSONObject json = new JSONObject().put("succeeded", "false").
                                         put("message", "sigmet " + sm.getUuid() + " failed to publish").
                                         put("uuid", sm.getUuid());
-                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
                             }
                         }
                     }
                 }catch(Exception e){
-                    Debug.printStackTrace(e);
+                    e.printStackTrace();
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -184,25 +180,25 @@ public class SigmetServices {
                 cancelSigmet.setSequence(sigmetStore.getNextSequence(cancelSigmet));
                 /* This is done to facilitate move_to, this is the only property which can be adjusted during sigmet cancel */
                 cancelSigmet.setVa_extra_fields(sm.getVa_extra_fields());
-                Debug.println("Canceling "+sm.getUuid());
+                log.debug("Canceling "+sm.getUuid());
                 try{
                     sigmetStore.storeSigmet(cancelSigmet);
                     sigmetStore.storeSigmet(toBeCancelled);
                     cancelSigmet.setFirFeature(firStore.lookup(cancelSigmet.getLocation_indicator_icao(), true));
                     publishSigmetStore.export(cancelSigmet, sigmetConverter, sigmetObjectMapper);
                     JSONObject sigmetJson = new JSONObject(sm.toJSON(sigmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
-                            put("message","sigmet "+sm.getUuid()+" canceled").
-                            put("uuid",sm.getUuid()).
-                            put("sigmetjson", sigmetJson.toString()).
-                            put("tac","");
-                    return ResponseEntity.ok(json.toString());
+                    JSONObject json = new JSONObject()
+                            .put("succeeded", "true")
+                            .put("message","sigmet "+sm.getUuid()+" canceled")
+                            .put("uuid",sm.getUuid())
+                            .put("sigmetjson", sigmetJson)
+                            .put("tac","");
+                    return ResponseEntity.ok(json);
                 }catch(Exception e){
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -211,8 +207,7 @@ public class SigmetServices {
                 try {
                     JSONObject obj=new JSONObject();
                     obj.put("error", "empty sigmet");
-                    String json = obj.toString();
-                    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                 } catch (JSONException e1) {
                 }
             }
@@ -220,17 +215,18 @@ public class SigmetServices {
             // TODO Auto-generated catch block
             e2.printStackTrace();
         }
-        Debug.errprintln("Unknown error");
+        log.debug("Unknown error");
         JSONObject obj=new JSONObject();
         try {
             obj.put("error", "Unknown error");
         } catch (JSONException e) {
         }
-        String json = obj.toString();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(obj);
     }
 
-    @RequestMapping(path="/{uuid}", method=RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @RequestMapping(path="/{uuid}",
+            method=RequestMethod.GET,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Sigmet getSigmetAsJson(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         return sigmetStore.getByUuid(uuid);
     }
@@ -295,7 +291,7 @@ public class SigmetServices {
             );
             return ResponseEntity.ok(validParam);
         }catch(Exception e){
-            Debug.println(e.getMessage());
+            log.debug(e.getMessage());
             jsonResponse.setErrorMessage("Unable to read sigmetparameters", 400);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.getMessage());
         }
@@ -327,7 +323,7 @@ public class SigmetServices {
 
             Feature fir=sigmet.getFirFeature();
             if (fir==null) {
-                Debug.println("Adding fir geometry for "+sigmet.getLocation_indicator_icao()+" automatically");
+                log.debug("Adding fir geometry for "+sigmet.getLocation_indicator_icao()+" automatically");
                 fir=firStore.lookup(sigmet.getLocation_indicator_icao(), true);
                 sigmet.setFirFeature(fir);
             }
@@ -355,7 +351,7 @@ public class SigmetServices {
                 return ResponseEntity.ok(json);
             }
         } catch (Exception e) {
-            Debug.printStackTrace(e);
+            e.printStackTrace();
             String json = new JSONObject().
                     put("message", "Unable to validate sigmet").toString();
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
@@ -377,14 +373,14 @@ public class SigmetServices {
     public ResponseEntity<String> SigmetIntersections(@RequestBody SigmetFeature feature) throws IOException {
         String FIRName=feature.getFirname();
         Feature FIR=firStore.lookup(FIRName, true);
-        Debug.println("SigmetIntersections for "+FIRName+" "+FIR);
+        log.debug("SigmetIntersections for "+FIRName+" "+FIR);
 
         if (FIR!=null) {
             GeometryFactory gf=new GeometryFactory(new PrecisionModel(PrecisionModel.FLOATING));
             GeoJsonReader reader=new GeoJsonReader(gf);
 
             String FIRs=sigmetObjectMapper.writeValueAsString(FIR.getGeometry()); //FIR as String
-            Debug.println("FIRs:"+FIRs);
+            log.debug("FIRs:"+FIRs);
 
             String message=null;
             Feature f=feature.getFeature();
@@ -395,7 +391,7 @@ public class SigmetServices {
                 ff.setProperty("selectionType", "poly");
             }else {
                 String os=sigmetObjectMapper.writeValueAsString(f.getGeometry()); //Feature as String
-                Debug.println("Feature os: "+os);
+                log.debug("Feature os: "+os);
                 try {
                     Geometry geom_fir=reader.read(FIRs);
                     Geometry geom_s=reader.read(os);
@@ -415,10 +411,10 @@ public class SigmetServices {
                 } catch (org.locationtech.jts.io.ParseException e1) {
                     // TODO Auto-generated catch block
                     e1.printStackTrace();
-                    Debug.println("Error with os:"+os);
+                    log.debug("Error with os:"+os);
                 }
             }
-            //		Debug.println(sm.dumpSigmetGeometryInfo());
+            //		log.debug(sm.dumpSigmetGeometryInfo());
             JSONObject json;
             try {
                 //				json = new JSONObject().put("message","feature "+featureId+" intersected").
@@ -487,22 +483,21 @@ public class SigmetServices {
     @RequestMapping(
             path = "",
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> getSigmetList(@RequestParam(value="active", required=true) Boolean active,
+    public ResponseEntity<JSONObject> getSigmetList(@RequestParam(value="active", required=true) Boolean active,
                                                 @RequestParam(value="status", required=false) SigmetAirmetStatus status,
                                                 @RequestParam(value="page", required=false) Integer page,
                                                 @RequestParam(value="count", required=false) Integer count) {
-        Debug.println("getSigmetList");
+        log.debug("getSigmetList");
         try{
             Sigmet[] sigmets=sigmetStore.getSigmets(active, status);
-//			Debug.println("SIGMETLIST has length of "+sigmets.length);
-            return ResponseEntity.ok(sigmetObjectMapper.writeValueAsString(new SigmetList(sigmets,page,count)));
+            return ResponseEntity.ok(sigmetObjectMapper.convertValue(new SigmetList(sigmets, page, count), JSONObject.class));
         }catch(Exception e){
             try {
                 JSONObject obj=new JSONObject();
                 obj.put("error",e.getMessage());
                 String json = obj.toString();
-                Debug.errprintln("Method not allowed" + json);
-                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                log.debug("Method not allowed" + json);
+                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
             } catch (JSONException e1) {
             }
         }
