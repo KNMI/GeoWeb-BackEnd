@@ -90,7 +90,7 @@ public class AirmetServices {
             path = "",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public synchronized ResponseEntity<String> storeJSONAirmet(@RequestBody JsonNode airmet) { // throws IOException {
+    public synchronized ResponseEntity<JSONObject> storeJSONAirmet(@RequestBody JsonNode airmet) { // throws IOException {
         Debug.println("########################################### storeairmet #######################################");
         Airmet am=null;
         try {
@@ -105,17 +105,17 @@ public class AirmetServices {
                 try{
                     airmetStore.storeAirmet(am);
                     JSONObject airmetJson= new JSONObject(am.toJSON(airmetObjectMapper));
-                    JSONObject json = new JSONObject().put("succeeded", "true").
-                            put("message","airmet "+am.getUuid()+" stored").
-                            put("uuid",am.getUuid()).
-                            put("airmetjson", airmetJson.toString());
-                    return ResponseEntity.ok(json.toString());
+                    JSONObject json = new JSONObject()
+                            .put("succeeded", "true")
+                            .put("message","airmet "+am.getUuid()+" stored")
+                            .put("uuid",am.getUuid())
+                            .put("airmetjson", airmetJson);
+                    return ResponseEntity.ok(json);
                 }catch(Exception e){
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -135,8 +135,8 @@ public class AirmetServices {
                             JSONObject json = new JSONObject().put("succeeded", "false").
                                     put("message", "airmet " + am.getUuid() + " is already published").
                                     put("uuid", am.getUuid()).
-                                    put("airmetjson", airmetJson.toString());
-                            return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                                    put("airmetjson", airmetJson);
+                            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
                         } else {
                             String result = publishAirmetStore.export(am, airmetConverter, airmetObjectMapper);
                             if (result.equals("OK")) {
@@ -145,13 +145,13 @@ public class AirmetServices {
                                 JSONObject json = new JSONObject().put("succeeded", "true").
                                         put("message", "airmet " + am.getUuid() + " published").
                                         put("uuid", am.getUuid()).
-                                        put("airmetjson", airmetJson.toString());
-                                return ResponseEntity.ok(json.toString());
+                                        put("airmetjson", airmetJson);
+                                return ResponseEntity.ok(json);
                             } else {
                                 JSONObject json = new JSONObject().put("succeeded", "false").
                                         put("message", "airmet " + am.getUuid() + " failed to publish").
                                         put("uuid", am.getUuid());
-                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json.toString());
+                                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
                             }
                         }
                     }
@@ -160,8 +160,7 @@ public class AirmetServices {
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -195,15 +194,14 @@ public class AirmetServices {
                     JSONObject json = new JSONObject().put("succeeded", "true").
                             put("message","airmet "+am.getUuid()+" canceled").
                             put("uuid",am.getUuid()).
-                            put("airmetjson", airmetJson.toString()).
+                            put("airmetjson", airmetJson).
                             put("tac","");
-                    return ResponseEntity.ok(json.toString());
+                    return ResponseEntity.ok(json);
                 }catch(Exception e){
                     try {
                         JSONObject obj=new JSONObject();
                         obj.put("error",e.getMessage());
-                        String json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -212,8 +210,7 @@ public class AirmetServices {
                 try {
                     JSONObject obj=new JSONObject();
                     obj.put("error", "empty airmet");
-                    String json = obj.toString();
-                    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                    return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
                 } catch (JSONException e1) {
                 }
             }
@@ -227,8 +224,7 @@ public class AirmetServices {
             obj.put("error", "Unknown error");
         } catch (JSONException e) {
         }
-        String json = obj.toString();
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(obj);
     }
 
     @RequestMapping(path="/{uuid}",
@@ -500,22 +496,21 @@ public class AirmetServices {
     @RequestMapping(
             path = "",
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> getAirmetList(@RequestParam(value="active", required=true) Boolean active,
+    public ResponseEntity<JSONObject> getAirmetList(@RequestParam(value="active", required=true) Boolean active,
                                                 @RequestParam(value="status", required=false) SigmetAirmetStatus status,
                                                 @RequestParam(value="page", required=false) Integer page,
                                                 @RequestParam(value="count", required=false) Integer count) {
         Debug.println("getAirmetList");
         try{
             Airmet[] airmets=airmetStore.getAirmets(active, status);
-//			Debug.println("AIRMETLIST has length of "+airmets.length);
-            return ResponseEntity.ok(airmetObjectMapper.writeValueAsString(new AirmetList(airmets,page,count)));
+            return ResponseEntity.ok(airmetObjectMapper.convertValue(new AirmetList(airmets, page, count), JSONObject.class));
         }catch(Exception e){
             try {
                 JSONObject obj=new JSONObject();
                 obj.put("error",e.getMessage());
                 String json = obj.toString();
                 Debug.errprintln("Method not allowed" + json);
-                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
             } catch (JSONException e1) {
             }
         }
