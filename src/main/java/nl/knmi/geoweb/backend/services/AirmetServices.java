@@ -1,12 +1,19 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.text.ParseException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
@@ -30,22 +37,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.admin.AdminStore;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.backend.product.airmet.AirmetParameters;
 import nl.knmi.geoweb.backend.product.airmet.AirmetPhenomenaMapping;
+import nl.knmi.geoweb.backend.product.airmet.AirmetPhenomenaMapping.AirmetPhenomenon;
 import nl.knmi.geoweb.backend.product.airmet.AirmetStore;
 import nl.knmi.geoweb.backend.product.airmet.AirmetValidationResult;
 import nl.knmi.geoweb.backend.product.airmet.AirmetValidator;
@@ -282,25 +282,22 @@ public class AirmetServices {
     }
 
     @RequestMapping(path="/getairmetparameters")
-    public ResponseEntity<String> getAirmetParameters() {
-        JSONResponse jsonResponse = new JSONResponse();
+    public ResponseEntity<JSONObject> getAirmetParameters() {
         try {
             /* If airmetparameters.json is not available on disk:
              * airmetparameters.json is defined in src/main/resources/adminstore/config/airmetparameters.json and
              * is copied to disk location in adminstore
              */
 
-            String validParam = airmetObjectMapper.writeValueAsString(
-                    airmetObjectMapper.readValue(
-                            adminStore.read("config", "airmetparameters.json"),
-                            AirmetParameters.class
-                    )
-            );
+            String paramsFromFile = adminStore.read("config", "airmetparameters.json");
+            AirmetParameters params = airmetObjectMapper.readValue(paramsFromFile, AirmetParameters.class);
+            JSONObject validParam = airmetObjectMapper.convertValue(params, JSONObject.class);
             return ResponseEntity.ok(validParam);
         }catch(Exception e){
             log.debug(e.getMessage());
-            jsonResponse.setErrorMessage("Unable to read airmetparameters", 400);
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(jsonResponse.getMessage());
+            JSONObject jsonResponse = new JSONObject()
+                .put("message", "Unable to read airmetparameters");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(jsonResponse);
         }
 
     }
@@ -311,22 +308,25 @@ public class AirmetServices {
     }
 
     @RequestMapping("/getairmetphenomena")
-    public ResponseEntity<String> AirmetPhenomena() {
+    public ResponseEntity<JSONObject> AirmetPhenomena() {
         try {
-            return ResponseEntity.ok(airmetObjectMapper.writeValueAsString(new AirmetPhenomenaMapping().getPhenomena()));
+            List<AirmetPhenomenon> phenomena = new AirmetPhenomenaMapping().getPhenomena();
+            JSONObject jsonResponse = airmetObjectMapper.convertValue(phenomena, JSONObject.class);
+            return ResponseEntity.ok(jsonResponse);
         }catch(Exception e){}
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
 
-    @RequestMapping(path = "/verify", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
-    )
-    public ResponseEntity<String> verifyAIRMET(@RequestBody String airmetStr) throws IOException, JSONException, ParseException {
-        airmetStr = URLDecoder.decode(airmetStr, "UTF8");
+    @RequestMapping(path = "/verify",
+            method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<JSONObject> verifyAIRMET(@RequestBody JsonNode airmetStr) throws IOException, JSONException, ParseException {
         /* Add TAC */
         String TAC = "unable to create TAC";
+        Airmet airmet;
         try {
-            Airmet airmet = airmetObjectMapper.readValue(airmetStr, Airmet.class);
+            airmet = airmetObjectMapper.treeToValue(airmetStr, Airmet.class);
 
             Feature fir=airmet.getFirFeature();
             if (fir==null) {
@@ -338,29 +338,32 @@ public class AirmetServices {
                 TAC = airmet.toTAC(fir);
             }
         } catch (InvalidFormatException e) {
-            String json = new JSONObject().
-                    put("message", "Unable to parse airmet").toString();
+            JSONObject json = new JSONObject()
+                .put("message", "Unable to parse airmet");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
 
         try {
-            AirmetValidationResult jsonValidation = airmetValidator.validate(airmetStr);
+            AirmetValidationResult jsonValidation = airmetValidator.validate(airmet);
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
-                String finalJson = new JSONObject()
+                JSONObject finalJson = new JSONObject()
                         .put("succeeded", false)
-                        .put("errors", new JSONObject(errors.toString())) //TODO Get errors from validation
+                        .put("errors", airmetObjectMapper.convertValue(errors, JSONObject.class))
                         .put("TAC", TAC)
-                        .put("message", "AIRMET is not valid").toString();
+                        .put("message", "AIRMET is not valid");
                 return ResponseEntity.ok(finalJson);
             } else {
-                String json = new JSONObject().put("succeeded", true).put("message", "AIRMET is verified.").put("TAC", TAC).toString();
+                JSONObject json = new JSONObject()
+                        .put("succeeded", true)
+                        .put("message", "AIRMET is verified.")
+                        .put("TAC", TAC);
                 return ResponseEntity.ok(json);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            String json = new JSONObject().
-                    put("message", "Unable to validate airmet").toString();
+            JSONObject json = new JSONObject()
+                    .put("message", "Unable to validate airmet");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
     }
@@ -377,7 +380,7 @@ public class AirmetServices {
             path = "/airmetintersections",
             method = RequestMethod.POST,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> AirmetIntersections(@RequestBody AirmetFeature feature) throws IOException {
+    public ResponseEntity<JSONObject> AirmetIntersections(@RequestBody AirmetFeature feature) throws IOException {
         String FIRName=feature.getFirname();
         Feature FIR=firStore.lookup(FIRName, true);
         log.debug("AirmetIntersections for "+FIRName+" "+FIR);
@@ -426,12 +429,13 @@ public class AirmetServices {
             try {
                 //				json = new JSONObject().put("message","feature "+featureId+" intersected").
                 //						 put("feature", new JSONObject(airmetObjectMapper.writeValueAsString(ff))).toString();
-                json = new JSONObject().put("succeeded", "true").
-                        put("feature", new JSONObject(airmetObjectMapper.writeValueAsString(ff).toString()));
+                json = new JSONObject()
+                        .put("succeeded", "true")
+                        .put("feature", airmetObjectMapper.convertValue(ff, JSONObject.class));
                 if (message!=null) {
                     json.put("message", message);
                 }
-                return ResponseEntity.ok(json.toString());
+                return ResponseEntity.ok(json);
             } catch (JSONException e) {
                 // TODO: Auto-generated catch block
                 e.printStackTrace();
