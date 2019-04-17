@@ -46,6 +46,7 @@ import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.backend.product.airmet.AirmetParameters;
 import nl.knmi.geoweb.backend.product.airmet.AirmetPhenomenaMapping;
 import nl.knmi.geoweb.backend.product.airmet.AirmetPhenomenaMapping.AirmetPhenomenon;
+import nl.knmi.geoweb.backend.product.airmet.ObscuringPhenomenonList.ObscuringPhenomenon;
 import nl.knmi.geoweb.backend.product.airmet.AirmetStore;
 import nl.knmi.geoweb.backend.product.airmet.AirmetValidationResult;
 import nl.knmi.geoweb.backend.product.airmet.AirmetValidator;
@@ -256,27 +257,35 @@ public class AirmetServices {
     @RequestMapping(path="/{uuid}",
             method = RequestMethod.DELETE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> deleteAirmetById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+    public ResponseEntity<JSONObject> deleteAirmetById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         Airmet airmet = airmetStore.getByUuid(uuid);
         if (airmet == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("AIRMET with uuid %s does not exist", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("AIRMET with uuid %s does not exist", uuid));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
         boolean airmetIsInConcept = airmet.getStatus() == SigmetAirmetStatus.concept;
         if (airmetIsInConcept != true) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("AIRMET with uuid %s is not in concept. Cannot delete.", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("AIRMET with uuid %s is not in concept. Cannot delete.", uuid));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
         boolean ret = airmetStore.deleteAirmetByUuid(uuid);
         if(ret) {
-            return ResponseEntity.ok(String.format("deleted %s", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("deleted %s", uuid));
+            return ResponseEntity.ok(json);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
     @RequestMapping(path="/getobscuringphenomena")
-    public ResponseEntity<String> getObscuringPhenomena() {
+    public ResponseEntity<JSONObject> getObscuringPhenomena() {
         try {
-            return ResponseEntity.ok(airmetObjectMapper.writeValueAsString(ObscuringPhenomenonList.getAllObscuringPhenomena()));
+            List<ObscuringPhenomenon> obsPhenomena = ObscuringPhenomenonList.getAllObscuringPhenomena();
+            JSONObject json = airmetObjectMapper.convertValue(obsPhenomena, JSONObject.class);
+            return ResponseEntity.ok(json);
         }catch(Exception e){}
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
@@ -303,8 +312,8 @@ public class AirmetServices {
     }
 
     @RequestMapping(path="/putairmetparameters")
-    public ResponseEntity<String> storeAirmetParameters(String json) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+    public ResponseEntity<JSONObject> storeAirmetParameters(String json) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
     }
 
     @RequestMapping("/getairmetphenomena")
@@ -344,7 +353,7 @@ public class AirmetServices {
         }
 
         try {
-            AirmetValidationResult jsonValidation = airmetValidator.validate(airmet);
+            AirmetValidationResult jsonValidation = airmetValidator.validate(airmetObjectMapper.convertValue(airmetStr, String.class));
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
                 JSONObject finalJson = new JSONObject()
