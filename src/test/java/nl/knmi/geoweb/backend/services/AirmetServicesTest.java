@@ -185,7 +185,7 @@ public class AirmetServicesTest {
                 .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.error").doesNotExist())
                 .andExpect(jsonPath("$.message", is("airmet " + uuid + " stored")))
-                .andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(jsonPath("$.succeeded", is(true)))
                 .andExpect(jsonPath("$.airmetjson.uuid", is(uuid)))
                 .andExpect(jsonPath("$.airmetjson.validdate", is(startTimestamp)));
 
@@ -240,7 +240,7 @@ public class AirmetServicesTest {
         mockMvc.perform(post("/airmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedAirmet))
                 .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.error").doesNotExist())
-                .andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(jsonPath("$.succeeded", is(true)))
                 .andExpect(jsonPath("$.message", is("airmet " + uuid + " published")))
                 .andExpect(jsonPath("$.uuid", is(uuid)))
                 .andExpect(jsonPath("$.airmetjson.uuid", is(uuid)))
@@ -271,7 +271,7 @@ public class AirmetServicesTest {
         mockMvc.perform(post("/airmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedAirmet))
                 .andExpect(status().isBadRequest()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.error").doesNotExist())
-                .andExpect(jsonPath("$.succeeded", is("false")))
+                .andExpect(jsonPath("$.succeeded", is(false)))
                 .andExpect(jsonPath("$.message", is("airmet " + uuid + " is already published")))
                 .andExpect(jsonPath("$.uuid", is(uuid)))
                 .andExpect(jsonPath("$.airmetjson.uuid", is(uuid)))
@@ -299,8 +299,10 @@ public class AirmetServicesTest {
 
         // then
         mockMvc.perform(post("/airmets/").contentType(MediaType.APPLICATION_JSON_UTF8).content(adjustedAirmet))
-                .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(jsonPath("$.error").doesNotExist()).andExpect(jsonPath("$.succeeded", is("true")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.succeeded", is(true)))
                 .andExpect(jsonPath("$.message", is("airmet " + uuid + " canceled")))
                 .andExpect(jsonPath("$.uuid", is(uuid))).andExpect(jsonPath("$.airmetjson.uuid", is(uuid)))
                 .andExpect(jsonPath("$.airmetjson.status", is("canceled")));

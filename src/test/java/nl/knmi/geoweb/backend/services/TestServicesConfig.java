@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Profile;
 
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
+import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.airmet.AirmetStore;
 import nl.knmi.geoweb.backend.product.sigmet.SigmetStore;
 
@@ -26,6 +27,12 @@ public class TestServicesConfig {
     @Primary
     public SigmetStore getSigmetStore() {
         return mock(SigmetStore.class);
+    }
+
+    @Bean
+    @Primary
+    public TafStore getTafStore() {
+        return mock(TafStore.class);
     }
 
     @Bean
