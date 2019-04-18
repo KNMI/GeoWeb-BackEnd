@@ -103,7 +103,7 @@ public class AirmetServices {
                     airmetStore.storeAirmet(am);
                     JSONObject airmetJson= new JSONObject(am.toJSON(airmetObjectMapper));
                     JSONObject json = new JSONObject()
-                            .put("succeeded", "true")
+                            .put("succeeded", true)
                             .put("message","airmet "+am.getUuid()+" stored")
                             .put("uuid",am.getUuid())
                             .put("airmetjson", airmetJson);
@@ -129,25 +129,28 @@ public class AirmetServices {
                         if (airmetStore.isPublished(am.getUuid())) {
                             //Already published
                             JSONObject airmetJson = new JSONObject(am.toJSON(airmetObjectMapper));
-                            JSONObject json = new JSONObject().put("succeeded", "false").
-                                    put("message", "airmet " + am.getUuid() + " is already published").
-                                    put("uuid", am.getUuid()).
-                                    put("airmetjson", airmetJson);
+                            JSONObject json = new JSONObject()
+                                    .put("succeeded", false)
+                                    .put("message", "airmet " + am.getUuid() + " is already published")
+                                    .put("uuid", am.getUuid())
+                                    .put("airmetjson", airmetJson);
                             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
                         } else {
                             String result = publishAirmetStore.export(am, airmetConverter, airmetObjectMapper);
                             if (result.equals("OK")) {
                                 airmetStore.storeAirmet(am);
                                 JSONObject airmetJson = new JSONObject(am.toJSON(airmetObjectMapper));
-                                JSONObject json = new JSONObject().put("succeeded", "true").
-                                        put("message", "airmet " + am.getUuid() + " published").
-                                        put("uuid", am.getUuid()).
-                                        put("airmetjson", airmetJson);
+                                JSONObject json = new JSONObject()
+                                        .put("succeeded", true)
+                                        .put("message", "airmet " + am.getUuid() + " published")
+                                        .put("uuid", am.getUuid())
+                                        .put("airmetjson", airmetJson);
                                 return ResponseEntity.ok(json);
                             } else {
-                                JSONObject json = new JSONObject().put("succeeded", "false").
-                                        put("message", "airmet " + am.getUuid() + " failed to publish").
-                                        put("uuid", am.getUuid());
+                                JSONObject json = new JSONObject()
+                                        .put("succeeded", false)
+                                        .put("message", "airmet " + am.getUuid() + " failed to publish")
+                                        .put("uuid", am.getUuid());
                                 return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
                             }
                         }
@@ -189,11 +192,11 @@ public class AirmetServices {
                     publishAirmetStore.export(cancelAirmet, airmetConverter, airmetObjectMapper);
                     JSONObject airmetJson = new JSONObject(am.toJSON(airmetObjectMapper));
                     JSONObject json = new JSONObject()
-                            .put("succeeded", "true").
-                            put("message","airmet "+am.getUuid()+" canceled").
-                            put("uuid",am.getUuid()).
-                            put("airmetjson", airmetJson).
-                            put("tac","");
+                            .put("succeeded", true)
+                            .put("message","airmet "+am.getUuid()+" canceled")
+                            .put("uuid",am.getUuid())
+                            .put("airmetjson", airmetJson)
+                            .put("tac","");
                     return ResponseEntity.ok(json);
                 }catch(Exception e){
                     try {
@@ -439,7 +442,7 @@ public class AirmetServices {
                 //				json = new JSONObject().put("message","feature "+featureId+" intersected").
                 //						 put("feature", new JSONObject(airmetObjectMapper.writeValueAsString(ff))).toString();
                 json = new JSONObject()
-                        .put("succeeded", "true")
+                        .put("succeeded", true)
                         .put("feature", airmetObjectMapper.convertValue(ff, JSONObject.class));
                 if (message!=null) {
                     json.put("message", message);
