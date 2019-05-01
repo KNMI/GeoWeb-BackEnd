@@ -7,6 +7,7 @@ Back end for GeoWeb
 
 For setting up development environment:
 
+0) Make sure you have JDK 8 (1.8) installed, the project currently doesn't work with version 9 (higher versions we did not test yet)
 1) Download and install spring tool suite (https://spring.io/tools/sts/all)
 2) Download lombok.jar (https://projectlombok.org/download.html)
 3) Install lombok into spring tool suite with java -jar lombok.jar

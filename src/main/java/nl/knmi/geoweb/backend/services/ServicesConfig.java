@@ -32,7 +32,20 @@ public class ServicesConfig {
 		return om;
 
 	}
-	
+	@Bean("airmetObjectMapper")
+	public static ObjectMapper getAirmetObjectMapperBean() {
+		Debug.println("Init SigmetObjectMapperBean (services)");
+		ObjectMapper om = new ObjectMapper();
+		om.registerModule(new JavaTimeModule());
+		om.setTimeZone(TimeZone.getTimeZone("UTC"));
+		//		om.setDateFormat(new SimpleDateFormat(DATEFORMAT_ISO8601));
+		om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+		om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
+		return om;
+
+	}
 	@Bean("tafObjectMapper")
 	public static ObjectMapper getTafObjectMapperBean() {
 		Debug.println("Init TafObjectMapperBean (services)");
