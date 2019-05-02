@@ -33,7 +33,9 @@ spring:
 
 logging:
   level:
-    web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
+    org:
+        springframework:
+            web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
 
 geoweb:
   products:
@@ -62,7 +64,9 @@ spring:
 
 logging:
   level:
-    web: WARN
+    org:
+        springframework:
+            web: WARN
 
 geoweb:
   products:

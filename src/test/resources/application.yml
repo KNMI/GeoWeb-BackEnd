@@ -36,7 +36,9 @@ client:
 
 logging:
   level:
-    web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
+    org:
+        springframework:
+            web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
 
 geoweb:
   products:
