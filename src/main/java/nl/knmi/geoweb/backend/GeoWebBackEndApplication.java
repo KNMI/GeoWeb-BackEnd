@@ -33,7 +33,7 @@ public class GeoWebBackEndApplication implements ApplicationRunner {
 	}
 
 	@Override
-  public void run(ApplicationArguments args) {
+	public void run(ApplicationArguments args) {
 		log.info("Version BackEnd: " + backendVersion);
 		log.info("Version MessageConverter: " + messageConverterVersion);
 	}
