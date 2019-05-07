@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active:
+      - test
+  devtools:
+    add-properties: false
+
+# GeoWeb configuration
+geoweb:
+  backendVersion: "@project.version@"
+  messageConverterVersion: "@geoweb.messageConverter.version@"
+  feedback:
+    feedbackfromname: Geoweb Admin
+    feedbackfrommail: geoweb-admin@geoweb.knmi.nl
+    feedbackmail: geoweb-scrumteam@knmi.nl
+
+---
+spring:
+  profiles: test
+  mail:
+    # Simple systems
+    host: localhost
+    port: 25
+
+security:
+    oauth2:
+        client:
+            clientId: GeoWeb-test
+
+client:
+    name: OAuth-test
+    logoutUri: http://localhost/logout?redirect_uri=
+
+logging:
+  level:
+    org:
+        springframework:
+            web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
+
+geoweb:
+  products:
+    storeLocation: /tmp/test
+    exportLocation: ${geoweb.products.storeLocation}/export

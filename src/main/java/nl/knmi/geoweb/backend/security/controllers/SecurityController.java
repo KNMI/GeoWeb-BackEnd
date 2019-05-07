@@ -24,7 +24,7 @@ import nl.knmi.geoweb.backend.security.services.SecurityServices;
 public class SecurityController {
 
     @Autowired
-    SecurityServices pocServices;
+    SecurityServices securityServices;
 
     @Value("${client.logoutUri}")
     private String keycloakLogoutUrl;
@@ -45,28 +45,28 @@ public class SecurityController {
     @ResponseBody
     public Map<String, String> getLoginOptions() {
         log.info("Request received @[/login/options]");
-        return pocServices.getLoginOptions();
+        return securityServices.getLoginOptions();
     }
 
     @GetMapping(path = "/logout")
     public String logOut(@RequestHeader(value = "Referer", required = false) Optional<String> referer,
             HttpServletRequest servletRequest) {
         log.info("Request received @[/logout]");
-        return "redirect:" + keycloakLogoutUrl + pocServices.getLogoutRedirect(referer, servletRequest);
+        return "redirect:" + keycloakLogoutUrl + securityServices.getLogoutRedirect(referer, servletRequest);
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/logout/options", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, String> getLogoutOptions() {
         log.info("Request received @[/logout/options]");
-        return pocServices.getLogoutOptions();
+        return securityServices.getLogoutOptions();
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/status", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> getStatus() {
         log.info("Request received @[/status]");
-        return pocServices.getStatus();
+        return securityServices.getStatus();
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/testOnly")

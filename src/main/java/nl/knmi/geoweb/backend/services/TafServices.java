@@ -1,7 +1,6 @@
 package nl.knmi.geoweb.backend.services;
 
 import java.io.IOException;
-import java.net.URLDecoder;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -10,6 +9,13 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.UUID;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -25,101 +31,87 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.datastore.ProductExporter;
 import nl.knmi.geoweb.backend.datastore.TafStore;
 import nl.knmi.geoweb.backend.product.taf.TAFtoTACMaps;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
-import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 import nl.knmi.geoweb.backend.product.taf.TafValidationResult;
 import nl.knmi.geoweb.backend.product.taf.TafValidator;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 
+@Slf4j
 @RestController
+@RequestMapping("/tafs")
 public class TafServices {
     @Autowired
     @Qualifier("tafObjectMapper")
     private ObjectMapper tafObjectMapper;
 
     @Autowired
-    TafStore tafStore;
-    ProductExporter<Taf> publishTafStore;
-    TafSchemaStore tafSchemaStore;
-    TafValidator tafValidator;
+    private TafStore tafStore;
+
+    @Autowired
+    private ProductExporter<Taf> publishTafStore;
+
+    @Autowired
+    private TafValidator tafValidator;
 
     @Autowired
     private TafConverter tafConverter;
 
-    TafServices(final TafStore tafStore, final TafSchemaStore tafSchemaStore, final TafValidator tafValidator, final ProductExporter<Taf> publishTafStore) throws Exception {
-        this.tafStore = tafStore;
-        this.tafSchemaStore = tafSchemaStore;
-        this.tafValidator = tafValidator;
-        this.publishTafStore = publishTafStore;
-    }
-
-    static TafSchemaStore schemaStore = null;
-
-    boolean enableDebug = false;
-
-
-    @RequestMapping(path = "/tafs/verify", method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
-    )
-    public ResponseEntity<String> verifyTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
-        tafStr = URLDecoder.decode(tafStr, "UTF8");
+    @RequestMapping(path = "/verify",
+            method = RequestMethod.POST,
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<JSONObject> verifyTAF(@RequestBody JsonNode tafStr) throws IOException, JSONException, ParseException {
         /* Add TAC */
         String TAC = "unable to create TAC";
-
+        Taf taf = tafObjectMapper.treeToValue(tafStr, Taf.class);
         try {
-            TafValidationResult jsonValidation = tafValidator.validate(tafStr);
+            TafValidationResult jsonValidation = tafValidator.validate(taf);
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
-//                Debug.errprintln("/tafs/verify: TAF validation failed");
-                String finalJson = new JSONObject()
+                JSONObject finalJson = new JSONObject()
                         .put("succeeded", false)
-                        .put("errors", new JSONObject(errors.toString()))
+                        .put("errors", tafObjectMapper.convertValue(errors, JSONObject.class))
                         .put("TAC", TAC)
-                        .put("message", "TAF is not valid").toString();
+                        .put("message", "TAF is not valid");
                 return ResponseEntity.ok(finalJson);
             } else {
                 /* Add TAC */
                 try {
-                    TAC = tafObjectMapper.readValue(tafStr, Taf.class).toTAC();
+                    TAC = taf.toTAC();
 
                 } catch (Exception e) {
-                    Debug.printStackTrace(e);
+                    e.printStackTrace();
                 }
                 // If there is already a taf published for this location and airport; only for type==normal
-                Taf taf = tafObjectMapper.readValue(tafStr, Taf.class);
                 Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
                 if (taf.metadata.getStatus() != TAFReportPublishedConcept.published && taf.metadata.getType() == TAFReportType.normal &&
                         Arrays.stream(tafs).anyMatch(publishedTaf -> publishedTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
                                 publishedTaf.metadata.getValidityStart().isEqual(taf.metadata.getValidityStart()) /* &&
 								(taf.metadata.getPreviousUuid()==null || !taf.metadata.getPreviousUuid().equals(publishedTaf.metadata.getUuid()))*/)) {
-                    String finalJson = new JSONObject()
+                    JSONObject finalJson = new JSONObject()
                             .put("succeeded", false)
                             .put("TAC", TAC)
-                            .put("message", "There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart())).toString();
+                            .put("message", "There is already a published TAF for " + taf.metadata.getLocation() + " at " + TAFtoTACMaps.toDDHH(taf.metadata.getValidityStart()));
                     return ResponseEntity.ok(finalJson);
                 }
 
-                String json = new JSONObject().put("succeeded", true).put("message", "TAF is verified.").put("TAC", TAC).toString();
+                JSONObject json = new JSONObject()
+                        .put("succeeded", true)
+                        .put("message", "TAF is verified.")
+                        .put("TAC", TAC);
                 return ResponseEntity.ok(json);
             }
         } catch (ProcessingException e) {
-            Debug.printStackTrace(e);
-            String json = new JSONObject().
-                    put("message", "Unable to validate taf").toString();
+            e.printStackTrace();
+            JSONObject json = new JSONObject()
+                    .put("message", "Unable to validate taf");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
     }
@@ -134,38 +126,21 @@ public class TafServices {
      * @throws ParseException
      */
     @RequestMapping(
-            path = "/tafs",
+            path = "",
             method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
-            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
-    )
-    public ResponseEntity<String> storeTAF(@RequestBody String tafStr) throws IOException, JSONException, ParseException {
-        Debug.println("storetaf");
-        Taf taf = null;
-        tafStr = URLDecoder.decode(tafStr, "UTF8");
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<JSONObject> storeTAF(@RequestBody JsonNode tafStr) throws IOException {
+        log.debug("storetaf");
+        Taf taf = tafObjectMapper.treeToValue(tafStr, Taf.class);
 
-        try {
-            //			objectMapper=Taf.getTafObjectMapperBean().enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-            taf = tafObjectMapper.readValue(tafStr, Taf.class);
-        } catch (Exception e2) {
-            Debug.errprintln("Error parsing taf [" + tafStr + "]");
-            Debug.printStackTrace(e2);
-            try {
-                JSONObject obj = new JSONObject();
-                obj.put("error", "Error parsing taf").put("exception", e2.getMessage());
-                String json = obj.toString();
-                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
-            } catch (JSONException e1) {
-            }
-        }
-        if (enableDebug) Debug.println("TAF from Object: " + taf.toJSON(tafObjectMapper));
         // Assert that the JSONs are equal regardless of order
-        final JsonNode tree1 = tafObjectMapper.readTree(tafStr);
+        final JsonNode tree1 = tafStr;
         final JsonNode tree2 = tafObjectMapper.readTree(taf.toJSON(tafObjectMapper));
         if (!tree1.equals(tree2)) {
             throw new IllegalArgumentException("TAF JSON is different from origional JSON");
         } else {
-            Debug.println("OK: Incoming TAF string is equal to serialized and deserialized TAF string");
+            log.debug("OK: Incoming TAF string is equal to serialized and deserialized TAF string");
         }
         if (taf.metadata.getUuid() == null) {            //Generate random uuid
             taf.metadata.setUuid(UUID.randomUUID().toString());
@@ -179,16 +154,15 @@ public class TafServices {
             taf.metadata.setStatus(TAFReportPublishedConcept.concept);
         }
 
-        Debug.println("Posting TAF of type " + taf.metadata.getType());
+        log.debug("Posting TAF of type " + taf.metadata.getType());
         switch (taf.metadata.getType()) {
             case normal:
                 //Check if TAF with uuid is already published
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
                     //Error
                     try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "TAF with uuid " + taf.metadata.getUuid() + "already published");
-                        String json = obj.toString();
+                        JSONObject json = new JSONObject()
+                                .put("error", "TAF with uuid " + taf.metadata.getUuid() + "already published");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                     } catch (JSONException e1) {
                     }
@@ -203,9 +177,8 @@ public class TafServices {
                     if (tafStore.isPublished(taf.getMetadata().getLocation(), taf.getMetadata().getValidityStart(), taf.getMetadata().getValidityEnd())) {
                         //Error
                         try {
-                            JSONObject obj = new JSONObject();
-                            obj.put("error", "TAF for " + taf.metadata.getLocation() + " already published");
-                            String json = obj.toString();
+                            JSONObject json = new JSONObject()
+                                    .put("error", "TAF for " + taf.metadata.getLocation() + " already published");
                             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                         } catch (JSONException e1) {
                         }
@@ -216,48 +189,52 @@ public class TafServices {
                     }
                     //Set issuetime
                     taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS));
+                    String tafJson = taf.toJSON(tafObjectMapper);
+                    log.debug("about to publish:" + tafJson);
                     String result = this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
                     if ("OK".equals(result)) {
                         //Only set to published if export has succeeded
                         tafStore.storeTaf(taf);
 
-                        JSONObject tafjson = new JSONObject(taf.toJSON(tafObjectMapper));
-                        String json = new JSONObject().put("succeeded", true).put("message", "Taf with id " + taf.metadata.getUuid() + " is published").put("tac", taf.toTAC()).put("tafjson", tafjson).put("uuid", taf.metadata.getUuid()).toString();
+                        JSONObject json = new JSONObject()
+                            .put("succeeded", true)
+                            .put("message", "Taf with id " + taf.metadata.getUuid() + " is published")
+                            .put("tac", taf.toTAC())
+                            .put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                            .put("uuid", taf.metadata.getUuid());
                         return ResponseEntity.ok(json);
                     } else {
                         //result contains error message
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "TAF for " + taf.metadata.getLocation() + " failed to get published: " + result);
-                        String json = obj.toString();
+                        JSONObject json = new JSONObject()
+                                .put("error", "TAF for " + taf.metadata.getLocation() + " failed to get published: " + result);
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                     }
                 }
-                String json = new JSONObject().
-                		put("succeeded", true).
-                		put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").
-                		put("tac", taf.toTAC()).put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
-                		put("uuid", taf.metadata.getUuid()).toString();
-                return ResponseEntity.ok(json);
+                JSONObject resultJson = new JSONObject()
+                		.put("succeeded", true)
+                		.put("message", "Taf with id " + taf.metadata.getUuid() + " is stored")
+                        .put("tac", taf.toTAC())
+                        .put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                		.put("uuid", taf.metadata.getUuid());
+                return ResponseEntity.ok(resultJson);
             case amendment:
             case correction:
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
                     //Error
-                    Debug.println("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
+                    log.debug("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
                     try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
-                        json = obj.toString();
+                        JSONObject json = new JSONObject()
+                                .put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                     } catch (JSONException e1) {
                     }
                 }
                 if (!tafStore.isPublished(taf.getMetadata().getPreviousUuid())) {
                     //Error
-                    Debug.println("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
+                    log.debug("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
                     try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
-                        json = obj.toString();
+                        JSONObject json = new JSONObject()
+                                .put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
                         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
                     } catch (JSONException e1) {
                     }
@@ -278,18 +255,18 @@ public class TafServices {
                         taf.getMetadata().setPreviousMetadata(previousTaf.getMetadata());
                         taf.getMetadata().setBaseTime(previousTaf.getMetadata().getBaseTime());
                         tafStore.storeTaf(taf);
-                        json = new JSONObject().
-                        		put("succeeded", true).
-                        		put("message", "Taf with id " + taf.metadata.getUuid() + " is stored").
-                        		put("tac", taf.toTAC()).
-                        		put("tafjson",  new JSONObject(taf.toJSON(tafObjectMapper))).
-                        		put("uuid", taf.metadata.getUuid()).toString();
+                        JSONObject json = new JSONObject()
+                                .put("succeeded", true)
+                        		.put("message", "Taf with id " + taf.metadata.getUuid() + " is stored")
+                        		.put("tac", taf.toTAC())
+                        		.put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                        		.put("uuid", taf.metadata.getUuid());
                         return ResponseEntity.ok(json);
                     }
                 } else if (taf.getMetadata().getStatus().equals(TAFReportPublishedConcept.published)) {
                     if (previousTaf.getMetadata().getLocation().equals(taf.getMetadata().getLocation()) &&
                             previousTaf.getMetadata().getValidityEnd().equals(taf.getMetadata().getValidityEnd())) {
-                        
+
                         if (taf.metadata.getType() == TAFReportType.amendment) { //Only change validityTime for amendments
                             Instant iValidityStart = Instant.now().truncatedTo(ChronoUnit.HOURS);
                             if (taf.getMetadata().getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("UTC")))) {
@@ -306,53 +283,52 @@ public class TafServices {
                                 taf.metadata.setBaseTime(previousTaf.metadata.getBaseTime());
                             }
                             this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
-                            json = new JSONObject().put("succeeded", true)
+                            JSONObject json = new JSONObject()
+                                    .put("succeeded", true)
                                     .put("message", "Taf with id " + taf.metadata.getUuid() + " is " + taf.metadata.getType())
-                                    .put("tac", taf.toTAC()).put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper)))
-                                    .put("uuid", taf.metadata.getUuid()).toString();
+                                    .put("tac", taf.toTAC())
+                                    .put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                                    .put("uuid", taf.metadata.getUuid());
                             /* After successful publish make previous TAF inactive */
-                            Debug.println("Inactivating TAF with uuid " + previousTaf.getMetadata().getUuid());
-                            Debug.println("Inactivating TAF with previousMetadata uuid " + taf.getMetadata().getPreviousMetadata().getUuid());
+                            log.debug("Inactivating TAF with uuid " + previousTaf.getMetadata().getUuid());
+                            log.debug("Inactivating TAF with previousMetadata uuid " + taf.getMetadata().getPreviousMetadata().getUuid());
                             previousTaf.getMetadata().setStatus(TAFReportPublishedConcept.inactive);
                             tafStore.storeTaf(previousTaf);
                             return ResponseEntity.ok(json);
                         } else {
                             //Error
-                            Debug.errprintln("Error: COR/AMD for old TAF");
+                            log.error("Error: COR/AMD for old TAF");
                         }
                     } else {
                         //Error
-                        Debug.errprintln("Error: COR/AMD do not match with previousTaf");
+                        log.error("Error: COR/AMD do not match with previousTaf");
                     }
                 }
-                
-                json = new JSONObject().
-                		put("succeeded", false).
-                		put("message", "Unable to store taf with uuid " + taf.metadata.getUuid()).
-                		put("tac", taf.toTAC()).
-                		put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
-                		put("uuid", taf.metadata.getUuid()).toString();
-                return ResponseEntity.ok(json);
+                JSONObject errorJson = new JSONObject()
+                        .put("succeeded", false)
+                        .put("message", "Unable to store taf with uuid " + taf.metadata.getUuid())
+                        .put("tac", taf.toTAC())
+                        .put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                        .put("uuid", taf.metadata.getUuid());
+                return ResponseEntity.ok(errorJson);
             case canceled:
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
                     //Error
-                    Debug.println("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
+                    log.debug("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
                     try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
-                        json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
+                        JSONObject obj = new JSONObject()
+                                .put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
                 if (!tafStore.isPublished(taf.getMetadata().getPreviousUuid())) {
                     //Error
-                    Debug.println("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
+                    log.debug("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
                     try {
-                        JSONObject obj = new JSONObject();
-                        obj.put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
-                        json = obj.toString();
-                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(json);
+                        JSONObject obj = new JSONObject()
+                                .put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
+                        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(obj);
                     } catch (JSONException e1) {
                     }
                 }
@@ -374,28 +350,27 @@ public class TafServices {
                         if (taf.metadata.getBaseTime() == null) {
                             taf.metadata.setBaseTime(previousTaf.metadata.getBaseTime());
                         }
-                        Debug.println("storing cancel");
+                        log.debug("storing cancel");
                         tafStore.storeTaf(taf);
-                        Debug.println("publishing cancel");
+                        log.debug("publishing cancel");
 
                         this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
 
-                        json = new JSONObject().
-                        		put("succeeded", true).
-                        		put("message", "Taf with id " + taf.metadata.getPreviousUuid() + " is canceled").
-                        		put("tac", taf.toTAC()).
-                        		put("tafjson", new JSONObject(taf.toJSON(tafObjectMapper))).
-                        		put("uuid", taf.metadata.getUuid()).toString();
+                        JSONObject json = new JSONObject()
+                                .put("succeeded", true)
+                        		.put("message", "Taf with id " + taf.metadata.getPreviousUuid() + " is canceled")
+                        		.put("tac", taf.toTAC())
+                        		.put("tafjson", tafObjectMapper.convertValue(taf, JSONObject.class))
+                        		.put("uuid", taf.metadata.getUuid());
                         return ResponseEntity.ok(json);
                     }
                 }
                 //Error
-                Debug.println("Err: cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
+                log.debug("Err: cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
                 try {
-                    JSONObject obj = new JSONObject();
-                    obj.put("error", "cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
-                    json = obj.toString();
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(json);
+                    JSONObject obj = new JSONObject()
+                            .put("error", "cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(obj);
                 } catch (JSONException e1) {
                 }
                 break;
@@ -403,7 +378,7 @@ public class TafServices {
                 break;
         }
 
-        Debug.errprintln("Unknown error");
+        log.error("Unknown error");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
 
@@ -446,7 +421,6 @@ public class TafServices {
             this.page = page;
             this.ntafs = numtafs;
         }
-
     }
 
     /**
@@ -459,16 +433,16 @@ public class TafServices {
      * @return
      */
     @RequestMapping(
-            path = "/tafs",
+            path = "/",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> getTafList(@RequestParam(value = "active", required = true) Boolean active,
+    public ResponseEntity<JSONObject> getTafList(@RequestParam(value = "active", required = true) Boolean active,
                                              @RequestParam(value = "status", required = false) TAFReportPublishedConcept status,
                                              @RequestParam(value = "uuid", required = false) String uuid,
                                              @RequestParam(value = "location", required = false) String location,
                                              @RequestParam(value = "page", required = false) Integer page,
                                              @RequestParam(value = "count", required = false) Integer count) {
-        Debug.println("getTafList");
+        log.debug("getTafList");
         try {
             final Taf[] tafs = tafStore.getTafs(active, status, uuid, location);
             Taf[] filteredTafs = (Taf[]) Arrays.stream(tafs).filter(
@@ -485,16 +459,14 @@ public class TafServices {
                                             otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))
                                             ))
                             )).toArray(Taf[]::new);
-
-            return ResponseEntity.ok(tafObjectMapper.writeValueAsString(new TafList(filteredTafs, page, count)));
+            JSONObject json = tafObjectMapper.convertValue(new TafList(filteredTafs, page, count), JSONObject.class);
+            return ResponseEntity.ok(json);
         } catch (Exception e) {
             try {
-                JSONObject obj = new JSONObject();
-                obj.put("error", e.getMessage());
-                String json = obj.toString();
-                Debug.errprintln("Method not allowed");
-                Debug.printStackTrace(e);
-                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(json);
+                JSONObject obj = new JSONObject()
+                        .put("error", e.getMessage());
+                e.printStackTrace();
+                return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
             } catch (JSONException e1) {
             }
         }
@@ -507,57 +479,51 @@ public class TafServices {
      * @param uuid
      * @return ok if the TAF was successfully deleted, BAD_REQUEST if the taf didn't exist, is not in concept, or if some other error occurred
      */
-    @RequestMapping(path = "/tafs/{uuid}",
+    @RequestMapping(path = "/{uuid}",
             method = RequestMethod.DELETE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<String> deleteTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
+    public ResponseEntity<JSONObject> deleteTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         Taf taf = tafStore.getByUuid(uuid);
         if (taf == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s does not exist", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("TAF with uuid %s does not exist", uuid));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
         boolean tafIsInConcept = taf.metadata.getStatus() == TAFReportPublishedConcept.concept;
         if (tafIsInConcept != true) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("TAF with uuid %s is not in concept. Cannot delete.", uuid));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
         }
         boolean ret = tafStore.deleteTafByUuid(uuid);
         if (ret) {
-            return ResponseEntity.ok(String.format("deleted %s", uuid));
+            JSONObject json = new JSONObject()
+                    .put("message", String.format("deleted %s", uuid));
+            return ResponseEntity.ok(json);
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
 
-
-    @RequestMapping(path = "/tafs/{uuid}",
+    @RequestMapping(path = "/{uuid}",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public Taf getTafById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         return tafStore.getByUuid(uuid);
     }
 
-    @RequestMapping(path = "/tafs/{uuid}",
+    @RequestMapping(path = "/{uuid}",
             method = RequestMethod.GET,
             produces = MediaType.TEXT_PLAIN_VALUE)
     public String getTacById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         return tafStore.getByUuid(uuid).toTAC();
     }
 
-    @RequestMapping(path = "/tafs/{uuid}",
+    @RequestMapping(path = "/{uuid}",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_XML_VALUE)
     public String getIWXXM21ById(@PathVariable String uuid) throws JsonParseException, JsonMappingException, IOException {
         Taf taf = tafStore.getByUuid(uuid);
         return tafConverter.ToIWXXM_2_1(taf);
-    }
-
-    /* Deprecated */
-    @RequestMapping(path = "/gettaf")
-    public Taf getTaf(@RequestParam(value = "uuid", required = true) String uuid) throws JsonParseException, JsonMappingException, IOException {
-        return tafStore.getByUuid(uuid);
-    }
-
-    @RequestMapping("/publishtaf")
-    public String publishTaf(String uuid) throws JsonParseException, JsonMappingException, IOException {
-        return "taf " + tafStore.getByUuid(uuid) + " published";
     }
 }
