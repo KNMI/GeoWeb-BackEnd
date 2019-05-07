@@ -4,6 +4,7 @@ import static org.mockito.Mockito.mock;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
@@ -31,6 +32,7 @@ public class TestServicesConfig {
 
     @Bean
     @Primary
+    @Profile("!lifecycle")
     public TafStore getTafStore() {
         return mock(TafStore.class);
     }
@@ -43,6 +45,7 @@ public class TestServicesConfig {
 
     @Bean
     @Primary
+    @Profile("!lifecycle")
     @SuppressWarnings("unchecked")
     public <P> ProductExporter<P> getProductExporter() {
         return mock(ProductExporter.class);

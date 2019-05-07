@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>nl.knmi.geoweb</groupId>
 	<artifactId>geoweb-backend</artifactId>
-	<version>0.52.1-SNAPSHOT</version>
+	<version>0.54.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>GeoWeb-BackEnd</name>
 	<description>Backend for GeoWeb</description>
@@ -19,7 +19,7 @@
 		<java.version>1.8</java.version>
 		<spring-boot.version>2.1.3.RELEASE</spring-boot.version>
 		<oauth-auto.version>${spring-boot.version}</oauth-auto.version>
-		<geoweb.messageConverter.version>1.52.0-SNAPSHOT</geoweb.messageConverter.version>
+		<geoweb.messageConverter.version>1.54.1-SNAPSHOT</geoweb.messageConverter.version>
 	</properties>
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->

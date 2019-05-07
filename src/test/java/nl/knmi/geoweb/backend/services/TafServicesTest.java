@@ -107,13 +107,15 @@ public class TafServicesTest {
         // given
         // when
         // then
-        mockMvc.perform(post("/tafs/").contentType(MediaType.APPLICATION_JSON_UTF8).content(testTafValid))
+        mockMvc.perform(post("/tafs").contentType(MediaType.APPLICATION_JSON_UTF8).content(testTafValid))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$.error").doesNotExist())
                 .andExpect(jsonPath("$.message", is("Taf with id " + validTaf.metadata.getUuid() + " is stored")))
                 .andExpect(jsonPath("$.succeeded", is(true)))
-                .andExpect(jsonPath("$.uuid", is(validTaf.metadata.getUuid())));
+                .andExpect(jsonPath("$.uuid", is(validTaf.metadata.getUuid())))
+                .andExpect(jsonPath("$.tafjson.metadata.baseTime",
+                        is(validTaf.metadata.getValidityStart().format(DateTimeFormatter.ISO_INSTANT))));
 
         verify(tafStore, times(1)).storeTaf(any(Taf.class));
         verify(tafStore, times(1)).isPublished(anyString());
@@ -143,6 +145,23 @@ public class TafServicesTest {
 
         verify(tafStore, times(1)).getTafs(false, null, null, null);
         verify(tafStore, times(1)).getTafs(true, null, null, null);
+        verifyNoMoreInteractions(tafStore);
+    }
+
+    @Test
+    public void serviceTestGetTaf() throws Exception {
+        // given
+        String uuid = validTaf.metadata.getUuid();
+        // when
+        when(tafStore.getByUuid(uuid)).thenReturn(validTaf);
+        // then
+        mockMvc.perform(get("/tafs/" + uuid))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.metadata.uuid", is(validTaf.metadata.getUuid())));
+
+        verify(tafStore, times(1)).getByUuid(anyString());
         verifyNoMoreInteractions(tafStore);
     }
 

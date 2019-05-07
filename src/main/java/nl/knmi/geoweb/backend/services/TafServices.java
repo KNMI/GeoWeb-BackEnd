@@ -126,7 +126,7 @@ public class TafServices {
      * @throws ParseException
      */
     @RequestMapping(
-            path = "/",
+            path = "",
             method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -189,6 +189,8 @@ public class TafServices {
                     }
                     //Set issuetime
                     taf.metadata.setIssueTime(OffsetDateTime.now(ZoneId.of("UTC")).truncatedTo(ChronoUnit.SECONDS));
+                    String tafJson = taf.toJSON(tafObjectMapper);
+                    log.debug("about to publish:" + tafJson);
                     String result = this.publishTafStore.export(taf, tafConverter, tafObjectMapper);
                     if ("OK".equals(result)) {
                         //Only set to published if export has succeeded
@@ -502,7 +504,6 @@ public class TafServices {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-
 
     @RequestMapping(path = "/{uuid}",
             method = RequestMethod.GET,
