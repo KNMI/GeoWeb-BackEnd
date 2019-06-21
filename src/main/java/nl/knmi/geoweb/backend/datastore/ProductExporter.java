@@ -20,7 +20,7 @@ public class ProductExporter<P> {
 		this("/tmp/exports");
 	}
 
-	ProductExporter(@Value(value = "${geoweb.products.exportLocation}") String productexportlocation) {
+	ProductExporter(@Value("${geoweb.products.exportLocation}") String productexportlocation) {
 		if (productexportlocation == null || productexportlocation.length() == 0) {
 			productexportlocation = "/tmp/exports";
 		}
