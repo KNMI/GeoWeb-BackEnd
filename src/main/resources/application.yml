@@ -1,16 +1,18 @@
 server:
   port: 8080
 
+# Spring configuration
 spring:
   profiles:
     active:
-      - dev
       - oauth2-keycloak
   main:
     bannerMode: "off"
   devtools:
     add-properties: false
   mail:
+    host: localhost
+    port: 25
     defaultEncoding: UTF-8
     protocol: smtp
 
@@ -22,57 +24,13 @@ geoweb:
     feedbackfromname: Geoweb Admin
     feedbackfrommail: geoweb-admin@geoweb.knmi.nl
     feedbackmail: geoweb-scrumteam@knmi.nl
+  products:
+    storeLocation: /tmp
+    exportLocation: ${geoweb.products.storeLocation}/export
 
----
-spring:
-  profiles: dev
-  mail:
-    # Simple systems
-    host: localhost
-    port: 25
-
+# Logging configuration
 logging:
   level:
     org:
         springframework:
             web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE
-
-geoweb:
-  products:
-    storeLocation: /tmp
-    exportLocation: ${geoweb.products.storeLocation}/export
-
----
-spring:
-  profiles: prod
-  mail:
-    # Amazon SES
-    host: ${BACKEND_MAIL_SERVER_ADDRESS}
-    port: ${BACKEND_MAIL_SERVER_PORT}
-    username: ${BACKEND_MAIL_USERNAME}
-    password: ${BACKEND_MAIL_PASSWORD}
-    properties:
-      mail:
-        transport:
-          protocol: smtp
-        smtp:
-          port: ${BACKEND_MAIL_SERVER_PORT}
-          authd: true
-          starttls:
-            enable: true
-            required: true
-
-logging:
-  level:
-    org:
-        springframework:
-            web: WARN
-
-geoweb:
-  products:
-    storeLocation: /backendstore
-    exportLocation: /productoutput
-
-server:
-  servlet:
-    contextPath: /backend
