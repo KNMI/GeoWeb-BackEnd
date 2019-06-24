@@ -65,7 +65,10 @@ public class TafServicesLifeCycleTest {
     private WebApplicationContext webApplicationContext;
 
     @Value("classpath:Taf_valid.json")
-    private Resource validTafResource;
+	private Resource validTafResource;
+	
+	@Value("${geoweb.products.storelocation}")
+    private String productstorelocation;
 
     @Autowired
     private TafConverter tafConverter;
@@ -80,9 +83,12 @@ public class TafServicesLifeCycleTest {
     private ObjectMapper objectMapper;
 
 	@Before
-	public void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        File[] tafFiles = new File("/tmp/test/tafs").listFiles();
+	public void setUp() throws Exception {
+		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+		if (productstorelocation == null) {
+			throw new Exception("productstorelocation property for testing is null");
+		}
+        File[] tafFiles = new File(productstorelocation + "/tafs").listFiles();
         if (tafFiles != null) {
             for(File file: tafFiles) {
                 if (!file.isDirectory()) {

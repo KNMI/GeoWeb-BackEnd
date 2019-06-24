@@ -15,14 +15,10 @@ import nl.knmi.geoweb.backend.product.ProductConverter;
 @Component
 public class ProductExporter<P> {
 	private File path;
-	
-	ProductExporter () {
-		this("/tmp/exports");
-	}
 
-	ProductExporter(@Value("${geoweb.products.exportLocation}") String productexportlocation) {
-		if (productexportlocation == null || productexportlocation.length() == 0) {
-			productexportlocation = "/tmp/exports";
+	ProductExporter(@Value("${geoweb.products.exportLocation}") String productexportlocation) throws Exception {
+		if (productexportlocation == null) {
+			throw new Exception("productexportlocation property is null");
 		}
 		this.path = new File(productexportlocation);
 
