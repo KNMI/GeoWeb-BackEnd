@@ -67,10 +67,9 @@ public class TafServices {
             method = RequestMethod.POST,
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<JSONObject> verifyTAF(@RequestBody JsonNode tafStr) throws IOException, JSONException, ParseException {
+    public ResponseEntity<JSONObject> verifyTAF(@RequestBody Taf taf) throws IOException, JSONException, ParseException {
         /* Add TAC */
         String TAC = "unable to create TAC";
-        Taf taf = tafObjectMapper.treeToValue(tafStr, Taf.class);
         try {
             TafValidationResult jsonValidation = tafValidator.validate(taf);
             if (jsonValidation.isSucceeded() == false) {
@@ -433,7 +432,7 @@ public class TafServices {
      * @return
      */
     @RequestMapping(
-            path = "/",
+            path = "",
             method = RequestMethod.GET,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<JSONObject> getTafList(@RequestParam(value = "active", required = true) Boolean active,

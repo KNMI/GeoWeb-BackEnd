@@ -36,7 +36,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.admin.AdminStore;
@@ -56,8 +55,6 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 @RestController
 @RequestMapping("/sigmets")
 public class SigmetServices {
-    final static String baseUrl = "/airmets";
-
     @Autowired
     private AdminStore adminStore;
 
@@ -293,16 +290,15 @@ public class SigmetServices {
     }
 
     @RequestMapping(path = "/putsigmetparameters")
-    public ResponseEntity<JSONObject> storeSigmetParameters(String json) {
+    public ResponseEntity<JSONObject> storeSigmetParameters(@RequestBody SigmetParameters parameters) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
     }
 
     @RequestMapping("/getsigmetphenomena")
-    public ResponseEntity<JSONObject> SigmetPhenomena() {
+    public ResponseEntity<List<SigmetPhenomenon>> SigmetPhenomena() {
         try {
             List<SigmetPhenomenon> phenomena = new SigmetPhenomenaMapping().getPhenomena();
-            JSONObject jsonResponse = sigmetObjectMapper.convertValue(phenomena, JSONObject.class);
-            return ResponseEntity.ok(jsonResponse);
+            return ResponseEntity.ok(phenomena);
         } catch (Exception e) {
         }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
@@ -333,7 +329,7 @@ public class SigmetServices {
 
         try {
             SigmetValidationResult jsonValidation = sigmetValidator
-                    .validate(sigmetObjectMapper.convertValue(sigmetStr, String.class));
+                    .validate(sigmetObjectMapper.writeValueAsString(sigmetStr));
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
                 JSONObject finalJson = new JSONObject().put("succeeded", false)
@@ -352,7 +348,7 @@ public class SigmetServices {
         }
     }
 
-    @Data
+    @Getter
     public static class SigmetFeature {
         private String firname;
         private Feature feature;

@@ -34,17 +34,17 @@ public class TafStore {
 	
 	private String directory = null;
 		
-	static boolean isCreated = false;
+	private boolean isCreated = false;
 	
 	TafStore (@Value("${geoweb.products.storeLocation}") String productstorelocation) throws Exception {
 		if(productstorelocation == null) {
 			throw new Exception("productstorelocation property is null");
 		}
-		if(isCreated == true) {
+		if(this.isCreated == true) {
 //			throw new Exception("TafStore is already created");
 			Debug.println("WARN: TafStore is already created");
 		}
-		isCreated = true;
+		this.isCreated = true;
 		String dir = productstorelocation + "/tafs/";
 		Debug.println("TAF STORE at " + dir);
 		File f = new File(dir);

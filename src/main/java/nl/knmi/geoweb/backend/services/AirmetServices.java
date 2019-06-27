@@ -58,8 +58,6 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 @RestController
 @RequestMapping("/airmets")
 public class AirmetServices {
-    final static String baseUrl="/airmets";
-
     @Autowired
     private AdminStore adminStore;
 
@@ -284,11 +282,10 @@ public class AirmetServices {
     }
 
     @RequestMapping(path="/getobscuringphenomena")
-    public ResponseEntity<JSONObject> getObscuringPhenomena() {
+    public ResponseEntity<List<ObscuringPhenomenon>> getObscuringPhenomena() {
         try {
             List<ObscuringPhenomenon> obsPhenomena = ObscuringPhenomenonList.getAllObscuringPhenomena();
-            JSONObject json = airmetObjectMapper.convertValue(obsPhenomena, JSONObject.class);
-            return ResponseEntity.ok(json);
+            return ResponseEntity.ok(obsPhenomena);
         }catch(Exception e){}
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
     }
@@ -315,16 +312,15 @@ public class AirmetServices {
     }
 
     @RequestMapping(path="/putairmetparameters")
-    public ResponseEntity<JSONObject> storeAirmetParameters(String json) {
+    public ResponseEntity<JSONObject> storeAirmetParameters(@RequestBody AirmetParameters parameters) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
     }
 
     @RequestMapping("/getairmetphenomena")
-    public ResponseEntity<JSONObject> AirmetPhenomena() {
+    public ResponseEntity<List<AirmetPhenomenon>> AirmetPhenomena() {
         try {
             List<AirmetPhenomenon> phenomena = new AirmetPhenomenaMapping().getPhenomena();
-            JSONObject jsonResponse = airmetObjectMapper.convertValue(phenomena, JSONObject.class);
-            return ResponseEntity.ok(jsonResponse);
+            return ResponseEntity.ok(phenomena);
         }catch(Exception e){}
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
     }
@@ -356,7 +352,7 @@ public class AirmetServices {
         }
 
         try {
-            AirmetValidationResult jsonValidation = airmetValidator.validate(airmetObjectMapper.convertValue(airmetStr, String.class));
+            AirmetValidationResult jsonValidation = airmetValidator.validate(airmetObjectMapper.writeValueAsString(airmetStr));
             if (jsonValidation.isSucceeded() == false) {
                 ObjectNode errors = jsonValidation.getErrors();
                 JSONObject finalJson = new JSONObject()

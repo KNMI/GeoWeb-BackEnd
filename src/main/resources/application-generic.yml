@@ -1,0 +1,10 @@
+security:
+    oauth2:
+      client:
+        clientId: ${client.id}
+
+client:
+  realm: GeoWeb
+  name: Generic
+  id: GeoWeb-SpringSecurity
+  logoutUri: http://localhost:8080/logout?redirect_uri=

@@ -6,6 +6,10 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,22 +19,26 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 import nl.knmi.geoweb.backend.usermanagement.UserStore;
 
 @RestController
 @RequestMapping("/preset")
 public class PresetServices {
+
+	@Autowired
+	private ObjectMapper objectMapper;
+
 	PresetStore presetStore;
 
 	PresetServices (final PresetStore presetStore) throws IOException {
 		this.presetStore = presetStore;
 	}
-	@RequestMapping(path="/getpresets")
-	public ResponseEntity<String> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
+	@RequestMapping(
+		path="/getpresets",
+		method = RequestMethod.GET,
+		produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public ResponseEntity<List<Preset>> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
 			UserStore userStore=UserStore.getInstance();
@@ -44,9 +52,7 @@ public class PresetServices {
 				presets.addAll(rolePresets);
 			}
 		}
-		String json=new ObjectMapper().writeValueAsString(presets);
-		return ResponseEntity.status(HttpStatus.OK).body(json);
-		//		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error");				
+		return ResponseEntity.status(HttpStatus.OK).body(presets);			
 	}
 
 	@RequestMapping(path="/getpreset")
@@ -66,7 +72,7 @@ public class PresetServices {
 		}
 		for (Preset preset : presets) {
 			if (preset.getName().equals(name)) {
-				String json=new ObjectMapper().writeValueAsString(preset);
+				String json= objectMapper.writeValueAsString(preset);
 				return ResponseEntity.status(HttpStatus.OK).body(json);
 			}
 		}
@@ -109,15 +115,14 @@ public class PresetServices {
 	}
 
 	@RequestMapping(path="/putuserpreset", method=RequestMethod.POST)
-	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestBody String preset, HttpServletRequest req) {
-		Preset pr = presetStore.loadJsonPreset(preset);
+	public ResponseEntity<String> storeUserPreset(@RequestParam("name")String name, @RequestBody Preset preset, HttpServletRequest req) {
 
-		if (pr!=null) {
-			pr.setName(name);
+		if (preset!=null) {
+			preset.setName(name);
 
 			String user=UserLogin.getUserFromRequest(req);
 			try {
-				presetStore.storeUserPreset(user, pr);
+				presetStore.storeUserPreset(user, preset);
 				return ResponseEntity.status(HttpStatus.OK).body("User preset "+name+" stored");				
 
 			} catch (IOException e) {

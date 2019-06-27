@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
 import org.springframework.boot.autoconfigure.security.oauth2.client.EnableOAuth2Sso;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.PrincipalExtractor;
@@ -31,7 +30,7 @@ import nl.knmi.geoweb.backend.security.extractors.keycloak.KeycloakAuthoritiesEx
 import nl.knmi.geoweb.backend.security.extractors.keycloak.KeycloakPrincipalExtractor;
 import nl.knmi.geoweb.backend.security.models.Privilege;
 
-@Profile("!test")
+@Profile("!test & !generic")
 @Configuration
 @EnableOAuth2Sso
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -82,15 +81,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/testOnly/**").hasAuthority(Privilege.SIGMET_EDIT.getAuthority())
                 .anyRequest().authenticated()
                 .and()
-                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb")).logoutSuccessUrl("/logout");
+                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb")).logoutSuccessUrl("/logout")
+                .and()
+                .cors()
+                .and()
+                .csrf().disable();
     }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedMethods(Arrays.asList(
-            HttpMethod.POST.toString(), HttpMethod.HEAD.toString(), HttpMethod.GET.toString(), HttpMethod.OPTIONS.toString(), HttpMethod.DELETE.toString()
-        ));
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        configuration.setAllowedHeaders(Arrays.asList("*"));
+        configuration.setAllowedMethods(Arrays.asList("*"));
+        // configuration.setAllowedMethods(Arrays.asList(
+        //     HttpMethod.POST.toString(), HttpMethod.HEAD.toString(), HttpMethod.GET.toString(), HttpMethod.OPTIONS.toString(), HttpMethod.DELETE.toString()
+        // ));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

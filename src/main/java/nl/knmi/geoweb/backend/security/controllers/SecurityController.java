@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.security.services.SecurityServices;
 
 @Slf4j
+@Profile("!generic")
 @Controller
 @RequestMapping("/")
 public class SecurityController {
