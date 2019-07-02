@@ -15,7 +15,7 @@ security:
 client:
   realm: GeoWeb
   name: Keycloak
-  id: GeoWeb-SpringSecurity-wim
+  id: GeoWeb-acc
   issuerUri: https://auth-acc.knmi.cloud/auth/realms/${client.realm}
   openIdUrl: ${client.issuerUri}/protocol/openid-connect
   logoutUri: ${client.openIdUrl}/logout?redirect_uri=
