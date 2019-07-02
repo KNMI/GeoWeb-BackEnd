@@ -1,5 +1,5 @@
 GeoWeb-BackEnd
-=====
+======
 
 [![Build Status](https://api.travis-ci.org/KNMI/GeoWeb-BackEnd.svg?branch=master)](https://travis-ci.org/KNMI/GeoWeb-BackEnd)
 

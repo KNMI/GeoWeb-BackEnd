@@ -1,0 +1,66 @@
+image: docker:latest
+
+variables:
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://localhost:2375
+  AWS_REGION: eu-west-1
+
+services:
+  - docker:dind
+
+stages:
+  - test
+  - compile
+  - build
+
+test:
+  stage: test
+  image: maven:3-jdk-8-alpine
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=.m2"
+  cache:
+    paths:
+      - .m2/
+  script:
+    - mvn clean test
+
+compile:
+  stage: compile
+  image: maven:3-jdk-8-alpine
+  variables:
+    MAVEN_OPTS: "-Dmaven.repo.local=.m2
+                 -Dmaven.test.skip=true"
+  cache:
+    paths:
+      - .m2/
+  script:
+    - mvn clean package
+    - cp ./target/geoweb-backend-*.jar geoweb-backend.jar
+  artifacts:
+    paths:
+      - geoweb-backend.jar
+
+build:
+  stage: build
+  image: docker:latest
+  variables:
+    IMAGE_TAG: 1.0.$CI_COMMIT_SHORT_SHA.$CI_PIPELINE_ID
+    REPO_NAMESPACE: knmi
+    REPOSITORY: geoweb-backend
+    ECR_REGISTRY_IMAGE: $BUILD_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$REPO_NAMESPACE/$REPOSITORY
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - apk add --no-cache py-pip
+    - pip install awscli
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+    - docker tag $CI_REGISTRY_IMAGE:latest $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker push $CI_REGISTRY_IMAGE:$IMAGE_TAG
+    - sh scripts/ecr.sh -r $REPOSITORY
+    - $(aws ecr get-login --no-include-email --region $AWS_REGION)
+    - docker tag $CI_REGISTRY_IMAGE:latest $ECR_REGISTRY_IMAGE:$IMAGE_TAG
+    - docker push $ECR_REGISTRY_IMAGE:$IMAGE_TAG
+  only:
+    refs:
+      - master
