@@ -19,7 +19,7 @@
 		<java.version>1.8</java.version>
 		<spring-boot.version>2.1.3.RELEASE</spring-boot.version>
 		<oauth-auto.version>${spring-boot.version}</oauth-auto.version>
-		<geoweb.messageConverter.version>1.55.0-SNAPSHOT</geoweb.messageConverter.version>
+		<geoweb.messageConverter.version>1.55.1-SNAPSHOT</geoweb.messageConverter.version>
 	</properties>
 	<dependencies>
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
