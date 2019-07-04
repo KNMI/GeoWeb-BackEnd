@@ -13,83 +13,108 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import javax.annotation.Resource;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import nl.knmi.adaguc.tools.Debug;
+import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportType;
+import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class})
+@ActiveProfiles({"test", "lifecycle"})
+@SpringBootTest
 @DirtiesContext
 public class TafServicesLifeCycleTest {
-	/** Entry point for Spring MVC testing support. */
-	private MockMvc mockMvc;
+    /** Entry point for Spring MVC testing support. */
+    private MockMvc mockMvc;
 
-	/** The Spring web application context. */
-	@Resource
-	private WebApplicationContext webApplicationContext;
+    /** The Spring web application context. */
+    @Autowired
+    private WebApplicationContext webApplicationContext;
 
-	/** The {@link ObjectMapper} instance to be used. */
-	@Autowired
-	@Qualifier("tafObjectMapper")
-	private ObjectMapper tafObjectMapper;
+    @Value("classpath:Taf_valid.json")
+    private Resource validTafResource;
 
-	@Autowired
-	@Qualifier("objectMapper")
-	private ObjectMapper objectMapper;
+    @Value("${geoweb.products.storelocation}")
+    private String productstorelocation;
 
-	@Before
-	public void setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		for(File file: new File("/tmp/tafs").listFiles()) 
-		    if (!file.isDirectory()) 
-		        file.delete();
-	}
+    @Autowired
+    private TafConverter tafConverter;
 
-	private String addTaf(Taf taf) throws Exception {
+    /** The {@link ObjectMapper} instance to be used. */
+    @Autowired
+    @Qualifier("tafObjectMapper")
+    private ObjectMapper tafObjectMapper;
+
+    @Autowired
+    @Qualifier("objectMapper")
+    private ObjectMapper objectMapper;
+
+    @Before
+    public void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        if (productstorelocation == null) {
+			throw new Exception("geoweb.products.storeLocation property for testing is null");
+        }
+        File[] tafFiles = new File(productstorelocation + "/tafs").listFiles();
+        if (tafFiles != null) {
+            for(File file: tafFiles) {
+                if (!file.isDirectory()) {
+                    file.delete();
+                }
+            }
+        }
+    }
+
+    private String addTaf(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
-		MvcResult result = mockMvc.perform(post("/tafs")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();	
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        MvcResult result = mockMvc.perform(post("/tafs")
+		        .contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
 		assertThat(jsonResult.has("error"), is(false));
 		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.get("message").asText().length(), not(0));
-		String uuid = jsonResult.get("uuid").asText();
+        assertThat(jsonResult.has("message"), is(true));
+        assertThat(jsonResult.get("message").asText().length(), not(0));
+        String uuid = jsonResult.get("uuid").asText();
 
-		return uuid;
-	}
+        return uuid;
+    }
 
 	private String publishAndFail(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
@@ -97,7 +122,7 @@ public class TafServicesLifeCycleTest {
 				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
 				//				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
 				.andExpect(status().is4xxClientError()).andReturn();
-		
+
 		return "FAIL";
 	}
 
@@ -119,7 +144,6 @@ public class TafServicesLifeCycleTest {
 		return uuid;
 	}
 
-
 	static OffsetDateTime actualisedBaseTime;
 
 	private Taf getBaseTaf(boolean actualise) throws JsonProcessingException, IOException {
@@ -129,7 +153,6 @@ public class TafServicesLifeCycleTest {
 						"	    \"uuid\" : \"d612cd81-a043-4fdb-b6fd-d043463d451a\","+
 						"	    \"validityStart\" : \"2018-06-25T06:00:00Z\","+
 						"	    \"validityEnd\" : \"2018-06-26T12:00:00Z\","+
-//						"       \"baseTime\" : \"2018-09-12T13:00:00Z\","+
 						"	    \"location\" : \"EHAM\","+
 						"	    \"status\" : \"concept\","+
 						"	    \"type\" : \"normal\""+
@@ -166,10 +189,10 @@ public class TafServicesLifeCycleTest {
 			actualisedBaseTime=tafObj.getMetadata().getValidityStart();
 			tafObj.getMetadata().setValidityEnd(now.plusHours(29));
 		}
-		
-		
+
+
 		return tafObj;
-	}
+    }
 
 	private Taf getTaf(String uuid) throws Exception {
 		MvcResult result = mockMvc.perform(get("/tafs/"+uuid))
@@ -177,7 +200,7 @@ public class TafServicesLifeCycleTest {
 				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 				.andReturn();
 		return tafObjectMapper.readValue(result.getResponse().getContentAsString(), Taf.class);
-	}
+    }
 
 	@Test
 	public void lifeCycleTest() throws Exception {
@@ -198,7 +221,7 @@ public class TafServicesLifeCycleTest {
 		Debug.println("EQ: "+baseTaf.equals(storedTaf));
 		assertEquals(baseTaf, storedTaf);
 		storedTaf.getMetadata().setBaseTime(baseTime);
-		
+
 		//Make an amendment with a new UUID. Ths should fail because TAF has not been published
 		Debug.println("Amending unpublished base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
@@ -216,7 +239,7 @@ public class TafServicesLifeCycleTest {
 		storedTaf.metadata.setStatus(TAFReportPublishedConcept.published);
 		String publishedUuid=storeTaf(storedTaf);
 		Debug.println("published: "+publishedUuid);
-		
+
 		//Make another amendment with a new UUID.
 		Debug.println("Amending published base taf");
 		storedTaf.metadata.setType(TAFReportType.amendment);
@@ -326,7 +349,7 @@ public class TafServicesLifeCycleTest {
 		String responseBody = result.getResponse().getContentAsString();
 		ObjectNode jsonResult = (ObjectNode) tafObjectMapper.readTree(responseBody);
 		int tafCount = jsonResult.get("ntafs").asInt();
-		mockMvc.perform(delete("/tafs/" + uuid))                
+		mockMvc.perform(delete("/tafs/" + uuid))
 		.andExpect(status().isOk())
 		.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
 		.andReturn();
@@ -338,6 +361,80 @@ public class TafServicesLifeCycleTest {
 		jsonResult = (ObjectNode) tafObjectMapper.readTree(responseBody);
 		int newTafCount = jsonResult.get("ntafs").asInt();
 		assert(newTafCount == tafCount - 1);
-	}
+    }
+
+ 	@Test
+	public void TafToTAFTest1() throws IOException {
+        String tafTAC = "TAF EHAM 041101Z 0412/0518 20015G25KT CAVOK\n"
+                + "BECMG 0416/0420 23017G27KT 9000 SHRA TSRA FEW009 SCT015 OVC720CB\n"
+                + "PROB30 0416/0420 22037G47KT 9999 FEW009 OVC015CB\n"
+                + "BECMG 0503/0505 VRB07G17KT 9999 SHRA FEW010CB";
+        Taf taf = null;
+        String json = null;
+        json = Tools.readResource("Taf_valid.json");
+	    if (json != null && !json.equals("")) {
+            taf = tafObjectMapper.readValue(json, Taf.class);
+        } else {
+            Debug.errprintln("json null");
+        }
+
+        assertEquals(tafTAC, taf.toTAC());
+        Debug.errprintln(taf.toTAC());
+        String s = tafConverter.ToIWXXM_2_1(taf);
+        Debug.errprintln("S:"+s);
+
+
+        String testTafValidRaw = StreamUtils.copyToString(validTafResource.getInputStream(), StandardCharsets.UTF_8);
+        // OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z"));
+        ObjectNode testTafValidNode = (ObjectNode) tafObjectMapper.readTree(testTafValidRaw);
+        // String testTafValidityStart = testTafValidNode.get(META_FIELD).get(DATE_FIELDS.get(0)).asText();
+        // long daysOffset = Duration
+        //         .between(tafObjectMapper.convertValue(testTafValidityStart, OffsetDateTime.class), now).toDays();
+
+        // DATE_FIELDS.forEach(fieldName -> {
+        //     String fieldValue = testTafValidNode.get(META_FIELD).get(fieldName).asText();
+        //     String adjustedFieldValue = tafObjectMapper.convertValue(fieldValue, OffsetDateTime.class)
+        //             .plusDays(daysOffset).format(DateTimeFormatter.ISO_INSTANT);
+        //     ((ObjectNode) testTafValidNode.get(META_FIELD)).put(fieldName, adjustedFieldValue);
+        // });
+        // testTafValid = tafObjectMapper.writeValueAsString(testTafValidNode);
+        Taf validTaf = tafObjectMapper.convertValue(testTafValidNode, Taf.class);
+        Debug.errprintln(validTaf.toTAC());
+        assertEquals(tafTAC, validTaf.toTAC());
+        Debug.errprintln("iWXXM:" + tafConverter.ToIWXXM_2_1(validTaf));
+    }
+
+    public Taf setTafFromResource(String fn) {
+        String json = "";
+        try {
+            json = Tools.readResource(fn);
+        } catch (IOException e) {
+            Debug.errprintln("Can't read resource " + fn);
+        }
+        return setTafFromString(json);
+    }
+
+    public Taf setTafFromString(String json) {
+        Taf taf = null;
+        try {
+            taf = tafObjectMapper.readValue(json, Taf.class);
+            return taf;
+        } catch (JsonParseException | JsonMappingException e) {
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        Debug.errprintln("set TAF from string [" + json + "] failed");
+        return null;
+    }
+
+    @Test
+    public void TafToTAFTest() throws JsonProcessingException {
+        Taf taf = setTafFromResource("Taf_valid.json");
+        Debug.errprintln(taf.toTAC());
+        Debug.errprintln(tafObjectMapper.writeValueAsString(taf));
+        String s = tafConverter.ToIWXXM_2_1(taf);
+        Debug.errprintln("S:" + s);
+    }
 
 }

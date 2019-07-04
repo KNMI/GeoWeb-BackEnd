@@ -28,7 +28,7 @@ public class AdminStore {
 
 
 
-	AdminStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+	AdminStore(@Value("${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation+"/admin";
 		File f = new File(dir);
 		if(f.exists() == false){

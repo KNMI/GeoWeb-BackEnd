@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+# Spring configuration
+spring:
+  profiles:
+    active:
+      - oauth2-keycloak
+  main:
+    bannerMode: "off"
+  devtools:
+    add-properties: false
+  mail:
+    host: localhost
+    port: 25
+    defaultEncoding: UTF-8
+    protocol: smtp
+
+# GeoWeb configuration
+geoweb:
+  backendVersion: "@project.version@"
+  messageConverterVersion: "@geoweb.messageConverter.version@"
+  feedback:
+    feedbackfromname: Geoweb Admin
+    feedbackfrommail: geoweb-admin@geoweb.knmi.nl
+    feedbackmail: geoweb-scrumteam@knmi.nl
+  products:
+    storeLocation: /tmp
+    exportLocation: ${geoweb.products.storeLocation}/export
+
+# Logging configuration
+logging:
+  level:
+    org:
+        springframework:
+            web: DEBUG # ERROR, WARN, INFO, DEBUG, TRACE

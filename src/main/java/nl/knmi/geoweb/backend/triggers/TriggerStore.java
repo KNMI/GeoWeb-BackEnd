@@ -36,7 +36,7 @@ public class TriggerStore {
 
 	private String directory;
 
-	public TriggerStore(@Value(value = "${productstorelocation}") String productstorelocation) throws IOException {
+	public TriggerStore(@Value("${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/triggers";
 		Debug.println("TRIGGER STORE at " + dir);
 		File f = new File(dir);

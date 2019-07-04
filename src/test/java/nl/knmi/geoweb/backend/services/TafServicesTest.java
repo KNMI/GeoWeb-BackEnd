@@ -1,197 +1,185 @@
 package nl.knmi.geoweb.backend.services;
 
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hamcrest.core.IsNot.not;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.List;
 
-import javax.annotation.Resource;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.context.WebApplicationContext;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import nl.knmi.adaguc.tools.Debug;
-import nl.knmi.adaguc.tools.Tools;
+import nl.knmi.geoweb.backend.datastore.ProductExporter;
+import nl.knmi.geoweb.backend.datastore.TafStore;
+import nl.knmi.geoweb.backend.product.taf.Taf;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes= {TestWebConfig.class})
-@DirtiesContext
+@SpringBootTest
 public class TafServicesTest {
-	/** Entry point for Spring MVC testing support. */
+    private static String META_FIELD = "metadata";
+    private static List<String> DATE_FIELDS = Arrays.asList("validityStart","validityEnd","issueTime");
+
     private MockMvc mockMvc;
-    
+
+    private Taf validTaf;
+    private String testTafValidRaw;
+    private String testTafValid;
+
+    @Value("classpath:Taf_valid.json")
+    private Resource validTafResource;
+
     /** The Spring web application context. */
-    @Resource
+    @Autowired
     private WebApplicationContext webApplicationContext;
-    
+
     /** The {@link ObjectMapper} instance to be used. */
     @Autowired
     @Qualifier("tafObjectMapper")
-    private ObjectMapper objectMapper;
+    private ObjectMapper tafObjectMapper;
+
+    @Autowired
+    TafStore tafStore;
+
+    @Autowired
+    private ProductExporter<Taf> tafExporter;
 
 	@Before
-	public void setUp() {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		Debug.println("Cleaning /tmp/tafs");
-		for(File file: new File("/tmp/tafs").listFiles())
-			if (!file.isDirectory()) {
-				file.delete();
-			}
-	}
+	public void setUp() throws IOException {
+        if (testTafValidRaw == null) {
+            testTafValidRaw = StreamUtils.copyToString(validTafResource.getInputStream(), StandardCharsets.UTF_8);
+        }
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z"));
+        ObjectNode testTafValidNode = (ObjectNode) tafObjectMapper.readTree(testTafValidRaw);
+        String testTafValidityStart = testTafValidNode.get(META_FIELD).get(DATE_FIELDS.get(0)).asText();
+        long daysOffset = Duration.between(tafObjectMapper.convertValue(testTafValidityStart, OffsetDateTime.class), now)
+                .toDays();
 
-	private String getValidTaf() throws Exception  {
-		String taf = Tools.readResource("Taf_valid.json");
-		ObjectNode tafJson = (ObjectNode)objectMapper.readTree(taf);
+        DATE_FIELDS.forEach(fieldName -> {
+            String fieldValue = testTafValidNode.get(META_FIELD).get(fieldName).asText();
+            String adjustedFieldValue = tafObjectMapper.convertValue(fieldValue, OffsetDateTime.class)
+                    .plusDays(daysOffset)
+                    .format(DateTimeFormatter.ISO_INSTANT);
+            ((ObjectNode) testTafValidNode.get(META_FIELD)).put(fieldName, adjustedFieldValue);
+        });
+        testTafValid = tafObjectMapper.writeValueAsString(testTafValidNode);
+        validTaf = tafObjectMapper.convertValue(testTafValidNode, Taf.class);
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).apply(springSecurity()).build();
+        reset(tafStore);
+        reset(tafExporter);
+    }
 
-		OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Z")).truncatedTo(ChronoUnit.HOURS);
-		ObjectNode metadataNode = (ObjectNode)tafJson.findParent("validityStart");
-		metadataNode.put("issueTime", now.minusHours(2).format(DateTimeFormatter.ISO_INSTANT));
-		metadataNode.put("validityStart", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
-		metadataNode.put("validityEnd", now.plusHours(29).format(DateTimeFormatter.ISO_INSTANT));
-		metadataNode.put("baseTime", now.minusHours(1).format(DateTimeFormatter.ISO_INSTANT));
-		metadataNode.put("uuid",  UUID.randomUUID().toString());
-		tafJson.set("metadata", (JsonNode)metadataNode);
-		tafJson.set("changegroups", (JsonNode)objectMapper.readTree("[]"));
-		return tafJson.toString();
-	}
-	
-	private String addTaf() throws Exception {
-		MvcResult result = mockMvc.perform(post("/tafs")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(getValidTaf()))
-				.andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();	
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-
-        assertThat(jsonResult.has("error"), is(false));
-        assertThat(jsonResult.has("message"), is(true));
-        assertThat(jsonResult.get("message").asText().length(), not(0));
-        String uuid = jsonResult.get("uuid").asText();
-        return uuid;
-	}
-	 
-	@Test
-	public void addTAFTest () throws Exception {
-		Debug.println("get inactive tafs");
-		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
+    @Test
+    public void serviceTestPostCorrectTaf() throws Exception {
+        // given
+        // when
+        // then
+        mockMvc.perform(post("/tafs").contentType(MediaType.APPLICATION_JSON_UTF8).content(testTafValid))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		
-		String responseBody = result.getResponse().getContentAsString();
-		Debug.println("resp: "+responseBody);
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		System.err.println("Before add: "+jsonResult);
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.message", is("Taf with id " + validTaf.metadata.getUuid() + " is stored")))
+                .andExpect(jsonPath("$.succeeded", is(true)))
+                .andExpect(jsonPath("$.uuid", is(validTaf.metadata.getUuid())))
+                .andExpect(jsonPath("$.tafjson.metadata.baseTime",
+                        is(validTaf.metadata.getValidityStart().format(DateTimeFormatter.ISO_INSTANT))));
 
-        assertThat(jsonResult.has("ntafs"), is(true));
- //       assertThat(jsonResult.has("tafs"), is(true));
-        int tafs = jsonResult.get("ntafs").asInt();
+        verify(tafStore, times(1)).storeTaf(any(Taf.class));
+        verify(tafStore, times(1)).isPublished(anyString());
+        verifyNoMoreInteractions(tafStore);
+    }
 
-        Debug.println("Add taff");
-		String uuid = addTaf();
-		Debug.println("Add taff done: "+ uuid);
-		assert(uuid != null);
-		
-		result = mockMvc.perform(get("/tafs?active=false"))
-                .andExpect(status().isOk())
+    @Test
+    public void serviceTestGetTafList() throws Exception {
+        // given
+        // when
+        when(tafStore.getTafs(false, null, null, null)).thenReturn(new Taf[] { validTaf });
+        when(tafStore.getTafs(true, null, null, null)).thenReturn(new Taf[0]);
+        // then
+        mockMvc.perform(get("/tafs/?active=false")).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		
-		responseBody = result.getResponse().getContentAsString();
-		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		System.err.println("After add: "+jsonResult);
-        assertThat(jsonResult.has("ntafs"), is(true));
-        assertThat(jsonResult.has("tafs"), is(true));
-        int new_tafs = jsonResult.get("ntafs").asInt();
-        Debug.println("" + new_tafs + " === " + tafs);
-        assert(new_tafs == tafs + 1);
-	}
-	
-	@Test
-	public void getTafList () throws Exception {
-		String uuid=addTaf();
-		Debug.println("TAF "+uuid+" stored");
-		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
-                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.page", is(0)))
+                .andExpect(jsonPath("$.npages", is(1)))
+                .andExpect(jsonPath("$.ntafs", is(1)))
+                .andExpect(jsonPath("$.tafs[0].metadata.uuid", is(validTaf.metadata.getUuid())));
+        mockMvc.perform(get("/tafs/?active=true")).andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectMapper om=new ObjectMapper();
-		ObjectNode jsonResult = (ObjectNode) om.readTree(responseBody);
-        assertThat(jsonResult.has("page"), is(true));
-        assertThat(jsonResult.has("npages"), is(true));
-        assertThat(jsonResult.has("ntafs"), is(true));
-        assertThat(jsonResult.has("tafs"), is(true));
-        assert(jsonResult.get("ntafs").asInt() >= 1);
-        int ntafs=jsonResult.get("ntafs").asInt();
-		result = mockMvc.perform(get("/tafs?active=true"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		
-		responseBody = result.getResponse().getContentAsString();
-		Debug.println("getTafList:"+responseBody);
-		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-        assertThat(jsonResult.has("page"), is(true));
-        assertThat(jsonResult.has("npages"), is(true));
-        assertThat(jsonResult.has("ntafs"), is(true));
-  //      assertThat(jsonResult.has("tafs"), is(false));
-  //      assertThat(jsonResult.get("ntafs").asInt(), is(0));
-        assert(ntafs>=jsonResult.get("ntafs").asInt());
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.page", is(0)))
+                .andExpect(jsonPath("$.npages", is(1)))
+                .andExpect(jsonPath("$.ntafs", is(0)));
 
-	}
-	
-	@Test
-	public void removeTaf () throws Exception {
-		String uuid = addTaf();
-		System.err.println("TAF with uuid "+uuid+" added");
-		MvcResult result = mockMvc.perform(get("/tafs?active=false"))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		int tafCount = jsonResult.get("ntafs").asInt();
+        verify(tafStore, times(1)).getTafs(false, null, null, null);
+        verify(tafStore, times(1)).getTafs(true, null, null, null);
+        verifyNoMoreInteractions(tafStore);
+    }
 
-		mockMvc.perform(delete("/tafs/" + uuid))                
-			.andExpect(status().isOk())
-	        .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-	        .andReturn();
-		result = mockMvc.perform(get("/tafs?active=false"))
+    @Test
+    public void serviceTestGetTaf() throws Exception {
+        // given
+        String uuid = validTaf.metadata.getUuid();
+        // when
+        when(tafStore.getByUuid(uuid)).thenReturn(validTaf);
+        // then
+        mockMvc.perform(get("/tafs/" + uuid))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
-                .andReturn();
-		responseBody = result.getResponse().getContentAsString();
-		jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
-		int newTafCount = jsonResult.get("ntafs").asInt();
-		assert(newTafCount == tafCount - 1);
-	}
-	
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.metadata.uuid", is(validTaf.metadata.getUuid())));
+
+        verify(tafStore, times(1)).getByUuid(anyString());
+        verifyNoMoreInteractions(tafStore);
+    }
+
+    @Test
+    public void serviceTestRemoveTaf() throws Exception {
+        // given
+        String uuid = validTaf.metadata.getUuid();
+        // when
+        when(tafStore.getByUuid(uuid)).thenReturn(validTaf);
+        when(tafStore.deleteTafByUuid(uuid)).thenReturn(true);
+        // then
+        mockMvc.perform(delete("/tafs/" + uuid)).andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(jsonPath("$.error").doesNotExist())
+                .andExpect(jsonPath("$.message", is("deleted " + uuid)));
+
+        verify(tafStore, times(1)).getByUuid(anyString());
+        verify(tafStore, times(1)).deleteTafByUuid(anyString());
+        verifyNoMoreInteractions(tafStore);
+    }
 }

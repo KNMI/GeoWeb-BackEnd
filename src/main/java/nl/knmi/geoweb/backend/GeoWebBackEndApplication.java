@@ -1,41 +1,31 @@
 package nl.knmi.geoweb.backend;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.Banner;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import nl.knmi.adaguc.tools.Debug;
 
 @SpringBootApplication
-@EnableAutoConfiguration
-@PropertySource("classpath:application.properties")
-public class GeoWebBackEndApplication extends SpringBootServletInitializer {
-	
-	@Value("${info.version}")
-	private String infoVersion;
+public class GeoWebBackEndApplication implements ApplicationRunner {
 
-	@RequestMapping(path = "/")
-	String home() {
-		Debug.println(infoVersion);
-		return "GeoWeb Backend version [" + infoVersion + "]";
-	}
+	@Value("${geoweb.backendVersion}")
+	private String backendVersion;
 
-	public static void main(String[] args) {
-		configureApplication(new SpringApplicationBuilder()).run(args);
+	@Value("${geoweb.messageConverterVersion}")
+	private String messageConverterVersion;
+
+	private static final Logger log = LoggerFactory.getLogger(GeoWebBackEndApplication.class);
+
+	public static void main(String[] args) throws Exception {
+		SpringApplication.run(GeoWebBackEndApplication.class, args);
 	}
 
 	@Override
-	protected SpringApplicationBuilder configure(SpringApplicationBuilder application)  {
-		Debug.println(infoVersion);
-		return application.sources(GeoWebBackEndApplication.class).properties();
-	}
-
-	private static SpringApplicationBuilder configureApplication(SpringApplicationBuilder builder){
-		return builder.sources(GeoWebBackEndApplication.class).bannerMode(Banner.Mode.OFF);
+	public void run(ApplicationArguments args) {
+		log.info("Version BackEnd: " + backendVersion);
+		log.info("Version MessageConverter: " + messageConverterVersion);
 	}
 }
