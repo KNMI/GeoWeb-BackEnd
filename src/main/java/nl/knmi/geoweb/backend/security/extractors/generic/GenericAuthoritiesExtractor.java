@@ -21,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.security.models.RoleToPrivilegesMapper;
 
 @Slf4j
-public class DefaultAuthoritiesExtractor implements AuthoritiesExtractor {
+public class GenericAuthoritiesExtractor implements AuthoritiesExtractor {
 
     private List<RoleToPrivilegesMapper> mappingsHolder;
 
-    public DefaultAuthoritiesExtractor(ObjectMapper objectMapper, Resource mappingResource) {
+    public GenericAuthoritiesExtractor(ObjectMapper objectMapper, Resource mappingResource) {
         try {
             RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResource.getFile(), RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);

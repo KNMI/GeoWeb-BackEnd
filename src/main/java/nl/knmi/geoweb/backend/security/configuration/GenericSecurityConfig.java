@@ -19,8 +19,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import nl.knmi.geoweb.backend.security.extractors.generic.DefaultAuthoritiesExtractor;
-import nl.knmi.geoweb.backend.security.extractors.generic.DefaultPrincipalExtractor;
+import nl.knmi.geoweb.backend.security.extractors.generic.GenericAuthoritiesExtractor;
+import nl.knmi.geoweb.backend.security.extractors.generic.GenericPrincipalExtractor;
 
 @Profile("generic")
 @Configuration
@@ -32,15 +32,12 @@ public class GenericSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("classpath:nl/knmi/geoweb/security/rolesToPrivilegesMapping.json")
     private Resource mappingResource;
 
-    // @Override
-    // public void configure(WebSecurity web) throws Exception {
-    // web.ignoring()
-    // .antMatchers("/**");
-    // }
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.antMatcher("/**").authorizeRequests().anyRequest().permitAll().and().cors().and().csrf().disable().logout()
+        http.antMatcher("/**").authorizeRequests().anyRequest().permitAll()
+                .and().cors()
+                .and().csrf().disable()
+                .logout()
                 .logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb"));
     }
 
@@ -59,12 +56,12 @@ public class GenericSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     @Profile("generic")
     public PrincipalExtractor genericPrincipalExtractor() {
-        return new DefaultPrincipalExtractor();
+        return new GenericPrincipalExtractor();
     }
 
     @Bean
     @Profile("generic")
     public AuthoritiesExtractor genericAuthoritiesExtractor() {
-        return new DefaultAuthoritiesExtractor(objectMapper, mappingResource);
+        return new GenericAuthoritiesExtractor(objectMapper, mappingResource);
     }
 }

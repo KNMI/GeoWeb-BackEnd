@@ -4,7 +4,7 @@ import java.util.Map;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.PrincipalExtractor;
 
-public class DefaultPrincipalExtractor implements PrincipalExtractor {
+public class GenericPrincipalExtractor implements PrincipalExtractor {
 
     @Override
     public Object extractPrincipal(Map<String, Object> map) {

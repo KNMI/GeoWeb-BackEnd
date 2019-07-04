@@ -38,7 +38,7 @@ public class TafStore {
 	
 	TafStore (@Value("${geoweb.products.storeLocation}") String productstorelocation) throws Exception {
 		if(productstorelocation == null) {
-			throw new Exception("productstorelocation property is null");
+			throw new Exception("geoweb.products.storeLocation property is null");
 		}
 		if(this.isCreated == true) {
 //			throw new Exception("TafStore is already created");

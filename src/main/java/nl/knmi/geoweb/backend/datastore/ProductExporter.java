@@ -18,7 +18,7 @@ public class ProductExporter<P> {
 
 	ProductExporter(@Value("${geoweb.products.exportLocation}") String productexportlocation) throws Exception {
 		if (productexportlocation == null) {
-			throw new Exception("productexportlocation property is null");
+			throw new Exception("geoweb.products.exportLocation property is null");
 		}
 		this.path = new File(productexportlocation);
 

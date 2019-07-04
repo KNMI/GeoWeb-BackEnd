@@ -57,37 +57,37 @@ import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 @SpringBootTest
 @DirtiesContext
 public class TafServicesLifeCycleTest {
-	/** Entry point for Spring MVC testing support. */
-	private MockMvc mockMvc;
+    /** Entry point for Spring MVC testing support. */
+    private MockMvc mockMvc;
 
-	/** The Spring web application context. */
-	@Autowired
+    /** The Spring web application context. */
+    @Autowired
     private WebApplicationContext webApplicationContext;
 
     @Value("classpath:Taf_valid.json")
-	private Resource validTafResource;
-	
-	@Value("${geoweb.products.storelocation}")
+    private Resource validTafResource;
+
+    @Value("${geoweb.products.storelocation}")
     private String productstorelocation;
 
     @Autowired
     private TafConverter tafConverter;
 
-	/** The {@link ObjectMapper} instance to be used. */
-	@Autowired
-	@Qualifier("tafObjectMapper")
-	private ObjectMapper tafObjectMapper;
+    /** The {@link ObjectMapper} instance to be used. */
+    @Autowired
+    @Qualifier("tafObjectMapper")
+    private ObjectMapper tafObjectMapper;
 
-	@Autowired
-	@Qualifier("objectMapper")
+    @Autowired
+    @Qualifier("objectMapper")
     private ObjectMapper objectMapper;
 
-	@Before
-	public void setUp() throws Exception {
-		mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-		if (productstorelocation == null) {
-			throw new Exception("productstorelocation property for testing is null");
-		}
+    @Before
+    public void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+        if (productstorelocation == null) {
+			throw new Exception("geoweb.products.storeLocation property for testing is null");
+        }
         File[] tafFiles = new File(productstorelocation + "/tafs").listFiles();
         if (tafFiles != null) {
             for(File file: tafFiles) {
@@ -96,25 +96,25 @@ public class TafServicesLifeCycleTest {
                 }
             }
         }
-	}
+    }
 
-	private String addTaf(Taf taf) throws Exception {
+    private String addTaf(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);
-		MvcResult result = mockMvc.perform(post("/tafs")
-				.contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
-				.andExpect(status().isOk())
-				.andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
-		String responseBody = result.getResponse().getContentAsString();
-		ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
+        MvcResult result = mockMvc.perform(post("/tafs")
+		        .contentType(MediaType.APPLICATION_JSON_UTF8).content(taf.toJSON(tafObjectMapper)))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8)).andReturn();
+        String responseBody = result.getResponse().getContentAsString();
+        ObjectNode jsonResult = (ObjectNode) objectMapper.readTree(responseBody);
 
 		assertThat(jsonResult.has("error"), is(false));
 		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.has("message"), is(true));
-		assertThat(jsonResult.get("message").asText().length(), not(0));
-		String uuid = jsonResult.get("uuid").asText();
+        assertThat(jsonResult.has("message"), is(true));
+        assertThat(jsonResult.get("message").asText().length(), not(0));
+        String uuid = jsonResult.get("uuid").asText();
 
-		return uuid;
-	}
+        return uuid;
+    }
 
 	private String publishAndFail(Taf taf) throws Exception {
 		objectMapper.setSerializationInclusion(Include.NON_NULL);

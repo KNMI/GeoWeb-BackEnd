@@ -53,7 +53,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/sigmets/**").hasAuthority(Privilege.SIGMET_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/tafs/**").hasAuthority(Privilege.TAF_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/airmets/**").hasAuthority(Privilege.AIRMET_EDIT.getAuthority())
-                // The following are not currently connected with any privileges. Consider for the future.
+                // TODO: The following are not currently connected with any privileges. Consider for the future.
                 //.antMatchers(HttpMethod.GET, "/getServices", "getOverlayServices").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 //.antMatchers(HttpMethod.GET, "/XML2JSON").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 //.antMatchers(HttpMethod.GET, "/preset/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
@@ -69,23 +69,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.DELETE, "/admin/example_tafs/**").hasAuthority(Privilege.TAF_SETTINGS_EDIT.getAuthority())
                 .antMatchers(HttpMethod.GET, "/admin/validation/schema/taf").hasAuthority(Privilege.TAF_SETTINGS_READ.getAuthority())
                 .antMatchers(HttpMethod.POST, "/admin/validation/schema/taf").hasAuthority(Privilege.TAF_SETTINGS_EDIT.getAuthority())
-                // ToDo: which privileges are necessary to enter/edit this page?
+                // TODO: which privileges are necessary to enter/edit this page?
                 //.antMatchers(HttpMethod.GET, "/admin/read**").hasAuthority(Privilege.PRIVILEGE.getAuthority())
                 //.antMatchers(HttpMethod.POST, "/admin/create**").hasAuthority(Privilege.PRIVILEGE.getAuthority())
                 .antMatchers(HttpMethod.GET, "/admin/**").hasAnyAuthority(
                         Privilege.AIRMET_SETTINGS_READ.getAuthority(),
                         Privilege.SIGMET_SETTINGS_READ.getAuthority(),
                         Privilege.TAF_SETTINGS_READ.getAuthority())
-                // ToDo: which privileges are necessary to enter/edit this page?
+                // TODO: which privileges are necessary to enter/edit this page?
                 // .antMatchers(HttpMethod.GET, "/store/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 .antMatchers(HttpMethod.GET, "/testOnly/**").hasAuthority(Privilege.SIGMET_EDIT.getAuthority())
                 .anyRequest().authenticated()
-                .and()
-                .logout().logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb")).logoutSuccessUrl("/logout")
-                .and()
-                .cors()
-                .and()
-                .csrf().disable();
+                .and().logout()
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb"))
+                .logoutSuccessUrl("/logout")
+                .and().cors()
+                .and().csrf().disable();
     }
 
     @Bean
@@ -94,9 +93,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("*"));
-        // configuration.setAllowedMethods(Arrays.asList(
-        //     HttpMethod.POST.toString(), HttpMethod.HEAD.toString(), HttpMethod.GET.toString(), HttpMethod.OPTIONS.toString(), HttpMethod.DELETE.toString()
-        // ));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
