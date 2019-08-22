@@ -35,11 +35,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ApplicationConfig implements WebMvcConfigurer {
     private static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
-    private ObjectMapper objectMapper;
-
     public ApplicationConfig() {
         log.info("Constructor ApplicationConfig");
-        ObjectMapper om = new ObjectMapper();
+    }
+
+    private void omBaseSettings(ObjectMapper om) {
         om.registerModule(new Jdk8Module());
         om.registerModule(new JavaTimeModule());
         om.registerModule(new JsonOrgModule());
@@ -49,7 +49,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
         simpleModule.addSerializer(OffsetDateTime.class, new JsonSerializer<OffsetDateTime>() {
             @Override
             public void serialize(OffsetDateTime offsetDateTime, JsonGenerator jsonGenerator,
-                    SerializerProvider serializerProvider) throws IOException {
+                SerializerProvider serializerProvider) throws IOException {
                 String formattedDate = DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(offsetDateTime);
                 jsonGenerator.writeString(formattedDate);
             }
@@ -60,44 +60,59 @@ public class ApplicationConfig implements WebMvcConfigurer {
         om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         om.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         om.enable(DeserializationFeature.ACCEPT_SINGLE_VALUE_AS_ARRAY);
-        objectMapper = om;
+
+
     }
+
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         MappingJackson2HttpMessageConverter jsonConverter = new MappingJackson2HttpMessageConverter();
-        jsonConverter.setObjectMapper(objectMapper);
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        jsonConverter.setObjectMapper(om);
         converters.add(jsonConverter);
     }
 
     @Bean("sigmetObjectMapper")
     public ObjectMapper getSigmetObjectMapperBean() {
         log.info("sigmetObjectMapper");
-        return objectMapper;
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        return om;
     }
 
     @Bean("airmetObjectMapper")
     public ObjectMapper getAirmetObjectMapperBean() {
         log.info("airmetObjectMapper");
-        return objectMapper;
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        return om;
     }
 
     @Bean("tafObjectMapper")
     public ObjectMapper getTafObjectMapperBean() {
         log.info("tafObjectMapper");
-        return objectMapper;
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        return om;
     }
 
     @Bean("geoWebObjectMapper")
     public ObjectMapper getGeoWebObjectMapperBean() {
         log.info("geoWebObjectMapper");
-        return objectMapper;
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        return om;
     }
 
     @Bean(name = "objectMapper")
     @Primary
     public ObjectMapper getObjectMapperBean() {
         log.info("ObjectMapper");
-        return objectMapper;
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om); //TODO are all these settings necessary (or too much)???
+        om.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return om;
     }
 }
