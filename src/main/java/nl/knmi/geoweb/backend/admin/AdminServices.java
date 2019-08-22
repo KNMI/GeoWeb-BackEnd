@@ -137,6 +137,7 @@ public class AdminServices {
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No or wrong ID given");
 	}
 
+/*
 	@RequestMapping(path="/validation/schema/{schemaId}", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> setSchemaContentById(@PathVariable String schemaId, @RequestBody String content) throws JsonProcessingException, IOException {
 		System.out.println(schemaId + ": " + content);
@@ -151,6 +152,8 @@ public class AdminServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No or wrong ID given");
 	}
+	*/
+
 	@RequestMapping(path="/example_tafs/{id}", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void storeExampleTaf(HttpServletRequest req, HttpServletResponse response, @PathVariable int id, @RequestBody String payload) {
 		Debug.println("updating taf");
