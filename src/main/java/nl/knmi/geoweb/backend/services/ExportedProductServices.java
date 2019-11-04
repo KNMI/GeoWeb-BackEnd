@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -25,44 +26,50 @@ public class ExportedProductServices {
     @Value("${geoweb.products.exportLocation}")
     private String productexportlocation;
 
-	@RequestMapping(path = "/list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public List<String> getExportedFiles()  {
-	    List<String> exported = new ArrayList<>();
+    @RequestMapping(path = "/list", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public List<String> getExportedFiles() {
+        List<String> exported = new ArrayList<>();
         Path path = Paths.get(productexportlocation);
         try {
             Files.list(Paths.get(productexportlocation))
-            .sorted(Comparator.comparing(p -> {
-                String regex = ".*(\\d{14})\\..*";
-                Pattern pattern = Pattern.compile(regex);
-                Matcher m = pattern.matcher(p.toFile().getName());
-                if (m.find()) {
-                    return m.group(1);
-                }
-                return p.toFile().getName() ;
-            }
-            ))
-            .forEach(p-> exported.add(p.getFileName().toString()));
+                .sorted(Comparator.comparing(p -> {
+                        String regex = ".*(\\d{14})\\.(\\w*)";
+                        Pattern pattern = Pattern.compile(regex);
+                        Matcher m = pattern.matcher(p.toFile().getName());
+                        if (m.find()) {
+                            return m.group(1) + "." + m.group(2);
+                        }
+                        return p.toFile().getName();
+                    }
+                ))
+                .forEach(p -> exported.add(p.getFileName().toString()));
         } catch (IOException e) {
             e.printStackTrace();
         }
         return exported;
     }
 
-    @RequestMapping(path="/get",
+    @RequestMapping(path = "/get",
         method = RequestMethod.GET)
-    public String getExportedFile(@RequestParam(name="file")  String fileName, HttpServletResponse response){
-	    File f = Paths.get(productexportlocation, fileName).toFile();
-	    String content="";
-	    if (fileName.endsWith(".xml")) {
-            response.addHeader("Content-Type", "application/xml");
+    public void getExportedFile(@RequestParam(name = "file") String fileName, HttpServletResponse response) {
+        File f = Paths.get(productexportlocation, fileName).toFile();
+        HttpServletResponseWrapper wrapper = new HttpServletResponseWrapper(response);
+        String content = "";
+        if (fileName.endsWith(".xml")) {
+            wrapper.setContentType(MediaType.APPLICATION_XML_VALUE);
+            wrapper.setCharacterEncoding("UTF-8");
         } else if (fileName.endsWith(".json")) {
-            response.addHeader("Content-Type", "application/json");
+            wrapper.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            wrapper.setCharacterEncoding("UTF-8");
         } else {
-
+            wrapper.setContentType(MediaType.TEXT_PLAIN_VALUE);
+            wrapper.setCharacterEncoding("UTF-8");
         }
+
         if (f.exists()) {
             try {
                 content = new String(Files.readAllBytes(Paths.get(f.getAbsolutePath())));
+                response.setStatus(HttpStatus.OK.value());
             } catch (IOException e) {
                 e.printStackTrace();
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -70,6 +77,10 @@ public class ExportedProductServices {
         } else {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
         }
-        return content;
-    }
+        try {
+            wrapper.getWriter().write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+}
 }
