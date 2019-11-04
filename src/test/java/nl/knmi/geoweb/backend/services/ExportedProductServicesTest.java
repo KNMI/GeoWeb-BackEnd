@@ -49,6 +49,14 @@ public class ExportedProductServicesTest {
         Files.write(p, contents.getBytes());
     }
 
+    @BeforeEach
+    public static void clean() {
+        File dir = new File(productexportlocation);
+        for (File file:dir.listFiles()) {
+            file.delete();
+        }
+    }
+
     private static String json1="[{\"key\": \"KEY\"}]";
     private static String json1Name="test1_20191105140000.json";
     private static String xml1="<?xml version=\"1.0\"><start>20191105140000</start>";
