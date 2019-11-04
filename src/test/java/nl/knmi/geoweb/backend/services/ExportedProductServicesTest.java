@@ -49,7 +49,7 @@ public class ExportedProductServicesTest {
         Files.write(p, contents.getBytes());
     }
 
-    @BeforeEach
+    @Before
     public static void clean() {
         File dir = new File(productexportlocation);
         for (File file:dir.listFiles()) {
