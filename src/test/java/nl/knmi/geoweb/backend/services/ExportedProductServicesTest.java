@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.hamcrest.Matchers.*;
 
 import java.io.IOException;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,7 +51,7 @@ public class ExportedProductServicesTest {
     }
 
     @Before
-    public static void clean() {
+    public void clean() {
         File dir = new File(productexportlocation);
         for (File file:dir.listFiles()) {
             file.delete();
