@@ -2,4 +2,6 @@
 .factorypath
 .settings
 .project
+.vscode
+.classpath
 GeoWeb-BackEnd.iml

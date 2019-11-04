@@ -5,7 +5,7 @@ GeoWeb-BackEnd
 
 Back end for GeoWeb
 
-For setting up development environment:
+For setting up development environment with STS:
 
 0) Make sure you have JDK 8 (1.8) installed, the project currently doesn't work with version 9 (higher versions we did not test yet)
 1) Download and install spring tool suite (https://spring.io/tools/sts/all)
@@ -28,6 +28,27 @@ For creating a new package:
 Creating a docker image:
 
 1) mvn install dockerfile:build
+
+# Setting up environment for Visual Studio Code
+
+Install the following extensions in visual studio code:
+* Lombok
+* Spring Boot Extension Pack
+* Java Extension Pack
+* Spring boot support
+
+Install maven dependencies:
+* mvn clean
+* mvn package
+
+Set the profile to generic
+
+* In geoweb-backend/src/main/resources/application.yml Change `spring->profiles->active` to `generic`
+
+Start with spring boot dashboard
+
+Visit http://localhost:8080/versioninfo/version
+
 
 
 
