@@ -394,7 +394,10 @@ public class SigmetServices {
                     ff.setGeometry(intersect_geom);
                     ff.setProperty("selectionType", selectionType);
                     try {
-                        if ((((Polygon) geom_new).getCoordinates().length > 7) && (!"box".equals(f.getProperty("selectionType")))) {
+                        if (geom_new.getGeometryType() == "MultiPolygon") { 
+                            message="Intersection of the drawn polygon with the FIR-boundary results in more than one selected area. The drawn polygon will be used for the TAC-code.";
+                        }
+                        else if ((((Polygon) geom_new).getCoordinates().length > 7) && (!"box".equals(f.getProperty("selectionType")))) {
                             message="Intersection of the drawn polygon with the FIR-boundary has more than 6 individual points. The drawn polygon will be used for the TAC-code.";
                         }
                     }catch (Exception e){}
