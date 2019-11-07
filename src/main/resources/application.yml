@@ -5,7 +5,7 @@ server:
 spring:
   profiles:
     active:
-      - oauth2-keycloak
+      - generic # oauth2-keycloak
   main:
     bannerMode: "off"
   devtools:
