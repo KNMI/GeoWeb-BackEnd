@@ -1,0 +1,349 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "weather_group": {
+            "oneOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "descriptor": {
+                            "enum": [
+                                "freezing"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Only moderate freezing fog is allowed"
+                                },
+                                "enum": [
+                                    "fog"
+                                ],
+                                "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "moderate"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena",
+                        "descriptor"
+                    ]
+                },{
+                    "additionalProperties": false,
+                    "properties": {
+                        "descriptor": {
+                            "enum": [
+                                "freezing"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Only freezing fog, drizzle or rain is allowed"
+                                },
+                                "enum": [
+                                    "drizzle",
+                                    "rain"
+                                ],
+                                "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "light",
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena",
+                        "descriptor"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "qualifier" : {
+                          "$geoweb::messages": {
+                              "enum": "MI (shallow), BC (patches), PR (partial), DR (low drifting) can only be moderate"
+                          },
+                          "enum": [
+                                "moderate"
+                            ],
+                            "type": "string"
+                        },
+                        "descriptor": {
+                            "enum": [
+                                "shallow",
+                                "patches",
+                                "partial",
+                                "low drifting"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Descriptor MI (shallow), BC (patchy) or PR (partial) is only allowed with FG (fog)"
+                                },
+                                "enum": [
+                                    "fog"
+                                ],
+                                "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        }
+                       
+                    },
+                    "required": [
+                        "phenomena", "descriptor"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "phenomena": {
+                            "items": {
+                                "enum": [
+                                    "fog",
+                                    "mist",
+                                    "widespread dust",
+                                    "haze",
+                                    "sand",
+                                    "smoke",
+                                    "volcanic ash",
+                                    "squalls",
+                                    "dust"
+                                ],
+                                "type": "string"
+                            },
+                            "maxItems": 2,
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "$geoweb::messages": {
+                                "enum": "Qualifier of intensity (-,+,VC) can only be used in combination with a precipitation type"
+                            },
+                            "enum": [
+                                "moderate"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "phenomena": {
+                            "items": {
+                                "enum": [
+                                    "funnel clouds"
+                                ],
+                                "type": "string"
+                            },
+                            "maxItems": 2,
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                          "$geoweb::messages": {
+                                "enum": "FC can only be moderate or heavy"
+                            },
+                            "enum": [
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+
+                    "properties": {
+                        "phenomena": {
+                            "items": {
+                                "enum": [
+                                    "rain", 
+                                    "drizzle",
+                                    "duststorm",
+                                    "snow",
+                                    "snow grains",
+                                    "ice pellets",
+                                    "sandstorm"
+                                ],
+                                "type": "string"
+                            },
+                            "maxItems": 2,
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "light",
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "descriptor": {
+                            "enum": [
+                                "blowing",
+                                "low drifting"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Blowing group only allowed with widespread dust, sand, or snow"
+                                },
+                                "enum": [
+                                    "widespread dust",
+                                    "sand",
+                                    "snow"
+                                ],
+                                "type": "string"
+                            },
+                            "maxItems": 1,
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "light",
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena",
+                        "descriptor"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "descriptor": {
+                            "enum": [
+                                "thunderstorm"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Thunderstorm only allowed with no additional phenomena, rain, snow or small hail"
+                                },
+                                "enum": [
+                                    "rain",
+                                    "snow",
+                                    "small hail",
+                                    "hail",
+                                    "squalls"
+                                ],
+                                "type": "string"
+                            },
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "light",
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "descriptor"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "descriptor": {
+                            "$geoweb::messages": {
+                                "enum": "Descriptor unknown"
+                            },
+                            "enum": [
+                                "showers"
+                            ],
+                            "type": "string"
+                        },
+                        "phenomena": {
+                            "items": {
+                                "$geoweb::messages": {
+                                    "enum": "Showers only allowed with rain, snow, snow grains or small hail"
+                                },
+                                "enum": [
+                                    "rain",
+                                    "snow",
+                                    "small hail",
+                                    "hail",
+                                    "snow grains"
+                                ],
+                                "type": "string"
+                            },
+                            "minItems": 1,
+                            "type": "array",
+                            "uniqueItems": true
+                        },
+                        "qualifier": {
+                            "enum": [
+                                "light",
+                                "moderate",
+                                "heavy"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "phenomena",
+                        "descriptor"
+                    ]
+                }
+            ],
+            "type": "object"
+        }
+    }
+}

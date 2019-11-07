@@ -1,0 +1,91 @@
+{
+  "geojson" : {
+    "type" : "FeatureCollection",
+    "features" : [ {
+      "type" : "Feature",
+      "properties" : {
+        "selectionType" : "fir",
+        "featureFunction" : "start",
+        "stroke-width" : 0.8,
+        "fill" : "#0f0",
+        "fill-opacity" : 0.2
+      },
+      "geometry" : null,
+      "id" : "a0359b98-39d4-4e2c-946f-262319b780d1"
+    }, {
+      "type" : "Feature",
+      "properties" : {
+        "featureFunction" : "end",
+        "relatesTo" : "a0359b98-39d4-4e2c-946f-262319b780d1",
+        "stroke-width" : 0.8,
+        "fill" : "#f00",
+        "fill-opacity" : 0.2
+      },
+      "geometry" : null,
+      "id" : "c34d44ce-8800-4be1-9336-93b1ea26f95a"
+    }, {
+      "type" : "Feature",
+      "properties" : {
+        "selectionType" : "poly",
+        "featureFunction" : "intersection",
+        "relatesTo" : "a0359b98-39d4-4e2c-946f-262319b780d1",
+        "stroke-width" : 2,
+        "fill" : "#2a2",
+        "fill-opacity" : 0.33
+      },
+      "geometry" : {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 4.9999984, 54.9999982 ], [ 5.0, 55.0 ], [ 4.33191389, 55.33264444 ], [ 3.36881667, 55.76431389 ], [ 2.89690278, 54.62093889 ], [ 2.76190833, 54.37926111 ], [ 2.86525833, 53.96258333 ], [ 2.95527222, 53.667575 ], [ 2.98694167, 53.58423889 ], [ 3.01528056, 53.46923611 ], [ 3.05528611, 53.30089722 ], [ 3.16004722, 52.93100278 ], [ 3.28387931, 53.07024997 ], [ 2.00000191, 51.50000191 ], [ 3.37000084, 51.36972237 ], [ 3.37052705, 51.36866995 ], [ 3.36222267, 51.3200016 ], [ 3.36388969, 51.31360817 ], [ 3.37361336, 51.30999947 ], [ 3.9525013, 51.2144413 ], [ 4.39750099, 51.45277596 ], [ 5.07861137, 51.39166451 ], [ 5.84833336, 51.13944435 ], [ 5.65166664, 50.82471657 ], [ 6.01179695, 50.75727272 ], [ 5.93416786, 51.03638649 ], [ 6.22222328, 51.36166573 ], [ 5.94639015, 51.81166267 ], [ 6.40500069, 51.83082771 ], [ 7.05309486, 52.23776436 ], [ 7.03138924, 52.26888466 ], [ 7.06361198, 52.34610939 ], [ 7.06555748, 52.38582802 ], [ 7.13305473, 52.88888741 ], [ 7.14217987, 52.89824389 ], [ 7.19166667, 53.3 ], [ 6.5, 53.66666667 ], [ 6.50000191, 55.00000191 ], [ 5.00000191, 55.00000191 ], [ 4.9999984, 54.9999982 ] ] ]
+      },
+      "id" : "e9e0932a-db65-455e-abb4-6a6b07769414"
+    }, {
+      "type" : "Feature",
+      "properties" : {
+        "featureFunction" : "intersection",
+        "relatesTo" : "c34d44ce-8800-4be1-9336-93b1ea26f95a",
+        "stroke-width" : 2,
+        "fill" : "#a22",
+        "fill-opacity" : 0.33
+      },
+      "geometry" : null,
+      "id" : "fb47fb7f-fe7e-460e-92d1-67866aabc061"
+    } ]
+  },
+  "phenomenon" : "VA_CLD",
+  "obs_or_forecast" : {
+    "obs" : true
+  },
+  "levelinfo" : {
+    "levels" : [ {
+      "value" : 200,
+      "unit" : "FL"
+    }, {
+      "unit" : "FL"
+    } ],
+    "mode" : "AT"
+  },
+  "movement_type" : "MOVEMENT",
+  "movement" : {
+    "speed" : 30,
+    "speeduom" : "KT",
+    "dir" : "NNE"
+  },
+  "change" : "INTSF",
+  "issuedate" : "2018-11-23T16:03:50.314Z",
+  "validdate" : "2018-11-23T17:00:00Z",
+  "validdate_end" : "2018-11-23T21:00:00Z",
+  "firname" : "AMSTERDAM FIR",
+  "location_indicator_icao" : "EHAA",
+  "location_indicator_mwo" : "EHDB",
+  "uuid" : "d314451a-6df8-460f-a733-21a4edb63097",
+  "status" : "published",
+  "type" : "normal",
+  "sequence" : 2,
+  "va_extra_fields" : {
+    "no_va_expected" : false,
+    "volcano":{
+      "name": "GRIMSVOTN",
+      "position": [52.0,5.2]
+    }
+  }
+}

@@ -1,0 +1,40 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "base_weather": {
+            "$geoweb::messages": {
+                "type": "Base forecast cannot contain NSW, maybe you meant visibility is CAVOK?",
+                "uniqueItems": "Weather groups must be unique"
+            },
+            "items": {
+                "$ref": "weathergroup.json#/definitions/weather_group"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+        },
+        "weather": {
+            "oneOf": [
+                {
+                    "$geoweb::messages": {
+                        "uniqueItems": "Weather groups must be unique"
+                    },
+                    "items": {
+                        "$ref": "weathergroup.json#/definitions/weather_group"
+                    },
+                    "maxItems": 3,
+                    "minItems": 1,
+                    "type": "array",
+                    "uniqueItems": true
+                },
+                {
+                    "enum": [
+                        "NSW"
+                    ],
+                    "type": "string"
+                }
+            ]
+        }
+    }
+}

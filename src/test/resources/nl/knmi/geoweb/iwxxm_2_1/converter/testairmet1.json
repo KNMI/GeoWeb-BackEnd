@@ -1,0 +1,218 @@
+{
+  "geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "selectionType": "fir",
+          "featureFunction": "start",
+          "stroke-width": 0.8,
+          "fill": "#0f0",
+          "fill-opacity": 0.2
+        },
+        "geometry": null,
+        "id": "db5eada7-8ad5-463a-afa8-d42b79d5e63d"
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "selectionType": "poly",
+          "featureFunction": "intersection",
+          "relatesTo": "db5eada7-8ad5-463a-afa8-d42b79d5e63d",
+          "stroke-width": 2,
+          "fill": "#2a2",
+          "fill-opacity": 0.33
+        },
+        "geometry": {
+          "type": "MultiPolygon",
+          "coordinates": [
+            [
+              [
+                [
+                  5.0,
+                  55.0
+                ],
+                [
+                  2.0,
+                  51.5
+                ],
+                [
+                  3.36305556,
+                  51.37305556
+                ],
+                [
+                  3.33493218,
+                  51.2345945
+                ],
+                [
+                  3.89619528,
+                  51.17178805
+                ],
+                [
+                  4.55225671,
+                  51.39763031
+                ],
+                [
+                  5.77839523,
+                  51.10068034
+                ],
+                [
+                  5.57449197,
+                  50.87107536
+                ],
+                [
+                  5.62534945,
+                  50.72642628
+                ],
+                [
+                  6.14,
+                  50.74
+                ],
+                [
+                  6.32737948,
+                  51.37958259
+                ],
+                [
+                  6.05437694,
+                  51.79106877
+                ],
+                [
+                  6.79267501,
+                  51.84
+                ],
+                [
+                  7.10288428,
+                  52.21882119
+                ],
+                [
+                  7.3,
+                  53.25
+                ],
+                [
+                  6.5,
+                  53.66666667
+                ],
+                [
+                  6.5,
+                  55.0
+                ],
+                [
+                  5.0,
+                  55.0
+                ]
+              ]
+            ],
+            [
+              [
+                [
+                  5.0,
+                  55.0
+                ],
+                [
+                  4.33191389,
+                  55.33264444
+                ],
+                [
+                  3.36881667,
+                  55.76431389
+                ],
+                [
+                  2.89690278,
+                  54.62093889
+                ],
+                [
+                  2.76190833,
+                  54.37926111
+                ],
+                [
+                  2.86525833,
+                  53.96258333
+                ],
+                [
+                  2.95527222,
+                  53.667575
+                ],
+                [
+                  2.98694167,
+                  53.58423889
+                ],
+                [
+                  3.01528056,
+                  53.46923611
+                ],
+                [
+                  3.05528611,
+                  53.30089722
+                ],
+                [
+                  3.163,
+                  52.92
+                ],
+                [
+                  5.0,
+                  55.0
+                ]
+              ]
+            ]
+          ]
+        },
+        "id": "cbe02376-01ad-41f0-bd69-de5ba2db1f8e"
+      }
+    ]
+  },
+  "phenomenon": "ISOL_TS",
+  "wind": {
+    "speed": {
+      "unit": "KT"
+    },
+    "direction": {
+      "unit": "degrees"
+    }
+  },
+  "cloudLevels": {
+    "lower": {
+      "unit": "FT",
+      "surface": false
+    },
+    "upper": {
+      "unit": "FT",
+      "above": false
+    }
+  },
+  "visibility": {
+    "unit": "M"
+  },
+  "obs_or_forecast": {
+    "obs": true,
+    "obsFcTime": "2019-02-28T07:00:00Z"
+  },
+  "levelinfo": {
+    "levels": [
+      {
+        "value": 100,
+        "unit": "FL"
+      },
+      {
+        "unit": "FL"
+      }
+    ],
+    "mode": "TOPS_ABV"
+  },
+  "movement_type": "MOVEMENT",
+  "movement": {
+    "speed": 15,
+    "speeduom": "KT",
+    "dir": "NNE"
+  },
+  "change": "INTSF",
+  "validdate": "2019-02-28T10:30:00Z",
+  "validdate_end": "2019-02-28T14:30:00Z",
+  "firname": "AMSTERDAM FIR",
+  "location_indicator_icao": "EHAA",
+  "location_indicator_mwo": "EHDB",
+  "uuid": "4c2a951e-f00f-4688-87df-c102b43dde4e",
+  "status": "published",
+  "type": "normal",
+  "sequence": 3
+}

@@ -1,0 +1,104 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "base_metadata": {
+            "$geoweb::messages": {
+                "required": "Type, status, location, and validity times are required"
+            },
+            "oneOf": [
+                {
+                    "additionalProperties": true,
+                    "properties": {
+                        "location": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "enum": [
+                                "concept"
+                            ],
+                            "type": "string"
+                        },
+                        "type": {
+                            "enum": [
+                                "normal",
+                                "amendment",
+                                "correction",
+                                "canceled",
+                                "missing",
+                                "retarded"
+                            ],
+                            "type": "string"
+                        },
+                        "uuid": {
+                            "format": "uuid",
+                            "type": "string"
+                        },
+                        "validityEnd": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "validityStart": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "validityStart",
+                        "validityEnd",
+                        "location"
+                    ]
+                },
+                {
+                    "additionalProperties": true,
+                    "properties": {
+                        "issueTime": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "location": {
+                            "type": "string"
+                        },
+                        "status": {
+                            "enum": [
+                                "published",
+                                "expired",
+                                "inactive"
+                            ],
+                            "type": "string"
+                        },
+                        "type": {
+                            "enum": [
+                                "normal",
+                                "amendment",
+                                "correction",
+                                "canceled",
+                                "missing",
+                                "retarded"
+                            ],
+                            "type": "string"
+                        },
+                        "uuid": {
+                            "format": "uuid",
+                            "type": "string"
+                        },
+                        "validityEnd": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "validityStart": {
+                            "format": "date-time",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "issueTime",
+                        "validityStart",
+                        "validityEnd",
+                        "location"
+                    ]
+                }
+            ],
+            "type": "object"
+        }
+    }
+}

@@ -1,0 +1,214 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "speedOperator":{
+          "enum": [
+            "above", "below"
+          ],
+          "type": "string"
+        },
+        "winddirectionvrb":{
+          "$geoweb::messages": {
+              "oneOf": "Direction must be VRB or one of (10, 20, ..., 360) degrees."
+          },
+          "oneOf": [
+              {
+                  "enum": [
+                      "VRB"
+                  ],
+                  "type": "string"
+              },
+              {
+                  "maximum": 360,
+                  "minimum": 1,
+                  "multipleOf": 10,
+                  "type": "integer"
+              }
+          ]                        
+        },
+        "wind": {
+            "oneOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "direction": {
+                            "maximum": 0,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        "speed": {
+                            "maximum": 0,
+                            "minimum": 0,
+                            "type": "integer"
+                        },
+                        "unit": {
+                            "enum": [
+                                "KT",
+                                "MPS"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "direction": {
+                          "$ref": "#/definitions/winddirectionvrb"
+                        },
+                        "speedOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gustsOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gusts": {
+                            "oneOf": [
+                                {
+                                    "maximum": 99,
+                                    "minimum": 13,
+                                    "type": "integer"
+                                },
+                                {
+                                    "enum": [
+                                        "P99"
+                                    ],
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "speed": {
+                            "$geoweb::messages": {
+                                "maximum": "Wind speed must be less than 100 knots or 50 meters per second",
+                                "minimum": "If the wind speed is less than 0 knots, the direction has to be variable."
+                            },
+                            "maximum": 99,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "unit": {
+                            "enum": [
+                                "KT"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "direction": {
+                          "$ref": "#/definitions/winddirectionvrb"
+                        },
+                        "speedOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gustsOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gusts": {
+                            "enum": [
+                                "P99"
+                            ],
+                            "type": "string"
+                        },
+                        "speed": {
+                            "enum": [
+                                "P99"
+                            ],
+                            "type": "string"
+                        },
+                        "unit": {
+                            "enum": [
+                                "KT"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "direction": {
+                          "$ref": "#/definitions/winddirectionvrb"
+                        },
+                        "speedOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gustsOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gusts": {
+                            "enum": [
+                                "P49"
+                            ],
+                            "type": "string"
+                        },
+                        "speed": {
+                            "enum": [
+                                "P49"
+                            ],
+                            "type": "string"
+                        },
+                        "unit": {
+                            "enum": [
+                                "MPS"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "direction": {
+                          "$ref": "#/definitions/winddirectionvrb"
+                        },
+                        "speedOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gustsOperator":{
+                          "$ref": "#/definitions/speedOperator"
+                        },
+                        "gusts": {
+                            "oneOf": [
+                                {
+                                    "maximum": 49,
+                                    "minimum": 7,
+                                    "type": "integer"
+                                },
+                                {
+                                    "enum": [
+                                        "P49"
+                                    ],
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "speed": {
+                          "$geoweb::messages": {
+                                "maximum": "Wind speed cannot be higher then 50 MPS",
+                                "minimum": "Wind speed should be at least 0 MPS"
+                            },
+                            "maximum": 49,
+                            "minimum": 1,
+                            "type": "integer"
+                        },
+                        "unit": {
+                            "enum": [
+                                "MPS"
+                            ],
+                            "type": "string"
+                        }
+                    }
+                }
+            ],
+            "required": [
+                "direction",
+                "speed",
+                "unit"
+            ],
+            "type": "object"
+        }
+    }
+}
