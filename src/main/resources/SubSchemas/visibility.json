@@ -1,0 +1,96 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "visibility": {
+            "oneOf": [
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "unit": {
+                            "enum": [
+                                "M",
+                                "KM"
+                            ],
+                            "type": "string"
+                        },
+                        "value": {
+                            "$geoweb::messages": {
+                                "minimum": "Visibility cannot be fewer than 0 meters",
+                                "multipleOf": "When visibility is between 0 and 750 meters it must be a multiple of 50 meters"
+                            },
+                            "maximum": 799,
+                            "minimum": 0,
+                            "multipleOf": 50,
+                            "type": "integer"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "unit": {
+                            "enum": [
+                                "M",
+                                "KM"
+                            ],
+                            "type": "string"
+                        },
+                        "value": {
+                            "$geoweb::messages": {
+                                "multipleOf": "When visibility is between 800 and 4900 meters it must be a multiple of 100 meters"
+                            },
+                            "maximum": 4999,
+                            "minimum": 800,
+                            "multipleOf": 100,
+                            "type": "integer"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "unit": {
+                            "enum": [
+                                "M",
+                                "KM"
+                            ],
+                            "type": "string"
+                        },
+                        "value": {
+                            "$geoweb::messages": {
+                                "maximum": "Visibility cannot be greater than 10000 meters",
+                                "multipleOf": "When visibility is between 5000 and 9000 meters it must be a multiple of 1000 meters"
+                            },
+                            "maximum": 9999,
+                            "minimum": 5000,
+                            "multipleOf": 1000,
+                            "type": "integer"
+                        }
+                    }
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "unit": {
+                            "enum": [
+                                "M",
+                                "KM"
+                            ],
+                            "type": "string"
+                        },
+                        "value": {
+                            "enum": [
+                                9999
+                            ],
+                            "type": "integer"
+                        }
+                    }
+                }
+            ],
+            "required": [
+                "value"
+            ],
+            "type": "object"
+        }
+    }
+}

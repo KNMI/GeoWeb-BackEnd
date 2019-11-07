@@ -1,0 +1,110 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "definitions": {
+        "changegroup": {
+            "oneOf": [
+                {
+                    "$geoweb::messages": {
+                        "required": "A changegroup must have a type, time (duration or start), and a change"
+                    },
+                    "additionalProperties": false,
+                    "properties": {
+                        "changeEnd": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "changeStart": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "changeType": {
+                            "enum": [
+                                "BECMG",
+                                "TEMPO",
+                                "PROB30",
+                                "PROB30 TEMPO",
+                                "PROB40",
+                                "PROB40 TEMPO"
+                            ],
+                            "type": "string"
+                        },
+                        "forecast": {
+                            "$ref": "forecast.json#/definitions/forecast"
+                        }
+                    },
+                    "required": [
+                        "changeType",
+                        "changeStart",
+                        "changeEnd",
+                        "forecast"
+                    ]
+                },
+                {
+                    "additionalProperties": false,
+                    "properties": {
+                        "changeStart": {
+                            "format": "date-time",
+                            "type": "string"
+                        },
+                        "changeType": {
+                            "enum": [
+                                "FM"
+                            ],
+                            "type": "string"
+                        },
+                        "forecast": {
+                            "$ref": "forecast.json#/definitions/forecast"
+                        }
+                    },
+                    "required": [
+                        "changeType",
+                        "changeStart",
+                        "forecast"
+                    ]
+                }
+            ],
+            "type": "object"
+        },
+        "changegroups": {
+            "$geoweb::messages": {
+                "maxItems": "That's way too many changegroups'"
+            },
+            "additionalProperties": false,
+            "items": [
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                },
+                {
+                    "$ref": "#/definitions/changegroup"
+                }
+            ],
+            "maxItems": 10,
+            "minItems": 0,
+            "type": "array"
+        }
+    }
+}

@@ -1,0 +1,141 @@
+{
+  "geojson": {
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "selectionType": "box",
+          "featureFunction": "start",
+          "stroke-width": 0.8,
+          "fill": "#0f0",
+          "fill-opacity": 0.2
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                1.4400425945497095,
+                52.91782348161797
+              ],
+              [
+                1.4400425945497095,
+                53.87688921728216
+              ],
+              [
+                5.104635569129936,
+                53.87688921728216
+              ],
+              [
+                5.104635569129936,
+                52.91782348161797
+              ],
+              [
+                1.4400425945497095,
+                52.91782348161797
+              ]
+            ]
+          ]
+        },
+        "id": "d22b8b60-34fd-4970-8a8e-aaac120ebb4f"
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "selectionType": "box",
+          "featureFunction": "intersection",
+          "relatesTo": "d22b8b60-34fd-4970-8a8e-aaac120ebb4f",
+          "stroke-width": 2,
+          "fill": "#2a2",
+          "fill-opacity": 0.33
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                2.89690133,
+                53.87688922
+              ],
+              [
+                5.10463557,
+                53.87688922
+              ],
+              [
+                5.10463557,
+                52.91782348
+              ],
+              [
+                3.15461313,
+                52.91782348
+              ],
+              [
+                2.89690133,
+                53.87688922
+              ]
+            ]
+          ]
+        },
+        "id": "15e51e2a-c7d1-485a-ae74-73bac0666b45"
+      }
+    ]
+  },
+  "phenomenon": "ISOL_CB",
+  "wind": {
+    "speed": {
+      "unit": "KT"
+    },
+    "direction": {
+      "unit": "degrees"
+    }
+  },
+  "cloudLevels": {
+    "lower": {
+      "unit": "FT",
+      "surface": false
+    },
+    "upper": {
+      "unit": "FT",
+      "above": false
+    }
+  },
+  "visibility": {
+    "unit": "M"
+  },
+  "obs_or_forecast": {
+    "obs": true,
+    "obsFcTime": "2019-03-07T11:59:00Z"
+  },
+  "levelinfo": {
+    "levels": [
+      {
+        "value": 100,
+        "unit": "FL"
+      },
+      {
+        "unit": "FL"
+      }
+    ],
+    "mode": "AT"
+  },
+  "movement_type": "MOVEMENT",
+  "movement": {
+    "speed": 12,
+    "speeduom": "KT",
+    "dir": "NNE"
+  },
+  "change": "WKN",
+  "issuedate": "2019-03-07T11:53:10.515Z",
+  "validdate": "2019-03-07T12:00:00Z",
+  "validdate_end": "2019-03-07T16:00:00Z",
+  "firname": "AMSTERDAM FIR",
+  "location_indicator_icao": "EHAA",
+  "location_indicator_mwo": "EHDB",
+  "uuid": "35a8053b-3b0f-42e0-8f4b-1398f946f588",
+  "status": "published",
+  "type": "normal",
+  "sequence": 2,
+  "cancels": 1,
+  "cancelsStart": "2019-03-07T12:00:00Z"
+}

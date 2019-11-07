@@ -1,0 +1,20 @@
+{
+  "forecast": {
+    "caVOK": true,
+    "wind": {
+      "direction": 200,
+      "speed": 15,
+      "gusts": 25,
+      "unit": "KT"
+    }
+  },
+  "metadata": {
+    "uuid": "a07447a5-dece-4ae7-afe8-ecac7cbc09fa",
+    "issueTime": "2017-08-04T11:01:20Z",
+    "location": "EHAM",
+    "validityStart": "2017-08-04T12:00:00Z",
+    "validityEnd": "2017-08-05T18:00:00Z",
+    "status": "concept",
+    "type": "normal"
+  }
+}
