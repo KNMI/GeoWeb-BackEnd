@@ -41,7 +41,7 @@ public class ExportedProductServices {
                         }
                         return p.toFile().getName();
                     }
-                ))
+                ,Comparator.reverseOrder()))
                 .forEach(p -> exported.add(p.getFileName().toString()));
         } catch (IOException e) {
             e.printStackTrace();

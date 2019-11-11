@@ -84,10 +84,10 @@ public class ExportedProductServicesTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(4)))
-                .andExpect(jsonPath("$[0]", is(json1Name)))
-                .andExpect(jsonPath("$[1]", is(tac1Name)))
-                .andExpect(jsonPath("$[2]", is(xml1Name)))
-                .andExpect(jsonPath("$[3]", is(xml2Name)))
+                .andExpect(jsonPath("$[3]", is(json1Name)))
+                .andExpect(jsonPath("$[2]", is(tac1Name)))
+                .andExpect(jsonPath("$[1]", is(xml1Name)))
+                .andExpect(jsonPath("$[0]", is(xml2Name)))
         ;
   }
 

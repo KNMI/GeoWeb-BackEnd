@@ -19,7 +19,6 @@ spring:
 # GeoWeb configuration
 geoweb:
   backendVersion: ^project.version^
-  messageConverterVersion: ^geoweb.messageConverter.version^
   feedback:
     feedbackfromname: Geoweb Admin
     feedbackfrommail: geoweb-admin@geoweb.knmi.nl

@@ -14,9 +14,6 @@ public class GeoWebBackEndApplication implements ApplicationRunner {
 	@Value("${geoweb.backendVersion}")
 	private String backendVersion;
 
-	@Value("${geoweb.messageConverterVersion}")
-	private String messageConverterVersion;
-
 	private static final Logger log = LoggerFactory.getLogger(GeoWebBackEndApplication.class);
 
 	public static void main(String[] args) throws Exception {
@@ -26,6 +23,5 @@ public class GeoWebBackEndApplication implements ApplicationRunner {
 	@Override
 	public void run(ApplicationArguments args) {
 		log.info("Version BackEnd: " + backendVersion);
-		log.info("Version MessageConverter: " + messageConverterVersion);
 	}
 }
