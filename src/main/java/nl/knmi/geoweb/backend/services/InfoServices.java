@@ -16,14 +16,10 @@ public class InfoServices {
 	@Value("${geoweb.backendVersion}")
 	private String backendVersion;
 
-	@Value("${geoweb.messageConverterVersion}")
-	private String messageConverterVersion;
-
 	@RequestMapping(path = "/version", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public Map<String, String> getVersionInfo() {
 		HashMap<String, String> map = new HashMap<>();
 		map.put("backend", backendVersion);
-		map.put("messageconverter", messageConverterVersion);
 		return map;
 	}
 }
