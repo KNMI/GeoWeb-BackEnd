@@ -94,6 +94,9 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
 
     private String visibilityToTAC() {
         if ((this.visibility != null) && (this.visibility.val != null) && (this.visibility.unit != null)) {
+            if (this.visibility.val >= 10000) {
+                this.visibility.val = Double.valueOf(9999);
+            }
             return String.format("%04.0f", this.visibility.val) + this.visibility.unit;
         }
         return "";

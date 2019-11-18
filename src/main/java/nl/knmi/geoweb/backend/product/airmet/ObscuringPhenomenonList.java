@@ -37,7 +37,7 @@ public class ObscuringPhenomenonList {
     public static List<ObscuringPhenomenon> getAllObscuringPhenomena() {
         if (allPhenomena==null) {
             allPhenomena = new ArrayList<>();
-            allPhenomena.add(new ObscuringPhenomenon("Mist", "BR"));
+            allPhenomena.add(new ObscuringPhenomenon("Mist (BR)", "BR"));
             allPhenomena.add(new ObscuringPhenomenon("Dust storm", "DS"));
             allPhenomena.add(new ObscuringPhenomenon("Dust", "DU"));
             allPhenomena.add(new ObscuringPhenomenon("Drizzle", "DZ"));
