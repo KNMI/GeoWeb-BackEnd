@@ -81,12 +81,10 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
             case WKN:
                 airmet.setIntensityChange(SigmetIntensityChange.WEAKENING);
                 break;
-            case NC:
-                airmet.setIntensityChange(SigmetIntensityChange.NO_CHANGE);
-                break;
             case INTSF:
                 airmet.setIntensityChange(SigmetIntensityChange.INTENSIFYING);
                 break;
+            case NC:
             default:
                 airmet.setIntensityChange(SigmetIntensityChange.NO_CHANGE);
         }
