@@ -407,30 +407,34 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
         }
 
         Debug.println("phen: " + this.phenomenon);
-        sb.append(this.phenomenon.getShortDescription());
+        if (this.phenomenon==null) {
+            sb.append(""); //Empty string for missing phenomenon
+        } else {
+            sb.append(this.phenomenon.getShortDescription());
 
-        switch (this.phenomenon) {
-            case SFC_WIND:
-                if (this.wind != null) {
+            switch (this.phenomenon) {
+                case SFC_WIND:
+                    if (this.wind != null) {
+                        sb.append(" ");
+                        sb.append(this.wind.toTAC());
+                    }
+                    break;
+                case SFC_VIS:
                     sb.append(" ");
-                    sb.append(this.wind.toTAC());
-                }
-                break;
-            case SFC_VIS:
-                sb.append(" ");
-                sb.append(this.visibilityToTAC());
-                sb.append(" ");
-                sb.append(this.obscuringToTAC());
-                break;
-            case BKN_CLD:
-            case OVC_CLD:
-                if (this.cloudLevels != null) {
+                    sb.append(this.visibilityToTAC());
                     sb.append(" ");
-                    sb.append(this.cloudLevels.toTAC());
-                }
-                break;
-            default:
-                break;
+                    sb.append(this.obscuringToTAC());
+                    break;
+                case BKN_CLD:
+                case OVC_CLD:
+                    if (this.cloudLevels != null) {
+                        sb.append(" ");
+                        sb.append(this.cloudLevels.toTAC());
+                    }
+                    break;
+                default:
+                    break;
+            }
         }
 
         sb.append('\n');

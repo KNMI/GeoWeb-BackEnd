@@ -78,7 +78,7 @@ public class SigmetAirmetUtils {
     Arrays.stream(coords);
     return Arrays.stream(coords).map(coord -> pointToDMSString(coord)).collect(Collectors.joining(" - "));
   }
-  
+
   private static String latlonToDMS(List<LngLatAlt> coords) {
     return coords.stream().map(lnglat -> pointToDMSString(lnglat)).collect(Collectors.joining(" - "));
   }
@@ -112,8 +112,10 @@ public class SigmetAirmetUtils {
   public static String featureToTAC(Feature f, Feature FIR) {
     List<LngLatAlt> coords;
 
-    if (f == null)
-      return " ERR ";
+    /* Empty text if feature or geometry is missing */
+    if ((f == null) || 
+      ((f.getGeometry()==null) && !f.getProperty("selectionType").toString().toLowerCase().equals("fir")))
+      return "";
 
     switch (f.getProperty("selectionType").toString().toLowerCase()) {
     case "poly":

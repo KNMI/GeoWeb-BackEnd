@@ -112,14 +112,14 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 				String location = "";
 				try {
 					location = (position != null && position.size() == 2) ?
-							" PSN " + Sigmet.convertLat(position.get(0).doubleValue()) 
+							" PSN " + Sigmet.convertLat(position.get(0).doubleValue())
 							+" " + Sigmet.convertLon(position.get(1).doubleValue()) :
 								"";
 				}catch(Exception e){
 					Debug.printStackTrace(e);
 				}
-				return  ((volcanoName.length() > 0 || location.length() > 0) ? "VA ERUPTION" : "") + 
-						volcanoName +  
+				return  ((volcanoName.length() > 0 || location.length() > 0) ? "VA ERUPTION" : "") +
+						volcanoName +
 						location +
 						((volcanoName.length() > 0 || location.length() > 0) ? " " : "");
 			}
@@ -360,7 +360,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 
 		sb.append(this.location_indicator_icao).append(' ').append(this.firname);
 
-	
+
 		if (this.cancels != null && this.cancelsStart != null) {
 			String validdateCancelled = String.format("%02d", this.cancelsStart.getDayOfMonth()) + String.format("%02d", this.cancelsStart.getHour()) + String.format("%02d", this.cancelsStart.getMinute());
 
@@ -379,7 +379,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			break;
 		case exercise:
 			sb.append("EXER ");
-			break;			
+			break;
 		default:
 		}
 
@@ -387,9 +387,12 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			sb.append(va_extra_fields.toTAC());
 		}
 
-		Debug.println("phen: "+this.phenomenon);
-		sb.append(this.phenomenon.getShortDescription());
-
+        Debug.println("phen: " + this.phenomenon);
+        if (this.phenomenon==null) {
+            sb.append(""); //Empty string for missing phenomenon
+        } else {
+            sb.append(this.phenomenon.getShortDescription());
+        }
 
 		sb.append('\n');
 		if (this.getObs_or_forecast()!=null) {
@@ -440,7 +443,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 				OffsetDateTime fpaTime=this.validdate_end;
 				sb.append("FCST AT ").append(String.format("%02d", fpaTime.getHour())).append(String.format("%02d", fpaTime.getMinute())).append("Z");
 				sb.append(" NO VA EXP");
-			} 
+			}
 		}
 
 
@@ -639,10 +642,10 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			String TACHeaderTime = now.format(DateTimeFormatter.ofPattern("ddHHmm"));
 			String TACHeaderLocation = this.getLocation_indicator_mwo();
 			/* Create TAC header */
-			String TACHeader = "ZCZC\n" + bulletinHeader + " " + TACHeaderLocation+" "+TACHeaderTime+"\n";	
+			String TACHeader = "ZCZC\n" + bulletinHeader + " " + TACHeaderLocation+" "+TACHeaderTime+"\n";
 			/* Create TAC message */
 			String TACCode = this.toTAC(this.getFirFeature());
-			// Remove all empty lines			
+			// Remove all empty lines
 			TACCode  = TACCode.replaceAll("(?m)^[ \t]*\r?\n", "");
 			// Replace last \n if available
 			if (TACCode.length() > 1 && TACCode.endsWith("\n")) { TACCode = TACCode.substring(0, TACCode.length() - 1); }
