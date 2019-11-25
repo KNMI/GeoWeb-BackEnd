@@ -207,12 +207,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
                 String mod = cldType.getMod();
                 Integer height = cldType.getHeight();
                 String unit = "[ft_i]";
-                if ("VV".equals(cover)) { //TODO is first if clause still needed? VV is handled above
-                    if (height == null) {
-                        retval.add(new ConversionIssue(ConversionIssue.Type.MISSING_DATA, "Cloud layer height not specified"));
-                    }
-                    cloud.setVerticalVisibility(NumericMeasureImpl.of(height, unit));
-                } else if ((cldType.getIsNSC() != null) && cldType.getIsNSC()) {
+                if ((cldType.getIsNSC() != null) && cldType.getIsNSC()) {
                     cloud.setNoSignificantCloud(cldType.getIsNSC());
                 } else {
                     CloudLayerImpl.Builder layer = new CloudLayerImpl.Builder();
@@ -239,11 +234,8 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
         }
         if (!layers.isEmpty()) {
             cloud.setLayers(layers);
-            fct.setCloud(cloud.build());
-        } else {
-            fct.setCloud(Optional.empty());
-            fct.setCloud(cloud.build());///
         }
+        fct.setCloud(cloud.build());
         return retval;
     }
 
