@@ -829,7 +829,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
 
     // Same as TAC, but maximum line with 69 chars where words (e.g. "BKN040") are not splitted
     // Also has a header and footer to the message
-    private String getPublishableTAC() {
+    private String getPublishableTAC(ProductConverter<Taf> converter) {
         String line = "";
         String publishTAC = "";
         String[] TACwords = this.toTAC().split("\\s+");
@@ -873,9 +873,8 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
                 break;
 
         }
-
-
-        String header = "FTNL99 " + this.metadata.location + " " + time + status +'\n';
+       
+        String header = "FTNL99 " + converter.getLocationIndicatorWMO() + " " + time + status +'\n';
         String footer = "=";
         return header + publishTAC + footer;
     }
@@ -892,7 +891,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
         String validTime = reportTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmm"));
         String name = "TAF_" + this.metadata.getLocation() + "_" + validTime + "_" + time;
         try {
-            Tools.writeFile(path.getPath() + "/" + name + ".tac", this.getPublishableTAC());
+            Tools.writeFile(path.getPath() + "/" + name + ".tac", this.getPublishableTAC(converter));
         } catch (Exception e) {
             return "creation of TAC failed";
         }

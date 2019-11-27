@@ -10,6 +10,7 @@ spring:
 
 # GeoWeb configuration
 geoweb:
+  locationIndicatorWMO: EHDB
   backendVersion: ^project.version^
   feedback:
     feedbackfromname: Geoweb Admin
