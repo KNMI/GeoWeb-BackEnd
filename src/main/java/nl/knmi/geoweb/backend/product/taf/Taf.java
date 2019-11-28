@@ -799,11 +799,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
         if (this.metadata.type !=null) switch (this.metadata.type) {
             case canceled:
                 /* Add date */
-                if (this.metadata.previousMetadata != null) {
-                    sb.append(" " + TAFtoTACMaps.toDDHH(this.metadata.previousMetadata.validityStart) + "/" + TAFtoTACMaps.toDDHH24(this.metadata.validityEnd));
-                } else {
-                    sb.append(" " + TAFtoTACMaps.toDDHH(this.metadata.validityStart) + "/" + TAFtoTACMaps.toDDHH24(this.metadata.validityEnd));
-                }
+                sb.append(" " + TAFtoTACMaps.toDDHH(this.metadata.validityStart) + "/" + TAFtoTACMaps.toDDHH24(this.metadata.validityEnd));
                 // In case of a cancel there are no change groups so we're done here
                 sb.append(" CNL");
                 return sb.toString();
