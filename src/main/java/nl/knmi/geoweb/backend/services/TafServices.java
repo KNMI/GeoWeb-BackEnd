@@ -461,9 +461,11 @@ public class TafServices {
                                             // For this location
                                             otherTaf.metadata.getLocation().equals(taf.metadata.getLocation()) &&
                                             // Such that the other TAF has a validity start later than *this* TAF...
-                                            otherTaf.metadata.getValidityEnd().isAfter(taf.metadata.getValidityEnd()) &&
+                                            (otherTaf.metadata.getValidityEnd().isAfter(taf.metadata.getValidityEnd()) || otherTaf.metadata.getValidityEnd().isEqual(taf.metadata.getValidityEnd())) &&
                                             // And the other TAF is already in its validity window
-                                            otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))
+                                            otherTaf.metadata.getValidityStart().isBefore(OffsetDateTime.now(ZoneId.of("Z"))) && 
+                                            //And the other TAF should not cancel this one
+                                            ((otherTaf.getMetadata().getType() == TAFReportType.canceled) && otherTaf.getMetadata().getPreviousUuid().equals(taf.getMetadata().getUuid())
                                             ))
                             )).toArray(Taf[]::new);
             JSONObject json = tafObjectMapper.convertValue(new TafList(filteredTafs, page, count), JSONObject.class);
