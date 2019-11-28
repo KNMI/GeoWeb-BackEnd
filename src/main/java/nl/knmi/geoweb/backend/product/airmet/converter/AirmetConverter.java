@@ -2,6 +2,7 @@ package nl.knmi.geoweb.backend.product.airmet.converter;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -64,5 +65,13 @@ public class AirmetConverter implements ProductConverter<Airmet>{
 			}
 		}
 		return "FAIL";
+	}
+
+	@Value("${geoweb.locationIndicatorWMO}")
+	String locationIndicatorWMO;
+
+	@Override
+	public String getLocationIndicatorWMO() {
+		return locationIndicatorWMO;
 	}
 }
