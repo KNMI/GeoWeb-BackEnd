@@ -20,6 +20,7 @@ import org.geojson.FeatureCollection;
 import org.geojson.GeoJsonObject;
 import org.geojson.LngLatAlt;
 import org.geojson.Polygon;
+import org.geojson.Point;
 import org.locationtech.jts.geom.Coordinate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -335,14 +336,28 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 	}
 
 	public String toTAC(Feature FIR) {
+		String missGeom = "Missing geometry";
 		GeoJsonObject effectiveStartGeometry = SigmetAirmetUtils.findStartGeometry(this.geojson);
 		if ((effectiveStartGeometry==null)||(((Feature)effectiveStartGeometry).getProperty("selectionType")==null)) {
-			return "Missing geometry";
+			return missGeom;
 		}
-		if (!((Feature)effectiveStartGeometry).getProperty("selectionType").equals("box")&&
-				!((Feature)effectiveStartGeometry).getProperty("selectionType").equals("fir")&&
-				!((Feature)effectiveStartGeometry).getProperty("selectionType").equals("point")) {
+
+		// If no  start geometry, return "Missing geometry"
+		if(((Feature)effectiveStartGeometry).getProperty("selectionType").equals("point")){
+			Point p = (Point)((Feature)effectiveStartGeometry).getGeometry();
+			if (p.getCoordinates()==null) {
+				return missGeom;
+			}
+		}else if(((Feature)effectiveStartGeometry).getProperty("selectionType").equals("box")){
+			List<List<LngLatAlt>> coordinates = ((Polygon)((Feature)effectiveStartGeometry).getGeometry()).getCoordinates();
+			if (coordinates==null || coordinates.size() == 0) {
+				return missGeom;
+			}
+		}else if(!((Feature)effectiveStartGeometry).getProperty("selectionType").equals("fir")){			
 			GeoJsonObject intersected= SigmetAirmetUtils.extractSingleStartGeometry(this.geojson);
+			if (((Polygon)((Feature)intersected).getGeometry())==null) {
+				return missGeom;
+			}
 			try {
 				int sz=((Polygon)((Feature)intersected).getGeometry()).getCoordinates().get(0).size();
 				if (sz<=7)  {
@@ -351,6 +366,31 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			}
 			catch(Exception e) {}
 		}
+		// If movement type = End position and no end geometry drawn, return "Missing end geometry"
+		if (this.movement_type==SigmetMovementType.FORECAST_POSITION) {
+			String missEndGeom = "Missing end geometry";
+			GeoJsonObject endGeometry =  (Feature)this.findEndGeometry(((Feature)SigmetAirmetUtils.findStartGeometry(this.geojson)).getId());
+			if ((endGeometry==null)||(((Feature)endGeometry).getProperty("selectionType")==null)) {
+				return missEndGeom;
+			}
+			if(((Feature)endGeometry).getProperty("selectionType").equals("point")){
+				Point p = (Point)((Feature)endGeometry).getGeometry();
+				if (p.getCoordinates()==null) {
+					return missEndGeom;
+				}
+			}else if(((Feature)endGeometry).getProperty("selectionType").equals("box")){
+				List<List<LngLatAlt>> coordinates = ((Polygon)((Feature)endGeometry).getGeometry()).getCoordinates();
+				if (coordinates==null || coordinates.size() == 0) {
+					return missEndGeom;
+				}
+			}else if(!((Feature)endGeometry).getProperty("selectionType").equals("fir")){	
+				GeoJsonObject intersectedEnd= (Feature)this.extractSingleEndGeometry();
+				if (((Polygon)((Feature)intersectedEnd).getGeometry())==null) {
+					return missEndGeom;
+				}	
+			}
+		}
+
 		StringBuilder sb = new StringBuilder();
 		String validdateFormatted = String.format("%02d", this.validdate.getDayOfMonth()) + String.format("%02d", this.validdate.getHour()) + String.format("%02d", this.validdate.getMinute());
 		String validdateEndFormatted = String.format("%02d", this.validdate_end.getDayOfMonth()) + String.format("%02d", this.validdate_end.getHour()) + String.format("%02d", this.validdate_end.getMinute());

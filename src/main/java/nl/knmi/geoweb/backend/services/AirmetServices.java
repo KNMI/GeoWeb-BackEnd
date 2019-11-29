@@ -19,6 +19,7 @@ import org.geojson.Feature;
 import org.geojson.GeoJsonObject;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Polygon;
@@ -414,21 +415,26 @@ public class AirmetServices {
                     Geometry geom_fir=reader.read(FIRs);
                     Geometry geom_s=reader.read(os);
                     Geometry geom_new=geom_s.intersection(geom_fir);
-                    GeoJsonWriter writer=new GeoJsonWriter();
-                    String geom_news=writer.write(geom_new);
-                    String selectionType = feature.getFeature().getProperty("selectionType");
-                    GeoJsonObject intersect_geom=airmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
-                    ff=new Feature();
-                    ff.setGeometry(intersect_geom);
-                    ff.setProperty("selectionType", selectionType);
-                    try {
-                        if (geom_new.getGeometryType() == "MultiPolygon") { 
-                            message="Intersection of the drawn polygon with the FIR-boundary results in more than one selected area. The drawn polygon will be used for the TAC-code.";
-                        }
-                        else if ((((Polygon) geom_new).getCoordinates().length > 7) && (!"box".equals(f.getProperty("selectionType")))) {
-                            message="Intersection of the drawn polygon with the FIR-boundary has more than 6 individual points. The drawn polygon will be used for the TAC-code.";
-                        }
-                    }catch (Exception e){}
+                    Coordinate[] coordinates = geom_new.getCoordinates();
+                    if(coordinates == null || coordinates.length == 0){
+                        message="Point lies outside of the FIR";
+                    }else{
+                        GeoJsonWriter writer=new GeoJsonWriter();
+                        String geom_news=writer.write(geom_new);
+                        String selectionType = feature.getFeature().getProperty("selectionType");
+                        GeoJsonObject intersect_geom=airmetObjectMapper.readValue(geom_news, GeoJsonObject.class);
+                        ff=new Feature();
+                        ff.setGeometry(intersect_geom);
+                        ff.setProperty("selectionType", selectionType);
+                        try {
+                            if (geom_new.getGeometryType() == "MultiPolygon") { 
+                                message="Intersection of the drawn polygon with the FIR-boundary results in more than one selected area. The drawn polygon will be used for the TAC-code.";
+                            }
+                            else if ((((Polygon) geom_new).getCoordinates().length > 7) && (!"box".equals(f.getProperty("selectionType")))) {
+                                message="Intersection of the drawn polygon with the FIR-boundary has more than 6 individual points. The drawn polygon will be used for the TAC-code.";
+                            }
+                        }catch (Exception e){}
+                    }
                 } catch (org.locationtech.jts.io.ParseException e1) {
                     // TODO: Auto-generated catch block
                     e1.printStackTrace();

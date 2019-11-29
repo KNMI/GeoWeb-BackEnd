@@ -1,3 +1,14 @@
+2019-11-27
+* (FIX) GW-218: AIRMET - TAC is not updated when deleting start position of FIR - have ensured the backend does not crash when clicking on the poly draw option to remove an already drawn fir
+    Backend now returns "Missing geometry" when no start geometry has been drawn
+
+2019-11-28
+* (FIX) GW-218: SIGMET - Backend now returns "Missing end geometry" when no start end has been drawn
+
+2019-11-27
+* (FIX) GW-218: SIGMET - TAC is not updated when deleting start or end position of FIR - have ensured the backend does not crash when clicking on the poly draw option to remove an already drawn fir
+    Backend now returns "Missing geometry" when no start geometry has been drawn
+
 2019-11-25
 * (FIX) GW-229: For cancelled TAFs, the exported TAC had the incorrect validity start - this should be updated when cancelling to the moment of issuing the cancelled TAF: TAF EHRD 261025Z 2606/2712 20020KT CAVOK= -> TAF AMD EHRD 261025Z 2610/2712 CNL=. This was done on screen in the FE, but the exported TAC was wrong. This has been fixed so the exported TAC now has the correct validity start time
 
