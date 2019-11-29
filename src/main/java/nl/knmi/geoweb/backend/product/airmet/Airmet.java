@@ -24,6 +24,8 @@ import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.GeoJsonObject;
 import org.geojson.Polygon;
+import org.geojson.Point;
+import org.geojson.LngLatAlt;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -353,15 +355,28 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
 	}
 
 	public String toTAC(Feature FIR) {
+        String missGeom = "Missing geometry";
         GeoJsonObject effectiveStartGeometry = SigmetAirmetUtils.findStartGeometry(this.geojson);
-        if ((effectiveStartGeometry == null)
-                || (((Feature) effectiveStartGeometry).getProperty("selectionType") == null)) {
-            return "Missing geometry";
+        if ((effectiveStartGeometry == null) || (((Feature) effectiveStartGeometry).getProperty("selectionType") == null)) {
+            return missGeom;
         }
-        if (!((Feature) effectiveStartGeometry).getProperty("selectionType").equals("box")
-                && !((Feature) effectiveStartGeometry).getProperty("selectionType").equals("fir")
-                && !((Feature) effectiveStartGeometry).getProperty("selectionType").equals("point")) {
+
+		// If no  start geometry, return "Missing geometry"
+		if(((Feature)effectiveStartGeometry).getProperty("selectionType").equals("point")){
+			Point p = (Point)((Feature)effectiveStartGeometry).getGeometry();
+			if (p.getCoordinates()==null) {
+				return missGeom;
+			}
+		}else if(((Feature)effectiveStartGeometry).getProperty("selectionType").equals("box")){
+			List<List<LngLatAlt>> coordinates = ((Polygon)((Feature)effectiveStartGeometry).getGeometry()).getCoordinates();
+			if (coordinates==null || coordinates.size() == 0) {
+				return missGeom;
+			}
+		}else if(!((Feature)effectiveStartGeometry).getProperty("selectionType").equals("fir")){			
             GeoJsonObject intersected = SigmetAirmetUtils.extractSingleStartGeometry(this.geojson);
+			if (((Polygon)((Feature)intersected).getGeometry())==null) {
+				return missGeom;
+			}
             try {
 				int sz=((Polygon)((Feature)intersected).getGeometry()).getCoordinates().get(0).size();
 				if (sz<=7)  {
@@ -369,7 +384,8 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
 				}
 			}
 			catch(Exception e) {}
-        }
+		}
+
         StringBuilder sb = new StringBuilder();
         String validdateFormatted = String.format("%02d", this.validdate.getDayOfMonth())
                 + String.format("%02d", this.validdate.getHour()) + String.format("%02d", this.validdate.getMinute());
