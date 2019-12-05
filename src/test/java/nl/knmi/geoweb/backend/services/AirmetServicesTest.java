@@ -316,10 +316,4 @@ public class AirmetServicesTest {
         verifyNoMoreInteractions(firStore);
         verifyNoMoreInteractions(airmetStore);
     }
-
-    // RequestPostProcessor bearerToken = authHelper.addBearerToken("test",
-    // "ROLE_USER");
-    // ResultActions resultActions =
-    // restMvc.perform(post("/hello").with(bearerToken));
-
 }

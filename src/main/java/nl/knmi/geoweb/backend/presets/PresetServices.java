@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
-import nl.knmi.geoweb.backend.usermanagement.UserStore;
 
 @RestController
 @RequestMapping("/preset")
@@ -41,10 +40,8 @@ public class PresetServices {
 	public ResponseEntity<List<Preset>> getPresets(@RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
-			UserStore userStore=UserStore.getInstance();
-			String user=UserLogin.getUserFromRequest(req);
-			String[]roles=userStore.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER"};
+			String user=UserLogin.getUserName();
+			String[]roles=UserLogin.getUserPrivileges();
 			List<Preset>userPresets=presetStore.readUserPresets(user);
 			presets.addAll(userPresets);
 			for (String role: roles) {
@@ -59,10 +56,8 @@ public class PresetServices {
 	public ResponseEntity<String> getPreset(@RequestParam("name")String name, @RequestParam(value="system", required=false, defaultValue="false")Boolean system, HttpServletRequest req) throws JsonProcessingException {
 		List<Preset>presets=presetStore.readSystemPresets();
 		if (!system) {
-			UserStore userStore=UserStore.getInstance();
-			String user=UserLogin.getUserFromRequest(req);
-			String[]roles=userStore.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER"};
+			String user=UserLogin.getUserName();
+			String[]roles=UserLogin.getUserPrivileges();
 			List<Preset>userPresets=presetStore.readUserPresets(user);
 			presets.addAll(userPresets);
 			for (String role: roles) {
@@ -120,7 +115,7 @@ public class PresetServices {
 		if (preset!=null) {
 			preset.setName(name);
 
-			String user=UserLogin.getUserFromRequest(req);
+			String user=UserLogin.getUserName();
 			try {
 				presetStore.storeUserPreset(user, preset);
 				return ResponseEntity.status(HttpStatus.OK).body("User preset "+name+" stored");				

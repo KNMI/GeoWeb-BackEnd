@@ -38,6 +38,7 @@ public class SecurityServices {
         Map<String, String> oauth2AuthenticationUrls = new HashMap<>();
 
         oauth2AuthenticationUrls.put(clientName, loginUri);
+        oauth2AuthenticationUrls.put("type", "oauth2");
 
         return oauth2AuthenticationUrls;
     }

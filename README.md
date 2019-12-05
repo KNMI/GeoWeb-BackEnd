@@ -50,5 +50,59 @@ Start with spring boot dashboard
 Visit http://localhost:8080/versioninfo/version
 
 
+# OAuth2 with Amazon Cognito
+
+Setup Cognito on AWS
+
+* Create a user pool
+* Set required attributes (at least email)
+* Add users in 'General settings'->'Users and groups'
+* Add an application client in 'General settings'->'App clients' Here you get the user pool, client id and client secret. These need to be configured in the geoweb backend, either via commandline settings (below) or launch configurations.
+* In 'App integration'->'App client settings' Make sure that the 'Cognito User Pool' checkbox is clicked. 
+* As callback urls configure:  `https://<geowebbackendurl>/login`
+* As Sign out url configure: `https://<geowebbackendurl>/logout/geoweb`
+
+
+In order to run the backend with AWS cognito, the backend needs to run over https. On development machines this can be achieved by generating a self signed certificate and enabling SSL for tomcat.
+
+A self signed certificate can be generated via:
+```
+keytool -genkeypair -alias tomcat -keyalg RSA -keysize 2048 -keystore ~/keystore.jks -validity 3650
+```
+
+To start the GeoWeb backend from commandline:
+
+```
+mvn spring-boot:run -Dspring-boot.run.arguments=\
+--security.oauth2.client.clientSecret=***,\
+--security.oauth2.client.clientId=7kjte51escl78atbuqe8348v98,\
+--client.userpool=gw-sesar-test-appclient,\
+--spring.profiles.active=oauth2-cognito,\
+--server.ssl.enabled=true,\
+--server.port=8443,\
+--client.frontendURL=http://localhost:3000/
+```
+
+
+To start from visual studio code, you have to edit your launch configuration (launch.json):
+
+```
+   {
+      "type": "java",
+      "name": "Spring Boot-GeoWebBackEndApplication<geoweb-backend>",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "console": "internalConsole",
+      "mainClass": "nl.knmi.geoweb.backend.GeoWebBackEndApplication",
+      "projectName": "geoweb-backend",
+      "vmArgs": ["-Dsecurity.oauth2.client.clientSecret=***,
+        "-Dsecurity.oauth2.client.clientId=7kjte51escl78atbuqe8348v98",
+        "-Dclient.userpool=gw-sesar-test-appclient",
+        "-Dspring.profiles.active=oauth2-cognito",
+        "-Dserver.ssl.enabled=true",
+        "-Dserver.port=8443",
+        "-Dclient.frontendURL=http://localhost:3000/"]
+    }
+```
 
 
