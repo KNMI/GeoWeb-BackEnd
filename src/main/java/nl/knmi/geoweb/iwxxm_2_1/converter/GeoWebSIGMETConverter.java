@@ -199,7 +199,7 @@ public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET>
 
         if (input.getStatus().equals(SigmetAirmetStatus.published)) {
             if (input.getCancels() == null) {
-                phenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2jtsGeometry((Feature) SigmetAirmetUtils.extractSingleStartGeometry(input.getGeojson()))));
+                phenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2FmiAviGeometry((Feature) SigmetAirmetUtils.extractSingleStartGeometry(input.getGeojson()))));
                 if ((input.getObs_or_forecast() != null)&& (input.getObs_or_forecast().getObsFcTime() != null)){
                     phenBuilder.setTime(PartialOrCompleteTimeInstant.of(input.getObs_or_forecast().getObsFcTime().atZoneSameInstant(ZoneId.of("UTC"))));
                 }
@@ -208,7 +208,7 @@ public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET>
                 if (fpaRequired) {
                     PhenomenonGeometryImpl.Builder fpaPhenBuilder=new PhenomenonGeometryImpl.Builder();
                     fpaPhenBuilder.setTime(PartialOrCompleteTimeInstant.of(input.getValiddate_end().atZoneSameInstant(ZoneId.of("UTC"))));
-                    fpaPhenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2jtsGeometry((Feature) input.extractSingleEndGeometry())));
+                    fpaPhenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2FmiAviGeometry((Feature) input.extractSingleEndGeometry())));
                     fpaPhenBuilder.setApproximateLocation(false);
                     sigmet.setForecastGeometries(Arrays.asList(fpaPhenBuilder.build()));
                 }
