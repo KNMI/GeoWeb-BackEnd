@@ -27,13 +27,13 @@ public class AirmetToIWXXMTest {
 	@Autowired
 	@Qualifier("airmetObjectMapper")
 	private ObjectMapper airmetObjectMapper;
-	
+
 	@Autowired
 	private AirmetConverter airmetConverter;
 
 	@Autowired
 	private FIRStore firStore;
-	
+
 	static String[] testAirmets= new String[] {
 			getStringFromFile("nl/knmi/geoweb/iwxxm_2_1/converter/testairmet1.json"),
 			getStringFromFile("nl/knmi/geoweb/iwxxm_2_1/converter/testairmet2.json"),
@@ -62,7 +62,7 @@ public class AirmetToIWXXMTest {
 		Debug.errprintln("setGeoFromString on ["+json+"] failed");
 		am.setGeojson(null);
 	}
-	
+
 	public void TestConversion(String s) {
 		Airmet am = null;
 		try {
@@ -71,11 +71,12 @@ public class AirmetToIWXXMTest {
 			e.printStackTrace(System.err);
 		}
 
+
 		String res=airmetConverter.ToIWXXM_2_1(am);
 		Debug.errprintln(res);
 		Debug.errprintln("TAC: "+am.toTAC(firStore.lookup(am.getFirname(), true)));
 	}
-	
+
 	@Test
 	public void TestConversions(){
 		for (String am: testAirmets) {

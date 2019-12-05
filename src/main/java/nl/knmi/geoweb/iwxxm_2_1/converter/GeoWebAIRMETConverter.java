@@ -236,7 +236,7 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
 
         if (input.getStatus().equals(SigmetAirmetStatus.published)) {
             if (input.getCancels() == null) {
-                phenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2jtsGeometry((Feature) SigmetAirmetUtils.extractSingleStartGeometry(input.getGeojson()))));
+                phenBuilder.setGeometry(TacOrGeoGeometryImpl.of(GeoUtils.jsonFeature2FmiAviGeometry((Feature) SigmetAirmetUtils.extractSingleStartGeometry(input.getGeojson()))));
                 if ((input.getObs_or_forecast() != null)&& (input.getObs_or_forecast().getObsFcTime() != null)){
                     phenBuilder.setTime(PartialOrCompleteTimeInstant.of(input.getObs_or_forecast().getObsFcTime().atZoneSameInstant(ZoneId.of("UTC"))));
                 }
