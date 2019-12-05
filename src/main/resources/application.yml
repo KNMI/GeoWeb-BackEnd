@@ -1,6 +1,12 @@
 server:
   port: 8080
-
+  ssl:
+    enabled: false
+    keyStore: ${HOME}/keystore.jks
+    keyStorePassword: changeit
+    keyStoreType: JKS
+    keyAlias: tomcat
+    
 # Spring configuration
 spring:
   profiles:

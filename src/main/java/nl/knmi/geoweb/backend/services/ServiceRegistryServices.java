@@ -17,7 +17,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
-import nl.knmi.geoweb.backend.usermanagement.UserStore;
 
 
 @RestController
@@ -29,10 +28,7 @@ public class ServiceRegistryServices {
 		Debug.println("/getServices");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
-			UserStore store=UserStore.getInstance();
-			String user=UserLogin.getUserFromRequest(req);
-			String[]roles=store.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER", "ANON"};
+			String[]roles=UserLogin.getUserPrivileges();
 			List<Service> foundServices=new ArrayList<Service>();
 			for (String role : roles) {
 				List<Service>roleServices=reg.getWMSServicesForRole(role);
@@ -52,10 +48,7 @@ public class ServiceRegistryServices {
 		Debug.println("/getOverlayServices");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try{
-			UserStore store=UserStore.getInstance();
-			String user=UserLogin.getUserFromRequest(req);
-			String[]roles=store.getUserRoles(user);
-			if (roles==null) roles=new String[]{"USER", "ANON"};
+			String[]roles=UserLogin.getUserPrivileges();
 			List<Service> foundServices=new ArrayList<Service>();
 			for (String role : roles) {
 				List<Service>roleServices=reg.getWMSOverlayServicesForRole(role);

@@ -29,6 +29,7 @@
   {
     "roleName": "production_full",
     "privileges": [
+      "WMSSERVICES_FORECASTER",
       "TAF_read",
       "SIGMET_read",
       "AIRMET_read",

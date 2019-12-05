@@ -6,7 +6,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -16,7 +16,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -26,7 +26,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -36,7 +36,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -46,7 +46,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -56,7 +56,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -66,7 +66,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "MET"
+      "WMSSERVICES_FORECASTER"
     ]
   },
   {
@@ -76,8 +76,8 @@
     "type":"WMS",
     "goal":"OVERLAY",
     "roles":[
-      "USER",
-      "MET"
+      "WMSSERVICES_FORECASTER",
+      "ANONYMOUS"
     ]
   },
   {
@@ -87,7 +87,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "ANON"
+      "ANONYMOUS"
     ]
   },
   {
@@ -97,7 +97,7 @@
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
-      "ANON"
+      "ANONYMOUS"
     ]
   }
 ]

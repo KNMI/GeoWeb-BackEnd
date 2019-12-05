@@ -32,6 +32,7 @@ security:
 
 client:
     name: OAuth-test
+    frontendURL: http://localhost/
     logoutUri: http://localhost/logout?redirect_uri=
 
 logging:

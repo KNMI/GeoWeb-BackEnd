@@ -1,87 +1,52 @@
 package nl.knmi.geoweb.backend.usermanagement;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
-
-import nl.knmi.adaguc.tools.JsonMessage;
-import nl.knmi.geoweb.backend.usermanagement.UserStore.GeoWebUser;
 
 @RestController
 public class UserLogin {
+	/**
+	 * Return null if not signed in, otherwise returns the username.
+	 * 
+	 * @return
+	 */
+	public static String getUserName() {
+		if (SecurityContextHolder.getContext().getAuthentication() == null
+				|| !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
+				|| (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
+			return null;
+		} else {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			return auth.getName();
+		}
+	}
 
-	public static String getUserFromRequest(HttpServletRequest req) {
-		Cookie[] cookies=req.getCookies();
-		if (cookies!=null) {
-			for (Cookie cookie: cookies){
-				if (cookie.getName().equals("GEOWEB_AUTH")) {
-					return cookie.getValue();
-				}
+	/**
+	 * Returns list of roles, returns list with length 0 if not signed in.
+	 * 
+	 * @return
+	 */
+	public static String[] getUserPrivileges() {
+		if (SecurityContextHolder.getContext().getAuthentication() == null
+				|| !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
+				|| (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
+			return "ANONYMOUS".split(",");
+		} else {
+			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+			// return auth.getAuthorities().stream().toArray(String[]::new);
+			// List<GrantedAuthority> grantedAuthorities = new
+			// ArrayList<GrantedAuthority>(); for (Authority auth : auths)
+			// grantedAuthorities.add(new GrantedAuthorityImpl(auth.getName())); return
+			// grantedAuthorities; }
+			List<String> va = auth.getAuthorities().stream().map(authority -> authority.getAuthority())
+					.collect(Collectors.toList());
+		    return va.toArray(new String[0]);
+				// return (String[]) auth.getAuthorities().stream().map(authority -> authority.getAuthority()).collect(Collectors.toList()).toArray();
 			}
-		}
-		return "anonymous";
-	}
-
-	UserStore userstore=UserStore.getInstance();
-
-	@RequestMapping("/getuser")
-	public GeoWebUser getGeoWebUser (HttpServletRequest req) {
-		String user=getUserFromRequest(req);
-		if (!user.equals("anonymous")) {
-			GeoWebUser geowebUser=userstore.getUser(user);
-			return geowebUser;
-		}
-		RoleType[] roles={RoleType.USER, RoleType.ANON};
-		return userstore.new GeoWebUser("guest","XXX", roles);
-	}	
-
-	private Cookie getCookie(GeoWebUser user) {
-		Cookie cookie=new Cookie("GEOWEB_AUTH",user.getUsername());
-		cookie.setSecure(false);
-		cookie.setMaxAge(24*60*60);
-		cookie.setPath("/");
-		return cookie;
-	}
-
-
-	@RequestMapping("/logout")
-	public JsonMessage userLogout(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		Cookie []cookies=request.getCookies();
-		if (cookies!=null) {
-			for(int i = 0; i< cookies.length ; ++i){
-				if(cookies[i].getName().equals("GEOWEB_AUTH")){
-					cookies[i].setMaxAge(0);
-					cookies[i].setPath("/");
-					response.addCookie(cookies[i]);
-					return new JsonMessage("logout successfull");
-				}
-			} 
-		}
-		return new JsonMessage("not logged in");
-	}
-
-	@RequestMapping("/login")
-	public GeoWebUser userLogin(@RequestParam(value="username", required=true)String name,
-			@RequestParam(value="password", required=true)String password,
-			HttpServletResponse response) throws IOException {
-		GeoWebUser user=userstore.checkUser(name, password);
-		if (user==null) {
-			List<RoleType>roles=new ArrayList<RoleType>();
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);//, "User/password incorrect");
-			response.sendError(401, "User/password incorrect");
-			return userstore.new GeoWebUser(null, null, roles);
-
-		}
-		Cookie cookie=getCookie(user);
-		response.addCookie(cookie);
-		return user ;
 	}
 }

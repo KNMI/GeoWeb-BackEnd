@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MimeTypeUtils;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.security.services.SecurityServices;
 
 @Slf4j
-@Profile("!generic")
 @Controller
 @RequestMapping("/")
 public class SecurityController {
@@ -29,12 +27,15 @@ public class SecurityController {
     SecurityServices securityServices;
 
     @Value("${client.logoutUri}")
-    private String keycloakLogoutUrl;
+    private String oauth2LogoutUrl;
+
+    @Value("${client.frontendURL}")
+    private String frontendURL;
 
     @RequestMapping(method = RequestMethod.GET, path = "/")
     public String index() {
         log.info("Request received @[/]");
-        return "status";
+        return "redirect:" + frontendURL;
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/login/geoweb")
@@ -50,11 +51,15 @@ public class SecurityController {
         return securityServices.getLoginOptions();
     }
 
+    @Value("${security.oauth2.client.clientId}")
+    private String clientId;
+
+    
     @GetMapping(path = "/logout")
     public String logOut(@RequestHeader(value = "Referer", required = false) Optional<String> referer,
             HttpServletRequest servletRequest) {
         log.info("Request received @[/logout]");
-        return "redirect:" + keycloakLogoutUrl + securityServices.getLogoutRedirect(referer, servletRequest);
+        return "redirect:" + oauth2LogoutUrl + "?client_id=" + clientId + "&logout_uri=" + securityServices.getLogoutRedirect(referer, servletRequest) + "/logout/geoweb";
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/logout/options", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)

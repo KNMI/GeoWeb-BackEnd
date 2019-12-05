@@ -22,7 +22,9 @@ public enum Privilege implements GrantedAuthority {
     AIRMET_EDIT("AIRMET_edit"),
     AIRMET_READ("AIRMET_read"),
     AIRMET_SETTINGS_EDIT("AIRMET_settings_edit"),
-    AIRMET_SETTINGS_READ("AIRMET_settings_read");
+    AIRMET_SETTINGS_READ("AIRMET_settings_read"),
+    ANONYMOUS("ANONYMOUS"),
+    WMSSERVICES_FORECASTER("WMSSERVICES_FORECASTER");
 
     private final String authority;
 
