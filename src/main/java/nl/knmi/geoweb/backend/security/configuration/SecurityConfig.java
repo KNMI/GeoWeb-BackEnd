@@ -34,7 +34,6 @@ import nl.knmi.geoweb.backend.security.models.Privilege;
 @Configuration
 @EnableOAuth2Sso
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -43,6 +42,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        http.requiresChannel().antMatchers(
+            "/login",
+            "/signin",
+            "/login/geoweb",
+            "/login/options",
+            "/logout",
+            "/logout/options",
+            "/status").requiresSecure();
         // The order of the rules matters and the more specific request matchers should go first.
         // The first match in the list below will be evaluated
         http.antMatcher("/**").authorizeRequests()
