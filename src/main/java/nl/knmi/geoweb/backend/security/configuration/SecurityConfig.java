@@ -40,16 +40,21 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("classpath:nl/knmi/geoweb/security/rolesToPrivilegesMapping.json")
     private Resource mappingResource;
 
+    
+
+    @Value("${security.oauth2.client.registeredRedirectUri}")
+    private String registeredRedirectUri;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.requiresChannel().antMatchers(
-            "/login",
-            "/signin",
-            "/login/geoweb",
-            "/login/options",
-            "/logout",
-            "/logout/options",
-            "/status").requiresSecure();
+        // http.requiresChannel().antMatchers(
+        //     "/login",
+        //     "/signin",
+        //     "/login/geoweb",
+        //     "/login/options",
+        //     "/logout",
+        //     "/logout/options",
+        //     "/status").requiresSecure();
         // The order of the rules matters and the more specific request matchers should go first.
         // The first match in the list below will be evaluated
         http.antMatcher("/**").authorizeRequests()
@@ -106,8 +111,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .deleteCookies("JSESSIONID")
                 // .logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb"))
                 .logoutSuccessUrl("/logout")
-                .and().exceptionHandling()
-                .authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login"))
+                .and()
+                .exceptionHandling().authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(registeredRedirectUri))
                 .and().cors()
                 .and().csrf().disable();
     }
