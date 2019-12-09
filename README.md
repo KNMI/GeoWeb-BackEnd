@@ -80,7 +80,8 @@ mvn spring-boot:run -Dspring-boot.run.arguments=\
 --spring.profiles.active=oauth2-cognito,\
 --server.ssl.enabled=true,\
 --server.port=8443,\
---client.frontendURL=http://localhost:3000/
+--client.frontendURL=http://localhost:3000/,\
+--client.backendURL=https://localhost:8443/
 ```
 
 
@@ -95,13 +96,16 @@ To start from visual studio code, you have to edit your launch configuration (la
       "console": "internalConsole",
       "mainClass": "nl.knmi.geoweb.backend.GeoWebBackEndApplication",
       "projectName": "geoweb-backend",
-      "vmArgs": ["-Dsecurity.oauth2.client.clientSecret=***,
-        "-Dsecurity.oauth2.client.clientId=7kjte51escl78atbuqe8348v98",
-        "-Dclient.userpool=gw-sesar-test-appclient",
-        "-Dspring.profiles.active=oauth2-cognito",
-        "-Dserver.ssl.enabled=true",
-        "-Dserver.port=8443",
-        "-Dclient.frontendURL=http://localhost:3000/"]
+      "args": [
+            "--server.ssl.enabled=true",
+            "--server.port=8443",
+            "--security.oauth2.client.clientId=7kjte51escl78atbuqe8348v98"
+            "--security.oauth2.client.clientSecret=***",
+            "--client.userpool=gw-sesar-test-appclient",
+            "--spring.profiles.active=oauth2-cognito",
+            "--client.frontendURL=http://localhost:3000/",
+            "--client.backendURL=https://localhost:8443",
+        ]
     }
 ```
 

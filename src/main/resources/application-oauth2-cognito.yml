@@ -3,6 +3,9 @@ security:
       client:
         accessTokenUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/token
         userAuthorizationUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/authorize
+        preEstablishedRedirectUri: ${client.backendURL}/login
+        registeredRedirectUri: ${client.backendURL}/login
+        useCurrentUri: false
         scope:
           - openid
           - profile
@@ -13,6 +16,7 @@ security:
 client:
   realm: GeoWeb
   name: Cognito
+  backendURL: https://localhost:8443/
   frontendURL: http://localhost:3000/
   logoutUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/logout
 
