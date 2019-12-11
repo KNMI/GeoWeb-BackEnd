@@ -1,6 +1,7 @@
 package nl.knmi.geoweb.backend.security.services;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,10 +19,13 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 
 @Slf4j
 @Service
 public class SecurityServices {
+    @Value("${spring.profiles.active:}")
+    private String activeProfiles;
 
     @Value("${client.name}")
     private String clientName;
@@ -87,20 +91,37 @@ public class SecurityServices {
      */
     public Map<String, Object> getStatus() {
         Map<String, Object> status = new HashMap<>();
-        if (SecurityContextHolder.getContext().getAuthentication() == null
-                || !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
-                || (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
-            status.put("userName", null);
-            status.put("privileges", new ArrayList<>());
-            status.put("isLoggedIn", false);
-        } else {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            status.put("userName", auth.getName());
-            status.put("privileges", auth.getAuthorities().stream()
-                    .map(authority -> authority.getAuthority())
-                    .collect(Collectors.toList()));
+        if(SecurityServices.isProfileActive(activeProfiles, "generic")) {
+            ArrayList<String> privileges = new ArrayList<String>(Arrays.asList("AIRMET_edit", "AIRMET_read", "AIRMET_settings_read", 
+                                        "SIGMET_edit", "SIGMET_read", "SIGMET_settings_read", "TAF_edit", "TAF_read", "TAF_settings_read"));
+            status.put("userName", UserLogin.getUserName());
+            status.put("privileges", privileges);
             status.put("isLoggedIn", true);
+        }else{
+            if (SecurityContextHolder.getContext().getAuthentication() == null
+                    || !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
+                    || (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
+                status.put("userName", null);
+                status.put("privileges", new ArrayList<>());
+                status.put("isLoggedIn", false);
+            } else {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                status.put("userName", auth.getName());
+                status.put("privileges", auth.getAuthorities().stream()
+                        .map(authority -> authority.getAuthority())
+                        .collect(Collectors.toList()));
+                status.put("isLoggedIn", true);
+            }
         }
         return status;
+    }
+
+    public static boolean isProfileActive(String profiles, String requestedProfile){
+        for (String profileName : profiles.split(",")) {
+            if(profileName.equals(requestedProfile)){
+                return true;
+            }
+        }
+        return false;
     }
 }
