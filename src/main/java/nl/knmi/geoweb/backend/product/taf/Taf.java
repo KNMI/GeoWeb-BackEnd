@@ -24,6 +24,7 @@ import nl.knmi.geoweb.backend.product.ProductConverter;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 import nl.knmi.geoweb.backend.product.taf.serializers.CloudsSerializer;
 import nl.knmi.geoweb.backend.product.taf.serializers.WeathersSerializer;
+import nl.knmi.geoweb.backend.traceability.ProductTraceability;
 
 @Getter
 @Setter
@@ -886,6 +887,10 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
         }
         String validTime = reportTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmm"));
         String name = "TAF_" + this.metadata.getLocation() + "_" + validTime + "_" + time;
+
+        String action = (this.metadata.type.toString() == "normal") ? "publish": this.metadata.type.toString();
+        ProductTraceability.TraceProduct(action,"TAF", this.metadata.getUuid(), this.metadata.getLocation(), validTime, name);
+        
         try {
             Tools.writeFile(path.getPath() + "/" + name + ".tac", this.getPublishableTAC(converter));
         } catch (Exception e) {

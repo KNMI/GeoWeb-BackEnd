@@ -47,6 +47,7 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetMovement;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetUtils;
+import nl.knmi.geoweb.backend.traceability.ProductTraceability;
 
 @JsonInclude(Include.NON_NULL)
 @Getter
@@ -698,6 +699,8 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			String jsonFileName=path.getPath() + "/" + name + ".json";
 			Tools.writeFile(jsonFileName, this.toJSON(om));
 			toDeleteIfError.add(jsonFileName);
+
+			ProductTraceability.TraceProduct(status.toString(),"SIGMET", this.getUuid(), this.getLocation_indicator_mwo(), validTime, name);
 
 			String iwxxmName="A_"+iwxxmBulletinHeader+this.getLocation_indicator_mwo()+this.getValiddate().format(DateTimeFormatter.ofPattern("ddHHmm"));
 			if (status.equals(SigmetAirmetStatus.canceled)){
