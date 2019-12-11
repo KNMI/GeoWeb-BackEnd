@@ -8,21 +8,35 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RestController;
 
+import org.springframework.beans.factory.annotation.Value;
+import nl.knmi.geoweb.backend.security.services.SecurityServices;
+
 @RestController
 public class UserLogin {
+    private static String activeProfiles;
+
+	@Value("${spring.profiles.active:}")
+	public void setActiveProfiles(String actProfile){
+		activeProfiles = actProfile;
+	}
+
 	/**
 	 * Return null if not signed in, otherwise returns the username.
-	 * 
+	 * If profile is generic - return MET1 
 	 * @return
 	 */
 	public static String getUserName() {
-		if (SecurityContextHolder.getContext().getAuthentication() == null
-				|| !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
-				|| (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
-			return null;
-		} else {
-			Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-			return auth.getName();
+		if(SecurityServices.isProfileActive(activeProfiles, "generic")){
+			return "MET1";
+        }else{
+			if (SecurityContextHolder.getContext().getAuthentication() == null
+					|| !SecurityContextHolder.getContext().getAuthentication().isAuthenticated()
+					|| (SecurityContextHolder.getContext().getAuthentication() instanceof AnonymousAuthenticationToken)) {
+				return null;
+			} else {
+				Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+				return auth.getName();
+			}
 		}
 	}
 
