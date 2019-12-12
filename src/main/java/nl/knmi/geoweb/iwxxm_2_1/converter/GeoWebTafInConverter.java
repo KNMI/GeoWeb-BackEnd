@@ -17,11 +17,12 @@ import fi.fmi.avi.model.taf.TAF;
 import fi.fmi.avi.model.taf.TAFBaseForecast;
 import fi.fmi.avi.model.taf.TAFChangeForecast;
 import fi.fmi.avi.model.taf.TAFForecast;
+import lombok.extern.slf4j.Slf4j;
 import fi.fmi.avi.model.SurfaceWind;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.product.taf.TAFtoTACMaps;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 
+@Slf4j
 public class GeoWebTafInConverter extends AbstractGeoWebTafInConverter<TAF> {
     @Override
     public ConversionResult<Taf> convertMessage(TAF input, ConversionHints hints) {
@@ -103,7 +104,7 @@ public class GeoWebTafInConverter extends AbstractGeoWebTafInConverter<TAF> {
                         }
 
                         if (changeForecast.isCeilingAndVisibilityOk()) {
-                            Debug.errprintln("SETTING CHANGEFORECAST CAVOK");
+                            log.debug("SETTING CHANGEFORECAST CAVOK");
                             chFc.setCaVOK(true);
                         }
 
@@ -236,7 +237,7 @@ public class GeoWebTafInConverter extends AbstractGeoWebTafInConverter<TAF> {
                         tafWeather=TAFtoTACMaps.fromTacString(w.getCode());
                         weatherElems.add(tafWeather);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        log.error(e.getMessage());
                     }
                 }
                 fc.setWeather(weatherElems);

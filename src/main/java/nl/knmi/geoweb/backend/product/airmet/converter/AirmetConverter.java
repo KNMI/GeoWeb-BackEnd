@@ -15,12 +15,13 @@ import fi.fmi.avi.converter.ConversionIssue;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.converter.iwxxm.conf.IWXXMConverter;
 import fi.fmi.avi.model.sigmet.AIRMET;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.product.ProductConverter;
 import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebAIRMETConverter;
 import nl.knmi.geoweb.iwxxm_2_1.converter.conf.GeoWebConverterConfig;
 
+@Slf4j
 @Configuration
 @Import({ IWXXMConverter.class,
 		GeoWebAIRMETConverter.class, GeoWebConverterConfig.class})
@@ -52,16 +53,15 @@ public class AirmetConverter implements ProductConverter<Airmet>{
 			if (ConversionResult.Status.SUCCESS == iwxxmResult.getStatus()) {
 				return iwxxmResult.getConvertedMessage().get();
 			} else {
-				Debug.errprintln("ERR: "+iwxxmResult.getStatus());
+				log.error("IWXXM conversion failed: " + iwxxmResult.getStatus());
 				for (ConversionIssue iss:iwxxmResult.getConversionIssues()) {
-					Debug.errprintln("iss: "+iss.getMessage());
+					log.error("issue: " + iss.getMessage());
 				}
 			}
 		}else {
-			Debug.errprintln("Airmet2IWXXM failed");
-			Debug.errprintln("ERR: "+result.getStatus());
+			log.error("Airmet2IWXXM failed: " + result.getStatus());
 			for (ConversionIssue iss:result.getConversionIssues()) {
-				Debug.errprintln("iss: "+iss.getMessage());
+				log.error("issue: " + iss.getMessage());
 			}
 		}
 		return "FAIL";

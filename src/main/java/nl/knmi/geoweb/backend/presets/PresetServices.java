@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.usermanagement.UserLogin;
 
+@Slf4j
 @RestController
 @RequestMapping("/preset")
 public class PresetServices {
@@ -84,8 +86,7 @@ public class PresetServices {
 				return ResponseEntity.status(HttpStatus.OK).body("{ \"test\": \"OK\"}");				
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("ERR");				
@@ -102,8 +103,7 @@ public class PresetServices {
 				return ResponseEntity.status(HttpStatus.OK).body("Role preset "+name+" stored");				
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
@@ -121,8 +121,7 @@ public class PresetServices {
 				return ResponseEntity.status(HttpStatus.OK).body("User preset "+name+" stored");				
 
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				

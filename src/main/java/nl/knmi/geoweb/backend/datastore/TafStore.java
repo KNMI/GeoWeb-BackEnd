@@ -15,16 +15,18 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.TAFReportPublishedConcept;
 
+@Slf4j
 @Component
 public class TafStore {
 
@@ -41,19 +43,18 @@ public class TafStore {
 			throw new Exception("geoweb.products.storeLocation property is null");
 		}
 		if(this.isCreated == true) {
-//			throw new Exception("TafStore is already created");
-			Debug.println("WARN: TafStore is already created");
+			log.warn("TafStore is already created");
 		}
 		this.isCreated = true;
 		String dir = productstorelocation + "/tafs/";
-		Debug.println("TAF STORE at " + dir);
+		log.debug("TafStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating taf store at ["+f.getAbsolutePath()+"]");		
+			log.debug("Creating TafStore at ["+f.getAbsolutePath()+"]");		
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Taf directory location is not a directorty");
+			log.error("Taf directory location is not a directorty");
 			throw new NotDirectoryException("Taf directory location is not a directory");
 		}
 		
@@ -65,7 +66,6 @@ public class TafStore {
 	}
 	
 	public void storeTaf(Taf taf) throws JsonProcessingException, IOException {
-//		Debug.println("Store taf " + this.directory);
 		String fn=String.format("%s/taf_%s.json", this.directory, taf.metadata.getUuid());
 		if(taf.metadata.getValidityStart() == null || taf.metadata.getValidityEnd() == null) {
 			throw new IOException("Validity start end validity end must be specified");
@@ -76,7 +76,6 @@ public class TafStore {
 
 
 	public Taf[] getTafs(boolean selectActive, TAFReportPublishedConcept selectStatus, String uuid, String location) throws JsonParseException, JsonMappingException, IOException {
-//		Debug.println("directory:"+directory);
 		Comparator<Taf> comp = new Comparator<Taf>() {
 			public int compare(Taf lhs, Taf rhs) {
 				try{

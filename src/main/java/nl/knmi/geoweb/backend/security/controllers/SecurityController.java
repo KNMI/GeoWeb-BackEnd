@@ -34,20 +34,20 @@ public class SecurityController {
 
     @RequestMapping(method = RequestMethod.GET, path = "/")
     public String index() {
-        log.info("Request received @[/]");
+        log.debug("Request received @[/]");
         return "redirect:" + frontendURL;
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/login/geoweb")
     public String getGeoWebLogin() {
-        log.info("Request received @[/login/geoweb]");
+        log.debug("Request received @[/login/geoweb]");
         return "login";
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/login/options", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, String> getLoginOptions() {
-        log.info("Request received @[/login/options]");
+        log.debug("Request received @[/login/options]");
         return securityServices.getLoginOptions();
     }
 
@@ -58,27 +58,27 @@ public class SecurityController {
     @GetMapping(path = "/logout")
     public String logOut(@RequestHeader(value = "Referer", required = false) Optional<String> referer,
             HttpServletRequest servletRequest) {
-        log.info("Request received @[/logout]");
+        log.debug("Request received @[/logout]");
         return "redirect:" + oauth2LogoutUrl + "?client_id=" + clientId + "&logout_uri=" + securityServices.getLogoutRedirect(referer, servletRequest) + "/logout/geoweb";
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/logout/options", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, String> getLogoutOptions() {
-        log.info("Request received @[/logout/options]");
+        log.debug("Request received @[/logout/options]");
         return securityServices.getLogoutOptions();
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/status", produces = MimeTypeUtils.APPLICATION_JSON_VALUE)
     @ResponseBody
     public Map<String, Object> getStatus() {
-        log.info("Request received @[/status]");
+        log.debug("Request received @[/status]");
         return securityServices.getStatus();
     }
 
     @RequestMapping(method = RequestMethod.GET, path = "/testOnly")
     public String test() {
-        log.info("Request received @[/testOnly]");
+        log.debug("Request received @[/testOnly]");
         return "test.html";
     }
 }

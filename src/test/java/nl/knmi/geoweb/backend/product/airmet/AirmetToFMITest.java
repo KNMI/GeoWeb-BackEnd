@@ -27,7 +27,7 @@ import fi.fmi.avi.converter.AviMessageSpecificConverter;
 import fi.fmi.avi.converter.ConversionHints;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.model.sigmet.AIRMET;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.backend.product.sigmetairmet.ObsFc;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetChange;
@@ -37,6 +37,7 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebAIRMETConverter;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class AirmetToFMITest {
@@ -130,10 +131,10 @@ public class AirmetToFMITest {
 		Airmet am = getBaseAirmet("OCNL_TSGR");
 		ConversionResult<AIRMET>  res = geowebToFMIConverter.convertMessage(am,  hints);
 		assertThat(res.getStatus(), is(ConversionResult.Status.SUCCESS));
-		Debug.println(res.getConvertedMessage().get().toString());
+		log.debug(res.getConvertedMessage().get().toString());
 		ConversionResult<String> resJson = airmetJSONSerializer.convertMessage(res.getConvertedMessage().get(), hints);
 		assertThat(resJson.getStatus(), is(ConversionResult.Status.SUCCESS));
-		Debug.println(resJson.getConvertedMessage().get());
+		log.debug(resJson.getConvertedMessage().get());
 		JSONObject json = new JSONObject(resJson.getConvertedMessage().get());
 		assertThat(json.getJSONObject("validityPeriod").getJSONObject("startTime").getString("completeTime"), is((STARTTIME)));
 		assertThat(json.getJSONObject("validityPeriod").getJSONObject("endTime").getString("completeTime"), is((ENDTIME)));
@@ -154,13 +155,13 @@ public class AirmetToFMITest {
 		Airmet am = getBaseAirmet("BKN_CLD");
 		am.setMovement_type(Airmet.AirmetMovementType.STATIONARY);
 		am.setCloudLevels(new Airmet.AirmetCloudLevelInfo(true, true, 300, "FT"));
-		Debug.println(am.serializeAirmetToString(airmetObjectMapper));
+		log.debug(am.serializeAirmetToString(airmetObjectMapper));
 		ConversionResult<AIRMET>  res = geowebToFMIConverter.convertMessage(am,  hints);
 		assertThat(res.getStatus(), is(ConversionResult.Status.SUCCESS));
-		Debug.println(res.getConvertedMessage().get().toString());
+		log.debug(res.getConvertedMessage().get().toString());
 		ConversionResult<String> resJson = airmetJSONSerializer.convertMessage(res.getConvertedMessage().get(), hints);
 		assertThat(resJson.getStatus(), is(ConversionResult.Status.SUCCESS));
-		Debug.println(resJson.getConvertedMessage().get());
+		log.debug(resJson.getConvertedMessage().get());
 		JSONObject json = new JSONObject(resJson.getConvertedMessage().get());
 		assertThat(json.getJSONObject("validityPeriod").getJSONObject("startTime").getString("completeTime"), is((STARTTIME)));
 		assertThat(json.getJSONObject("validityPeriod").getJSONObject("endTime").getString("completeTime"), is((ENDTIME)));

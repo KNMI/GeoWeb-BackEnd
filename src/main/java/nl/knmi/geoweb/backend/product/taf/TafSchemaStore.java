@@ -22,9 +22,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 
+@Slf4j
 @Component
 public class TafSchemaStore {
 	@Getter
@@ -38,14 +39,14 @@ public class TafSchemaStore {
 	public TafSchemaStore(@Value(value = "${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 	
 		String dir = productstorelocation + "/tafs/schemas";
-		Debug.println("TAF SCHEMA STORE at " + dir);
+		log.debug("TafSchemaStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating taf schema store at ["+f.getAbsolutePath()+"]");		
+			log.debug("Creating TafSchemaStore at ["+f.getAbsolutePath()+"]");		
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Taf directory location is not a directory");
+			log.debug("Taf directory location is not a directory");
 			throw new NotDirectoryException("Taf directory location is not a directory");
 		}
 		
@@ -57,7 +58,7 @@ public class TafSchemaStore {
 		try {
 			s = Tools.readFile(this.directory + "/taf_jsonschema_schema.json");
 		} catch (IOException e) {
-			Debug.println("taf_jsonschema_schema.json missing: writing to store from resource");
+			log.warn("taf_jsonschema_schema.json missing: writing to store from resource");
 			s = Tools.readResource("taf_jsonschema_schema.json");
 			Tools.writeFile(this.directory + "/taf_jsonschema_schema.json", s);
 		}
@@ -128,7 +129,7 @@ public class TafSchemaStore {
 			byte[] bytes = Files.readAllBytes(latest.toPath());
 			return new String(bytes, "utf-8");
 		} else {
-			Debug.errprintln("No enriched taf schemas found, copying one from resources dir");
+			log.warn("No enriched taf schemas found, copying one from resources dir");
 			String s = Tools.readResource("EnrichedTafValidatorSchema.json");
 			String fn=String.format("%s/enriched_taf_schema_%d.json",  this.directory, new Date().getTime()/1000);
 			Tools.writeFile(fn, s);
@@ -156,7 +157,7 @@ public class TafSchemaStore {
 			String result = new String(bytes, "utf-8");
 			return result;
 		} else {
-			Debug.errprintln("No taf schemas found, copying one from resources dir");
+			log.warn("No taf schemas found, copying one from resources dir");
 			String s = Tools.readResource("TafValidatorSchema.json");
 			String fn=String.format("%s/taf_schema_%d.json",  this.directory, new Date().getTime()/1000);
 			Tools.writeFile(fn, s);

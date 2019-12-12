@@ -8,14 +8,14 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AugmentMaxVisibility {
 	public static void augment(JsonNode input) {
-		//		Debug.println("Augmenting max visibility");
 		ObjectNode forecast = (ObjectNode) input.get("forecast");
 		if (forecast == null || forecast.isNull() || forecast.isMissingNode()) {
-			Debug.println("augmentMaxVisibility: No forecast");
+			log.warn("augmentMaxVisibility: No forecast");
 			return;
 		}
 
@@ -101,15 +101,12 @@ public class AugmentMaxVisibility {
 				forecast.put("visibilityAndFogWithoutDescriptorWithinLimit", visibility < 1000);
 			} else {
 				String descriptor = weatherGroup.get("descriptor").asText();
-//				Debug.println(descriptor);
 				if (descriptor.equals("freezing")) {
 					forecast.put("visibilityWithinLimit", visibility < 1000);
 /*
 				} else if (descriptor.equals("shallow")) {
 					*/
 /* Shallow fog MIFG *//*
-
-					Debug.println("TODO: MIFG is now always OK (MBG, 2018-09-05");
 					// forecast.put("visibilityWithinLimit", visibility > 1000); 
 */
 				} else {

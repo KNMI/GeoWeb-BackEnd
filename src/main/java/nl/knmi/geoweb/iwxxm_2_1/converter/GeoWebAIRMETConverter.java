@@ -29,7 +29,7 @@ import fi.fmi.avi.model.sigmet.immutable.AirmetCloudLevelsImpl;
 import fi.fmi.avi.model.sigmet.immutable.AirmetReferenceImpl;
 import fi.fmi.avi.model.sigmet.immutable.AirmetWindImpl;
 import fi.fmi.avi.model.sigmet.immutable.PhenomenonGeometryWithHeightImpl;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.backend.product.airmet.ObscuringPhenomenonList;
 import nl.knmi.geoweb.backend.product.sigmet.geo.GeoUtils;
@@ -37,11 +37,12 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetUtils;
 
+@Slf4j
 public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET> {
 
     @Override
     public ConversionResult<AIRMET> convertMessage(Airmet input, ConversionHints hints) {
-        Debug.println("convertMessage: " + this.getClass().getName());
+        log.trace("convertMessage: " + this.getClass().getName());
         ConversionResult<AIRMET> retval = new ConversionResult<>();
         AIRMETImpl.Builder airmet = new AIRMETImpl.Builder();
 
@@ -74,7 +75,7 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
                 airmet.setAnalysisType(SigmetAnalysisType.FORECAST);
             }
         } else {
-            Debug.errprintln("obs_or_fcst NOT found");
+            log.error("obs_or_fcst NOT found");
         }
 
         switch (input.getChange()) {
@@ -114,7 +115,7 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
                 break;
         }
 
-        Debug.println("levelinfo: " + input.getLevelinfo());
+        log.error("levelinfo: " + input.getLevelinfo());
 
         PhenomenonGeometryWithHeightImpl.Builder phenBuilder = new PhenomenonGeometryWithHeightImpl.Builder();
 
@@ -127,21 +128,21 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
                 if (cloudLevels != null) {
                     Airmet.LowerCloudLevel lowerCloudLevel = cloudLevels.getLower();
                     if (lowerCloudLevel == null) {
-                        Debug.errprintln("lowerCloudLevel is null");
+                        log.debug("lowerCloudLevel is null");
                     } else {
                         if (lowerCloudLevel.getSurface()) {
-                            Debug.errprintln("cloudBottom isSurface = true");
+                            log.debug("cloudBottom isSurface = true");
                             phenBuilder.setLowerLimit(NumericMeasureImpl.of(0.0, "FT")); //Special case for SFC: 0FT)
                             cloudLevelsBuilder.setCloudBase(NumericMeasureImpl.of(0, "FT"));
                         } else {
-                            Debug.errprintln("cloudBottom isSurface = false");
+                            log.debug("cloudBottom isSurface = false");
                             phenBuilder.setLowerLimit(NumericMeasureImpl.of(lowerCloudLevel.getVal(), lowerCloudLevel.getUnit()));
                             cloudLevelsBuilder.setCloudBase(NumericMeasureImpl.of(lowerCloudLevel.getVal(), lowerCloudLevel.getUnit()));
                         }
                     }
                     Airmet.UpperCloudLevel upperCloudLevel = cloudLevels.getUpper();
                     if (upperCloudLevel == null) {
-                        Debug.errprintln("upperCloudLevel is null");
+                        log.debug("upperCloudLevel is null");
                     } else {
                         phenBuilder.setUpperLimit(NumericMeasureImpl.of(upperCloudLevel.getVal(), upperCloudLevel.getUnit()));
                         cloudLevelsBuilder.setCloudTop(NumericMeasureImpl.of(upperCloudLevel.getVal(), upperCloudLevel.getUnit()));
@@ -183,7 +184,7 @@ public class GeoWebAIRMETConverter extends AbstractGeoWebAirmetConverter<AIRMET>
             default:
                 //Levelinfo might/has to be set
                 if (input.getLevelinfo() != null) {
-                    Debug.println("setLevelInfo(" + input.getLevelinfo().getMode() + ")");
+                    log.debug("setLevelInfo(" + input.getLevelinfo().getMode() + ")");
                     switch (input.getLevelinfo().getMode()) {
                         case BETW:
                             NumericMeasure nmLower = NumericMeasureImpl.of((double) input.getLevelinfo().getLevels()[0].getValue(),

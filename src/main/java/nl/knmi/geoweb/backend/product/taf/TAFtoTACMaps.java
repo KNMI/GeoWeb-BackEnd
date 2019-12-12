@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class TAFtoTACMaps {
 	private static final Map<String, String> qualifierMap;
 	private static final Map<String, String> descriptorMap;
@@ -148,7 +149,7 @@ public class TAFtoTACMaps {
             if (phenomenon!=null){
                 w.getPhenomena().add(phenomenon);
             } else {
-                Debug.errprintln("Unknown phenomenon "+ph);
+                log.error("Unknown phenomenon "+ph);
             }
         }
         return w;

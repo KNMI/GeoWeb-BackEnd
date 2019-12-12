@@ -19,7 +19,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 
 import lombok.extern.slf4j.Slf4j;
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.geoweb.backend.security.models.RoleToPrivilegesMapper;
 
 @Slf4j
@@ -34,8 +33,7 @@ public class CognitoAuthoritiesExtractor implements AuthoritiesExtractor {
                     RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);
         } catch (IOException exception) {
-            log.error("Could not obtain roles to privilege mappings from resource");
-            log.error(exception.getMessage());
+            log.error("Could not obtain roles to privilege mappings from resource. " + exception.getMessage());
             mappingsHolder = new ArrayList<RoleToPrivilegesMapper>();
         }
     }
@@ -44,8 +42,7 @@ public class CognitoAuthoritiesExtractor implements AuthoritiesExtractor {
     public List<GrantedAuthority> extractAuthorities(Map<String, Object> map) {
         try {
             ObjectMapper om = new ObjectMapper();
-            Debug.println("!!!! -------------------------------- !!!");
-            Debug.println(om.writeValueAsString(map));
+            log.debug("Authority map: " + om.writeValueAsString(map));
         } catch (JsonProcessingException e) {
         }
         
@@ -74,7 +71,7 @@ public class CognitoAuthoritiesExtractor implements AuthoritiesExtractor {
     private List<String> extractRoles(Map<String, Object> map) {
         String roleList = "production_full";
         List<String> roles = Arrays.asList(roleList.split(","));
-        log.info("roles: " + roles);
+        log.debug("Roles: " + roles);
         return roles;
     }
 }

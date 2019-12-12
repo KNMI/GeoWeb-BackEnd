@@ -71,10 +71,10 @@ public class SecurityServices {
                 .replaceQuery(null)
                 .build();
         if (!referer.isPresent()) {
-            log.info("root: " + rootComponents.toUriString());
+            log.debug("root: " + rootComponents.toUriString());
             return rootComponents.toUriString();
         }
-        log.info("ref: " + UriComponentsBuilder.fromUriString(referer.get())
+        log.debug("ref: " + UriComponentsBuilder.fromUriString(referer.get())
                 .scheme(rootComponents.getScheme())
                 .build()
                 .toUriString());

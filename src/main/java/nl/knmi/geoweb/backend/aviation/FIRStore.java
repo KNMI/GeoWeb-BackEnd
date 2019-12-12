@@ -23,10 +23,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import lombok.Setter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.sigmet.geo.GeoUtils;
 
+@Slf4j
 @Getter
 @Setter
 @Component
@@ -44,7 +45,7 @@ public class FIRStore implements Cloneable {
         try {
             Tools.mksubdirs(productstorelocation + "/admin/config");
         } catch (final IOException e) {
-            Debug.errprintln("Creation of " + productstorelocation + "/admin/config" + " failed");
+            log.error("Creation of " + productstorelocation + "/admin/config" + " failed");
         }
         this.worldFIRFile = "world_firs.json";
         this.delegatedFile = "delegated.json";
@@ -57,21 +58,21 @@ public class FIRStore implements Cloneable {
         this.simplifiedFIRInfos = new HashMap<String, Feature>();
         final File fn = new File(this.directory + "/" + this.worldFIRFile);
         if (!(fn.exists() && fn.isFile())) {
-            Debug.errprintln("No FIR file found, copying one from resources dir to " + this.directory);
+            log.warn("No FIR file found, copying one from resources dir to " + this.directory);
             final String s = Tools.readResource(this.worldFIRFile);
             final String FIRText = String.format("%s/%s", this.directory, this.worldFIRFile);
             Tools.writeFile(FIRText, s);
         }
         final File simplifiedFn = new File(this.directory + "/" + this.simplifiedFIRFile);
         if (!(simplifiedFn.exists() && simplifiedFn.isFile())) {
-            Debug.errprintln("No simplified FIR file found, copying one from resources dir to " + this.directory);
+            log.warn("No simplified FIR file found, copying one from resources dir to " + this.directory);
             final String s = Tools.readResource(this.simplifiedFIRFile);
             final String FIRText = String.format("%s/%s", this.directory, this.simplifiedFIRFile);
             Tools.writeFile(FIRText, s);
         }
         final File delegatedFn = new File(this.directory + "/" + this.delegatedFile);
         if (!(delegatedFn.exists() && delegatedFn.isFile())) {
-            Debug.errprintln("No delegated areas FIR file found, copying one from resources dir to " + this.directory);
+            log.warn("No delegated areas FIR file found, copying one from resources dir to " + this.directory);
             // TODO: since the lists of coordinates for delegated area (EHAA) doesn't align
             // with the FIR boundary,
             // we moved a coordinate to make them intersect:
@@ -93,9 +94,9 @@ public class FIRStore implements Cloneable {
                 worldFIRInfos.put(ICAOCode, f);
             }
         } catch (final IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        Debug.errprintln("Found " + worldFIRInfos.size() + " records of FIRinfo");
+        log.debug("Found " + worldFIRInfos.size() + " records of FIRinfo");
 
         try {
             final GeoJsonObject simplifiedFIRInfo = om.readValue(simplifiedFn, GeoJsonObject.class);
@@ -107,9 +108,9 @@ public class FIRStore implements Cloneable {
                 simplifiedFIRInfos.put(ICAOCode, f);
             }
         } catch (final IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        Debug.errprintln("Found " + simplifiedFIRInfos.size() + " records of simplified FIRinfo");
+        log.debug("Found " + simplifiedFIRInfos.size() + " records of simplified FIRinfo");
 
         try {
             final GeoJsonObject DelegatedInfo = om.readValue(delegatedFn, GeoJsonObject.class);
@@ -125,7 +126,7 @@ public class FIRStore implements Cloneable {
                 delegatedAirspaces.get(FIRname).add(f);
             }
         } catch (final IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -172,7 +173,6 @@ public class FIRStore implements Cloneable {
             if (delegatedAirspaces.containsKey(name)) {
                 for (final Feature f : delegatedAirspaces.get(name)) {
                     // Merge f with feature
-                    // Debug.println("Adding delegated area for "+name);
                     feature = GeoUtils.merge(feature, f);
                 }
             }

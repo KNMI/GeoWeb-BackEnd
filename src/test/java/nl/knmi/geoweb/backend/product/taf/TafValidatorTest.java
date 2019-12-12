@@ -19,12 +19,14 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.TestConfig;
 
 // FIXME: [entire file] TafSchemaStore and TafValidator are re-instantiated for each test. This is not desirable (performance, breaks dependency injection by Spring).
 // It needs to be refactored in a way that there will be only a single instance used multiple times.
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class TafValidatorTest {
@@ -66,7 +68,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(), is("{\"/changegroups/0/forecast/wind/windEnoughDifference\":"
 				+ "[\"Change in wind must be at least 30 degrees in direction or 5 knots (2 MPS) in speed or gust\"]}"));
 		assertThat(report.isSucceeded(), is(false));
@@ -139,7 +141,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(), is("{\"/changegroups/0/forecast/wind/windEnoughDifference\":"
 				+ "[\"Change in wind must be at least 30 degrees in direction or 5 knots (2 MPS) in speed or gust\"]}"));
 		assertThat(report.isSucceeded(), is(false));
@@ -168,7 +170,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(), is("{\"/changegroups/0/forecast/wind/windEnoughDifference\":"
 				+ "[\"Change in wind must be at least 30 degrees in direction or 5 knots (2 MPS) in speed or gust\"]}"));
 		assertThat(report.isSucceeded(), is(false));
@@ -194,7 +196,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors().toString());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(),
 				is("{\"/forecast/clouds/1/cloudsHeightAscending\":[\"Cloud groups must be ascending in height\"]}"));
 		assertThat(report.isSucceeded(), is(false));
@@ -281,7 +283,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors().toString());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(), is(
 				"{\"/forecast/visibilityAndFogWithoutDescriptorWithinLimit\":[\"Fog requires a visibility of less than 1000 meters\"]}"));
 		assertThat(report.isSucceeded(), is(false));
@@ -294,7 +296,7 @@ public class TafValidatorTest {
 		TafSchemaStore tafSchemaStore = new TafSchemaStore(productstorelocation);
 		TafValidator tafValidator = new TafValidator(tafSchemaStore, tafObjectMapper);
 		TafValidationResult report = tafValidator.validate(tafString);
-		System.out.println(report.getErrors().toString());
+		log.error(report.getErrors().asText());
 		assertThat(report.getErrors().toString(),
 				is("{\"/forecast/weather/0/qualifier\":[\"Qualifier of intensity (-,+,VC) can only be used in combination with a precipitation type\"]}"));
 		assertThat(report.isSucceeded(), is(false));

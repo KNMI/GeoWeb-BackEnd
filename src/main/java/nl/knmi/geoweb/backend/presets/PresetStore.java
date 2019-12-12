@@ -23,10 +23,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 
-
+@Slf4j
 @Getter
 @Component
 public class PresetStore {
@@ -65,21 +65,21 @@ public class PresetStore {
 
 	public PresetStore(@Value("${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/presets";
-		Debug.println("PRESET STORE at " + dir);
+		log.debug("PresetStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating presetstore at ["+f.getAbsolutePath()+"]");
+			log.debug("Creating PresetStore at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Sigmet directory location is not a directory");
-			throw new NotDirectoryException("Sigmet directory location is not a directory");
+			log.error("Preset directory location is not a directory");
+			throw new NotDirectoryException("Preset directory location is not a directory");
 		}
 		this.userDir=dir+"/users";
 		f=new File(userDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				log.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
@@ -87,7 +87,7 @@ public class PresetStore {
 		f=new File(roleDir);
 		if(f.exists() == false){
 			if (!f.mkdir()) {
-				Debug.errprintln("Presets directory can not be created");
+				log.error("Presets directory can not be created");
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
@@ -101,8 +101,7 @@ public class PresetStore {
 		try {
 			json=om.writeValueAsString(preset);
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		File f=null;
 
@@ -146,14 +145,11 @@ public class PresetStore {
 		try {
 			  return om.readValue(json, Preset.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return null;
 	}
@@ -168,14 +164,11 @@ public class PresetStore {
 		try {
 			return om.readValue(json, StoredPreset.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return null;
 	}
@@ -196,8 +189,7 @@ public class PresetStore {
 				presets.add(preset.getPreset());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return presets;
 	}
@@ -220,8 +212,7 @@ public class PresetStore {
 				}
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return presets;
 	}
@@ -242,8 +233,7 @@ public class PresetStore {
 				presets.add(preset.getPreset());
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return presets;
 	}
@@ -253,11 +243,9 @@ public class PresetStore {
 //		try {
 //			ps=new PresetStore("/tmp/presets");
 //		} catch (NotDirectoryException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			log.error(e.getMessage());
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //		AreaPreset pi1=PresetItem.createAreaPreset(60, 50, "EPSG:4326");
 //		DisplayPreset pi2=PresetItem.createDisplayPreset("QUADCOL", 4);
@@ -271,10 +259,9 @@ public class PresetStore {
 //		LayerPreset pi4=PresetItem.createLayerPreset(services[1], layers[1],  dims);
 //		lyrs.add(pi4);
 //		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(lyrs));
+//			log.debug(new ObjectMapper().writeValueAsString(lyrs));
 //		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
+//			log.error(e1.getMessage());
 //		}
 //		List<List<LayerPreset>>lyrslist=new ArrayList<List<LayerPreset>>();
 //		lyrslist.add(lyrs);
@@ -284,42 +271,36 @@ public class PresetStore {
 //		try {
 //			ps.storeSystemPreset(p1);
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //		Preset p2=new Preset("preset2", keywords, lyrslist, pi2, pi1);
 //		try {
 //			ps.storeUserPreset("ernst", p2);
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //		Preset p3=new Preset("preset3", keywords, lyrslist, pi2, pi1);
 //		try {
 //			String[]roles={"met", "admin"};
 //			ps.storeRolePreset(Arrays.asList(roles), p3);
 //		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //
 //		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(ps.readUserPresets("ernst")));
+//			log.debug(new ObjectMapper().writeValueAsString(ps.readUserPresets("ernst")));
 //		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //		try {
-//			System.err.println(new ObjectMapper().writeValueAsString(ps.readRolePresets("met")));
+//			log.debug(new ObjectMapper().writeValueAsString(ps.readRolePresets("met")));
 //		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //		try {
-//			System.err.println("sys:"+new ObjectMapper().writeValueAsString(ps.readSystemPresets()));
+//			log.debug("sys:"+new ObjectMapper().writeValueAsString(ps.readSystemPresets()));
 //		} catch (JsonProcessingException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
+//			log.error(e.getMessage());
 //		}
 //	}
 }

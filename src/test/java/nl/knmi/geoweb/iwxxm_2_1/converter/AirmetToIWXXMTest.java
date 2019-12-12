@@ -10,17 +10,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.product.airmet.Airmet;
 import nl.knmi.geoweb.backend.product.airmet.converter.AirmetConverter;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class AirmetToIWXXMTest {
@@ -44,7 +46,7 @@ public class AirmetToIWXXMTest {
 		try {
 			return Tools.readResource(fn);
 		} catch (IOException e) {
-			Debug.errprintln("Can't read resource "+fn);
+			log.error("Can't read resource " + fn);
 		}
 		return "";
     }
@@ -59,7 +61,7 @@ public class AirmetToIWXXMTest {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
 		}
-		Debug.errprintln("setGeoFromString on ["+json+"] failed");
+		log.error("setGeoFromString on ["+json+"] failed");
 		am.setGeojson(null);
 	}
 
@@ -68,13 +70,13 @@ public class AirmetToIWXXMTest {
 		try {
 			am=airmetObjectMapper.readValue(s, Airmet.class);
 		} catch (Exception e) {
-			e.printStackTrace(System.err);
+			log.error(e.getMessage());
 		}
 
 
 		String res=airmetConverter.ToIWXXM_2_1(am);
-		Debug.errprintln(res);
-		Debug.errprintln("TAC: "+am.toTAC(firStore.lookup(am.getFirname(), true)));
+		log.debug(res);
+		log.debug("TAC: " + am.toTAC(firStore.lookup(am.getFirname(), true)));
 	}
 
 	@Test

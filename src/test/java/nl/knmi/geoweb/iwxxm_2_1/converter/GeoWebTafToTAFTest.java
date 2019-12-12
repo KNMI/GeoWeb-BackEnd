@@ -15,12 +15,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.converter.TafConverter;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class GeoWebTafToTAFTest {
@@ -36,7 +37,7 @@ public class GeoWebTafToTAFTest {
         try {
             json = Tools.readResource(fn);
         } catch (IOException e) {
-            Debug.errprintln("Can't read resource " + fn);
+            log.error("Can't read resource " + fn);
         }
         return setTafFromString(json);
     }
@@ -49,17 +50,17 @@ public class GeoWebTafToTAFTest {
         } catch (JsonParseException | JsonMappingException e) {
 
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        Debug.errprintln("set TAF from string [" + json + "] failed");
+        log.error("set TAF from string [" + json + "] failed");
         return null;
     }
 
     @Test
     public void TafToTAFTest() throws JsonProcessingException {
       Taf taf=setTafFromResource("Taf_valid.json");
-      Debug.errprintln(taf.toTAC());
+      log.debug(taf.toTAC());
       String s = tafConverter.ToIWXXM_2_1(taf);
-      Debug.errprintln("S:"+s);
+      log.debug("IWXXM:" + s);
 	}
 }

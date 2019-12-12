@@ -35,7 +35,6 @@ public class AirmetValidator {
 		try{
 			objectMapper.readValue(sigmetStr, Airmet.class).toTAC();
 		}catch(Exception e){
-			//			Debug.printStackTrace(e);
 			ObjectMapper om = new ObjectMapper();
 			return new AirmetValidationResult(false,
 					(ObjectNode) om.readTree("{\"/airmet/message\": [\"Unable to generate TAC report\"]}"));

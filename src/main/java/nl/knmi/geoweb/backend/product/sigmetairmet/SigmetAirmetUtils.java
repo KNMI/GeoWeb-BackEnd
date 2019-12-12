@@ -7,8 +7,6 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
-
 import org.geojson.Feature;
 import org.geojson.FeatureCollection;
 import org.geojson.GeoJsonObject;
@@ -22,8 +20,12 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.locationtech.jts.geom.impl.CoordinateArraySequenceFactory;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.locationtech.jts.io.ParseException;
 
+@Slf4j
 public class SigmetAirmetUtils {
   private static String START = "start";
   private static String INTERSECTION = "intersection";
@@ -143,7 +145,7 @@ public class SigmetAirmetUtils {
       GeoJsonReader reader = new GeoJsonReader(gf);
 
       if (FIR == null || FIR.getGeometry() == null) {
-        Debug.println("FIR is null!!");
+        log.warn("FIR is null!!");
         return "";
       }
       try {
@@ -161,7 +163,6 @@ public class SigmetAirmetUtils {
           double maxX = env.getMaxX();
           double minY = env.getMinY();
           double maxY = env.getMaxY();
-          // Debug.println("BBOX (++);: "+minX+"-"+maxX+","+minY+"-"+maxY);
 
           if ((minX == maxX) || (minY == maxY))
             return " POINT "; // Box is one point!!
@@ -191,7 +192,7 @@ public class SigmetAirmetUtils {
             }
           }
           drawnCoords[4] = drawnCoords[0]; // Copy first point to last
-          Debug.println("drawnCoords: " + drawnCoords[0] + " " + drawnCoords[1] + " " + drawnCoords[2] + " "
+          log.debug("drawnCoords: " + drawnCoords[0] + " " + drawnCoords[1] + " " + drawnCoords[2] + " "
               + drawnCoords[3] + " " + drawnCoords[4]);
 
           for (int i = 0; i < 4; i++) {
@@ -201,15 +202,13 @@ public class SigmetAirmetUtils {
             if (side.intersects(geom_fir)) {
               boxSidesIntersecting[i] = true;
               boxSidesIntersectingCount++;
-              // Debug.println("Intersecting on side "+i);
-              // Debug.println("I:"+side.intersection(geom_fir));
             } else {
               boxSidesIntersecting[i] = false;
             }
           }
 
+          log.debug("Intersecting box on " + boxSidesIntersectingCount + " sides");
           if (boxSidesIntersectingCount == 1) {
-            Debug.println("Intersecting box on 1 side");
             if (boxSidesIntersecting[0]) {
               // N of
               return String.format("N OF %s", convertLat(minY));
@@ -224,7 +223,6 @@ public class SigmetAirmetUtils {
               return String.format("E OF %s", convertLon(minX));
             }
           } else if (boxSidesIntersectingCount == 2) {
-            Debug.println("Intersecting box on 2 sides");
             if (boxSidesIntersecting[0] && boxSidesIntersecting[1]) {
               // N of and W of
               return String.format("N OF %s AND W OF %s", convertLat(minY), convertLon(maxX));
@@ -244,16 +242,10 @@ public class SigmetAirmetUtils {
               // E of and W of
               return String.format("E OF %s AND W OF %s", convertLon(minX), convertLon(maxX));
             }
-          } else if (boxSidesIntersectingCount == 3) {
-            Debug.println("Intersecting box on 3 sides");
-          } else if (boxSidesIntersectingCount == 4) {
-            Debug.println("Intersecting box on 4 sides");
           }
 
           // Intersect the box with the FIR
           org.locationtech.jts.geom.Geometry intersection = drawnGeometry.intersection(geom_fir);
-
-          // Debug.println("intersection: "+intersection);
 
           if (intersection.equalsTopo(geom_fir)) {
             return "ENTIRE FIR";
@@ -262,17 +254,16 @@ public class SigmetAirmetUtils {
           Coordinate[] drawn = drawnGeometry.getCoordinates();
           Coordinate[] intersected = intersection.getCoordinates();
           coords = ((Polygon) (f.getGeometry())).getCoordinates().get(0);
-          // Debug.println("SIZES: "+drawn.length+" "+intersected.length);
           if (intersected.length > 7) {
-            Debug.println("More than 7 in intersection!!");
+            log.warn("More than 7 in intersection!!");
             return "WI " + latlonToDMS(drawn);
           }
           return "WI " + latlonToDMS(intersected);
         } catch (ParseException pe) {
-          // pe.printStackTrace();
+          // log.error(pe.getMessage());
         }
       } catch (JsonProcessingException e) {
-        e.printStackTrace();
+        log.error(e.getMessage());
       }
       return " ERR ";
     default:

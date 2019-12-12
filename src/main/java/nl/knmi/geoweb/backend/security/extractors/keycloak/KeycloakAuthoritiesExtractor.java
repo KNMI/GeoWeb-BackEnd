@@ -34,8 +34,7 @@ public class KeycloakAuthoritiesExtractor implements AuthoritiesExtractor {
             RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResource.getFile(), RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);
         } catch (IOException exception) {
-            log.error("Could not obtain roles to privilege mappings from resource");
-            log.error(exception.getMessage());
+            log.error("Could not obtain roles to privilege mappings from resource. " + exception.getMessage());
             mappingsHolder = new ArrayList<RoleToPrivilegesMapper>();
         }
     }
@@ -87,7 +86,7 @@ public class KeycloakAuthoritiesExtractor implements AuthoritiesExtractor {
 
         @SuppressWarnings("unchecked")
         List<String> roles = (List<String>) rolesMap.get(KEY_ROLES);
-        log.info("roles: " + roles);
+        log.info("Roles: " + roles);
         return roles;
     }
 }

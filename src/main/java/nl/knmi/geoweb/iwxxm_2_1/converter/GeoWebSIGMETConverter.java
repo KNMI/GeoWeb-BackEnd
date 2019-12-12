@@ -31,7 +31,7 @@ import fi.fmi.avi.model.sigmet.immutable.PhenomenonGeometryWithHeightImpl;
 import fi.fmi.avi.model.sigmet.immutable.SIGMETImpl;
 import fi.fmi.avi.model.sigmet.immutable.SigmetReferenceImpl;
 import fi.fmi.avi.model.sigmet.immutable.VAInfoImpl;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.SigmetMovementType;
 import nl.knmi.geoweb.backend.product.sigmet.geo.GeoUtils;
@@ -39,11 +39,12 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetUtils;
 
+@Slf4j
 public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET> {
 
     @Override
     public ConversionResult<SIGMET> convertMessage(Sigmet input, ConversionHints hints) {
-        Debug.println("convertMessage: " + this.getClass().getName());
+        log.trace("convertMessage: " + this.getClass().getName());
         ConversionResult<SIGMET> retval = new ConversionResult<>();
         SIGMETImpl.Builder sigmet = new SIGMETImpl.Builder();
 
@@ -81,14 +82,14 @@ public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET>
 
 //        SigmetAnalysisImpl.Builder sa = new SigmetAnalysisImpl.Builder();
         if (input.getObs_or_forecast() != null) {
-            Debug.errprintln("obs_or_fcst found "+input.getObs_or_forecast().isObs());
+            log.debug("obs_or_fcst found "+input.getObs_or_forecast().isObs());
             if (input.getObs_or_forecast().isObs()) {
                 sigmet.setAnalysisType(SigmetAnalysisType.OBSERVATION);
             } else {
                 sigmet.setAnalysisType(SigmetAnalysisType.FORECAST);
             }
         } else {
-            Debug.errprintln("obs_or_fcst NOT found");
+            log.error("obs_or_fcst NOT found");
         }
 
         switch (input.getChange()) {
@@ -143,11 +144,11 @@ public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET>
             }
         }
 
-        Debug.println("levelinfo: " + input.getLevelinfo());
+        log.debug("levelinfo: " + input.getLevelinfo());
 
         PhenomenonGeometryWithHeightImpl.Builder phenBuilder = new PhenomenonGeometryWithHeightImpl.Builder();
         if (input.getLevelinfo() != null) {
-            Debug.println("setLevelInfo(" + input.getLevelinfo().getMode() + ")");
+            log.debug("setLevelInfo(" + input.getLevelinfo().getMode() + ")");
             switch (input.getLevelinfo().getMode()) {
                 case BETW:
                     NumericMeasure nmLower = NumericMeasureImpl.of((double) input.getLevelinfo().getLevels()[0].getValue(),
@@ -204,7 +205,7 @@ public class GeoWebSIGMETConverter extends AbstractGeoWebSigmetConverter<SIGMET>
                     phenBuilder.setTime(PartialOrCompleteTimeInstant.of(input.getObs_or_forecast().getObsFcTime().atZoneSameInstant(ZoneId.of("UTC"))));
                 }
                 phenBuilder.setApproximateLocation(false);
-                Debug.println("FPA required: " + fpaRequired);
+                log.debug("FPA required: " + fpaRequired);
                 if (fpaRequired) {
                     PhenomenonGeometryImpl.Builder fpaPhenBuilder=new PhenomenonGeometryImpl.Builder();
                     fpaPhenBuilder.setTime(PartialOrCompleteTimeInstant.of(input.getValiddate_end().atZoneSameInstant(ZoneId.of("UTC"))));

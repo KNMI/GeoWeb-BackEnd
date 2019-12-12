@@ -36,7 +36,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
     private static final String DATEFORMAT_ISO8601 = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     public ApplicationConfig() {
-        log.info("Constructor ApplicationConfig");
+        log.trace("Constructor ApplicationConfig");
     }
 
     private void omBaseSettings(ObjectMapper om) {
@@ -76,7 +76,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Bean("sigmetObjectMapper")
     public ObjectMapper getSigmetObjectMapperBean() {
-        log.info("sigmetObjectMapper");
+        log.trace("sigmetObjectMapper");
         ObjectMapper om=new ObjectMapper();
         omBaseSettings(om);
         return om;
@@ -84,7 +84,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Bean("airmetObjectMapper")
     public ObjectMapper getAirmetObjectMapperBean() {
-        log.info("airmetObjectMapper");
+        log.trace("airmetObjectMapper");
         ObjectMapper om=new ObjectMapper();
         omBaseSettings(om);
         return om;
@@ -92,7 +92,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Bean("tafObjectMapper")
     public ObjectMapper getTafObjectMapperBean() {
-        log.info("tafObjectMapper");
+        log.trace("tafObjectMapper");
         ObjectMapper om=new ObjectMapper();
         omBaseSettings(om);
         return om;
@@ -100,7 +100,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
 
     @Bean("geoWebObjectMapper")
     public ObjectMapper getGeoWebObjectMapperBean() {
-        log.info("geoWebObjectMapper");
+        log.trace("geoWebObjectMapper");
         ObjectMapper om=new ObjectMapper();
         omBaseSettings(om);
         return om;
@@ -109,7 +109,7 @@ public class ApplicationConfig implements WebMvcConfigurer {
     @Bean(name = "objectMapper")
     @Primary
     public ObjectMapper getObjectMapperBean() {
-        log.info("ObjectMapper");
+        log.trace("ObjectMapper");
         ObjectMapper om=new ObjectMapper();
         omBaseSettings(om); //TODO are all these settings necessary (or too much)???
         om.setTimeZone(TimeZone.getTimeZone("UTC"));

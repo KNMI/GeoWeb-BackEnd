@@ -14,11 +14,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import nl.knmi.adaguc.tools.MyXMLParser;
 
+@Slf4j
 @RestController
 public class ServiceHelper {
 	@Bean
@@ -38,22 +41,21 @@ public class ServiceHelper {
 		 * @param out1
 		 * @param response
 		 */
-		System.err.println("XML2JSON "+request);
+		log.debug("XML2JSON " + request);
 
 		String requestStr;
 		OutputStream out;
 		try {
 			out = response.getOutputStream();
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
-			e2.printStackTrace();
+			log.error(e2.getMessage());
 			return;
 		}
 		try {
 			requestStr=URLDecoder.decode(request,"UTF-8");
 			MyXMLParser.XMLElement rootElement = new MyXMLParser.XMLElement();
 			//Remote XML2JSON request to external WMS service
-			System.err.println("Converting XML to JSON for "+requestStr);
+			log.debug("Converting XML to JSON for " + requestStr);
 			rootElement.parse(new URL(requestStr));
 			if (callback==null) {
 				response.setContentType("application/json");
@@ -67,7 +69,7 @@ public class ServiceHelper {
 
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 			try {
 				if (callback==null) {
 					response.setContentType("application/json");

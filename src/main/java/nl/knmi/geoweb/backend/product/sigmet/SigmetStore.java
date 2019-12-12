@@ -16,15 +16,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet.Phenomenon;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
+@Slf4j
 @Component
 public class SigmetStore {
 
@@ -42,13 +44,13 @@ public class SigmetStore {
 
 	public void setLocation(String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/sigmets";
-		Debug.println("SIGMET STORE at " + dir);
+		log.debug("SigmetStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating sigmet store at ["+f.getAbsolutePath()+"]");		}
+			log.debug("Creating SigmetStore at ["+f.getAbsolutePath()+"]");		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Sigmet directory location is not a directory");
+			log.error("Sigmet directory location is not a directory");
 			throw new NotDirectoryException("Sigmet directory location is not a directorty");
 		}
 
@@ -89,7 +91,7 @@ public class SigmetStore {
                     (rhs.getSequence() == lhs.getSequence() ? 0 : -1));
 			seq = sigmets[0].getSequence() + 1;
 		}
-		Debug.println("SEQUENCE NR: Created sequence number " + seq + " for sigmet phenomenon " + sigmetPhenomenon.toString());
+		log.info("Created sequence number " + seq + " for sigmet phenomenon " + sigmetPhenomenon.toString());
 		return seq;
 	}
 
@@ -142,7 +144,6 @@ public class SigmetStore {
 				try {
 					sm = Sigmet.getSigmetFromFile(sigmetObjectMapper, f);
 					if (selectActive) {
-//						Debug.println(sm.getStatus()+" "+now+" "+sm.getValiddate()+" "+sm.getValiddate_end());
 						if ((sm.getStatus()==SigmetAirmetStatus.published)&&
 								(sm.getValiddate_end().isAfter(now))) {
 							sigmets.add(sm);
@@ -161,14 +162,11 @@ public class SigmetStore {
 						sigmets.add(sm);
 					}
 				} catch (JsonParseException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error(e.getMessage());
 				} catch (JsonMappingException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error(e.getMessage());
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error(e.getMessage());
 				}
 			}
 			sigmets.sort(comp);

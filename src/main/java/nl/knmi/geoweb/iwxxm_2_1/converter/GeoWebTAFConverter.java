@@ -9,8 +9,7 @@ import fi.fmi.avi.model.immutable.*;
 import fi.fmi.avi.model.taf.*;
 
 import fi.fmi.avi.model.taf.immutable.*;
-
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.product.taf.Taf;
 import nl.knmi.geoweb.backend.product.taf.Taf.Forecast.TAFCloudType;
 import nl.knmi.geoweb.backend.product.taf.Taf.Forecast.TAFVisibility;
@@ -25,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
     boolean debug=false;
     @Override
@@ -140,13 +140,13 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
         }
 
         String windSpeedUnit = input.getForecast().getWind().getUnit();
-        if (debug) Debug.println("unit: " + windSpeedUnit + " " + "MPS".equalsIgnoreCase(windSpeedUnit));
+        if (debug) log.debug("unit: " + windSpeedUnit + " " + "MPS".equalsIgnoreCase(windSpeedUnit));
         if ("KT".equalsIgnoreCase(windSpeedUnit)) {
             windSpeedUnit = "[kn_i]";
         } else if ("MPS".equalsIgnoreCase(windSpeedUnit)) {
             windSpeedUnit = "m/s";
         }
-        if (debug) Debug.println("unit2: " + windSpeedUnit + " " + "MPS".equalsIgnoreCase(windSpeedUnit));
+        if (debug) log.debug("unit2: " + windSpeedUnit + " " + "MPS".equalsIgnoreCase(windSpeedUnit));
         Integer meanSpeed = input.getForecast().getWind().getSpeed();
         if (meanSpeed != null) {
             wind.setMeanWindSpeed(NumericMeasureImpl.of(meanSpeed, windSpeedUnit));
@@ -169,7 +169,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
                 }
             }
         }
-        if (debug) Debug.println("fc winds:" + meanSpeed + "," + gustSpeed);
+        if (debug) log.debug("fc winds:" + meanSpeed + "," + gustSpeed);
         fct.setSurfaceWind(wind.build());
 
         return retval;
@@ -312,7 +312,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
                         retval.add(new ConversionIssue(ConversionIssue.Type.SYNTAX, "Change group " + ch.getChangeType() + " is not allowed in TAF"));
                         break;
                 }
-                if (debug) Debug.println("Adding change for " + changeType);
+                if (debug) log.debug("Adding change for " + changeType);
                 changeForecasts.add(changeFct.build());
             }
         }
@@ -388,10 +388,10 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
             if (gustSpeed != null) {
                 wind.setWindGust(NumericMeasureImpl.of(gustSpeed, windSpeedUnit));
             }
-            if (debug) Debug.println("winds:" + meanSpeed + "," + gustSpeed);
+            if (debug) log.debug("winds:" + meanSpeed + "," + gustSpeed);
             fct.setSurfaceWind(wind.build());
         } else {
-            if (debug) Debug.println("updateChangeForecastSurfaceWind() found null wind");
+            if (debug) log.debug("updateChangeForecastSurfaceWind() found null wind");
         }
 
         return retval;
@@ -411,7 +411,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
             dist = src.getValue();
             unit = src.getUnit();
         } else {
-            if (debug) Debug.println("updateChangeVisibility() found null visibility");
+            if (debug) log.debug("updateChangeVisibility() found null visibility");
         }
         if (unit == null) unit = "m";
         if (unit.equals("M")) unit = "m";
@@ -443,7 +443,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
                 }
             }
         } else {
-            if (debug) Debug.println("updateChangeWeather() found null weather");
+            if (debug) log.debug("updateChangeWeather() found null weather");
         }
         if (!weatherList.isEmpty()) {
             fct.setForecastWeather(weatherList);
@@ -498,7 +498,7 @@ public class GeoWebTAFConverter extends AbstractGeoWebConverter<TAF> {
                 }
             }
         } else {
-            if (debug) Debug.println("updateChangeClouds() found null clouds");
+            if (debug) log.debug("updateChangeClouds() found null clouds");
         }
 
         cloud.setLayers(layers);
