@@ -1,7 +1,6 @@
 package nl.knmi.geoweb.backend.security.services;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -91,11 +90,9 @@ public class SecurityServices {
      */
     public Map<String, Object> getStatus() {
         Map<String, Object> status = new HashMap<>();
-        if(SecurityServices.isProfileActive(activeProfiles, "generic")) {
-            ArrayList<String> privileges = new ArrayList<String>(Arrays.asList("AIRMET_edit", "AIRMET_read", "AIRMET_settings_read", 
-                                        "SIGMET_edit", "SIGMET_read", "SIGMET_settings_read", "TAF_edit", "TAF_read", "TAF_settings_read"));
+        if(SecurityServices.isProfileActive(activeProfiles, "generic")) {          
             status.put("userName", UserLogin.getUserName());
-            status.put("privileges", privileges);
+            status.put("privileges", UserLogin.getUserPrivileges());
             status.put("isLoggedIn", true);
         }else{
             if (SecurityContextHolder.getContext().getAuthentication() == null
@@ -115,7 +112,11 @@ public class SecurityServices {
         }
         return status;
     }
-
+    /**
+	 * Returns whether the profile passed in is active or not
+	 * 
+	 * @return
+	 */
     public static boolean isProfileActive(String profiles, String requestedProfile){
         for (String profileName : profiles.split(",")) {
             if(profileName.equals(requestedProfile)){
