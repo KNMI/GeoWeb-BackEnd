@@ -18,9 +18,11 @@ import fi.fmi.avi.converter.ConversionHints;
 import fi.fmi.avi.converter.ConversionResult;
 import fi.fmi.avi.model.taf.TAF;
 import fi.fmi.avi.model.taf.immutable.TAFImpl;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebTafInConverter;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class TAFToGeoWebTaf {
@@ -40,15 +42,15 @@ public class TAFToGeoWebTaf {
         TAF taf=null;
         try {
             taf = tafObjectMapper.readValue(tafResource.getInputStream(), TAFImpl.class);
-            System.err.println("TAF:"+taf);
+            log.info("TAF:" + taf);
         } catch (IOException e) {
-            System.err.println("OhOh "+e);
+            log.error(e.getMessage());
         }
         TAF completedTaf= TAFImpl.Builder.from(taf).withAllTimesComplete(ZonedDateTime.now()).build();
-        System.err.println("completedTAF:"+completedTaf);
+        log.debug("completedTAF:" + completedTaf);
         ConversionHints hints=new ConversionHints();
         ConversionResult<Taf> result=geowebTafInConverter.convertMessage(completedTaf, hints);
-        System.err.println("Conversion status: "+ result.getStatus());
-        System.err.println(result.getConvertedMessage().get().toTAC());
+        log.debug("Conversion status: " + result.getStatus());
+        log.debug(result.getConvertedMessage().get().toTAC());
     }
 }

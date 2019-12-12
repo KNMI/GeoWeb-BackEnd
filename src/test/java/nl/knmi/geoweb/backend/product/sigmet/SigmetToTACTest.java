@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
@@ -30,6 +30,7 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetChange;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetLevel;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class SigmetToTACTest {
@@ -90,24 +91,24 @@ public class SigmetToTACTest {
 	}
 	
 	public void setGeoFromString(Sigmet sm, String json) {
-		Debug.println("setGeoFromString "+json);
+		log.trace("setGeoFromString "+json);
 		GeoJsonObject geo;	
 		try {
 			geo = sigmetObjectMapper.readValue(json, GeoJsonObject.class);
 			sm.setGeojson(geo);
-			Debug.println("setGeoFromString ["+json+"] set");
+			log.debug("setGeoFromString [" + json + "] set");
 			return;
 		} catch (JsonParseException e) {
 		} catch (JsonMappingException e) {
 		} catch (IOException e) {
 		}
-		Debug.errprintln("setGeoFromString on ["+json+"] failed");
+		log.error("setGeoFromString on [" + json + "] failed");
 		sm.setGeojson(null);
 	}
 	
 	public void validateSigmet (Sigmet sm) throws Exception {
-		Debug.println("Testing createAndCheckSigmet");
-		Debug.println(sm.getValiddate().toString());
+		log.trace("Testing createAndCheckSigmet");
+		log.error(sm.getValiddate().toString());
 		assertThat(sm.getPhenomenon().toString(), is("OBSC_TS"));
 	}
 	
@@ -146,8 +147,8 @@ public class SigmetToTACTest {
 		Sigmet[] sigmets=store.getSigmets(false, SigmetAirmetStatus.concept);
 		assertThat(sigmets.length, is(1));
 		validateSigmet(sigmets[0]);
-		Debug.println("SIGMET: "+sigmets[0].toString());
-		Debug.println("  TAC:"+sigmets[0].toTAC(firStore.lookup("EHAA", true)));
+		log.debug("SIGMET: " + sigmets[0].toString());
+		log.debug("  TAC:" + sigmets[0].toTAC(firStore.lookup("EHAA", true)));
 	}
 	
 }

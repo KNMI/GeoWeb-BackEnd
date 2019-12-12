@@ -26,9 +26,10 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 
+@Slf4j
 @Getter
 @Component
 public class TriggerStore {
@@ -38,14 +39,14 @@ public class TriggerStore {
 
 	public TriggerStore(@Value("${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/triggers";
-		Debug.println("TRIGGER STORE at " + dir);
+		log.debug("TriggerStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating triggerdir at ["+f.getAbsolutePath()+"]");
+			log.debug("Creating TriggerStore at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Trigger directory location is not a directory");
+			log.error("Trigger directory location is not a directory");
 			throw new NotDirectoryException("Trigger directory location is not a directory");
 		}
 		this.directory=dir;
@@ -72,8 +73,7 @@ public class TriggerStore {
 				triggers.add(trig);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return triggers;
 	}
@@ -85,8 +85,7 @@ public class TriggerStore {
 		try {
 			json=om.writeValueAsString(trigger);
 		} catch (JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		File f=null;
 
@@ -107,14 +106,11 @@ public class TriggerStore {
 		try {
 			return om.readValue(json, Trigger.class);
 		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return null;
 	}

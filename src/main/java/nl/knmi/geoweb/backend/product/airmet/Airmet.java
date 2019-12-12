@@ -29,7 +29,7 @@ import org.geojson.LngLatAlt;
 
 import lombok.Getter;
 import lombok.Setter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 
 import nl.knmi.geoweb.backend.product.GeoWebProduct;
@@ -44,6 +44,7 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetUtils;
 import nl.knmi.geoweb.backend.traceability.ProductTraceability;
 
+@Slf4j
 @JsonInclude(Include.NON_EMPTY)
 @Getter
 @Setter
@@ -314,7 +315,7 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
             this.status = status;
         }
         public static AirmetStatus getAirmetStatus(String status){
-            Debug.println("AIRMET status: " + status);
+            log.info("AIRMET status: " + status);
 
             for (AirmetStatus sstatus: AirmetStatus.values()) {
                 if (status.equals(sstatus.toString())){
@@ -423,7 +424,7 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
         default:
         }
 
-        Debug.println("phen: " + this.phenomenon);
+        log.debug("Phenomenon: " + this.phenomenon);
         if (this.phenomenon==null) {
             sb.append(""); //Empty string for missing phenomenon
         } else {
@@ -541,7 +542,7 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
     }
 
     public void serializeAirmet(ObjectMapper om, String fn) {
-        Debug.println("serializeAirmet to "+fn);
+        log.debug("serializeAirmet to "+fn);
         if(/*this.geojson == null ||*/ this.phenomenon == null) {
             throw new IllegalArgumentException("GeoJSON and Phenomenon are required");
         }
@@ -558,7 +559,7 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
         try {
             om.writeValue(new File(fn), this);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
     }
 
@@ -586,8 +587,6 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
 
     public static Airmet getAirmetFromFile(ObjectMapper om, File f) throws JsonParseException, JsonMappingException, IOException {
         Airmet sm=om.readValue(f, Airmet.class);
-        //		Debug.println("Airmet from "+f.getName());
-        //		Debug.println(sm.dumpAirmetGeometryInfo());
         return sm;
     }
 
@@ -630,8 +629,8 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
             iwxxmName+="_C_"+this.getLocation_indicator_mwo()+"_"+time;
             String s=converter.ToIWXXM_2_1(this);
             if ("FAIL".equals(s)) {
-                Debug.println(" ToIWXXM_2_1 failed");
-                toDeleteIfError.stream().forEach(f ->  {Debug.println("REMOVING "+f); Tools.rm(f); });
+                log.error(" ToIWXXM_2_1 failed");
+                toDeleteIfError.stream().forEach(f ->  {log.debug("Removing "+f); Tools.rm(f); });
                 return "ERROR: airmet.ToIWXXM_2_1() failed";
             } else {
                 Tools.writeFile(path.getPath() + "/" + iwxxmName + ".xml", s);
@@ -639,7 +638,7 @@ public class Airmet implements GeoWebProduct, IExportable<Airmet> {
         } catch (IOException | NullPointerException e) {
             toDeleteIfError.stream()
                 .forEach(f ->  {
-                    Debug.println("REMOVING "+f); Tools.rm(f);
+                    log.debug("Removing "+f); Tools.rm(f);
                 });
             return "ERROR: "+e.getMessage();
         }

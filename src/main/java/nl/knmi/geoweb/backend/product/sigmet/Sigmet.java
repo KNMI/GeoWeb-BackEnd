@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import lombok.Getter;
 import lombok.Setter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.GeoWebProduct;
 import nl.knmi.geoweb.backend.product.IExportable;
@@ -49,6 +49,7 @@ import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetType;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetUtils;
 import nl.knmi.geoweb.backend.traceability.ProductTraceability;
 
+@Slf4j
 @JsonInclude(Include.NON_NULL)
 @Getter
 @Setter
@@ -118,7 +119,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 							+" " + Sigmet.convertLon(position.get(1).doubleValue()) :
 								"";
 				}catch(Exception e){
-					Debug.printStackTrace(e);
+					log.error(e.getMessage());
 				}
 				return  ((volcanoName.length() > 0 || location.length() > 0) ? "VA ERUPTION" : "") +
 						volcanoName +
@@ -162,7 +163,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 
 		public static Phenomenon getRandomPhenomenon() {
 			int i=(int)(Math.random()*Phenomenon.values().length);
-			Debug.errprintln("rand "+i+ " "+Phenomenon.values().length);
+			log.debug("rand "+i+ " "+Phenomenon.values().length);
 			return Phenomenon.valueOf(Phenomenon.values()[i].toString());
 		}
 
@@ -242,14 +243,12 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 
 	public static Sigmet getSigmetFromFile(ObjectMapper om, File f) throws JsonParseException, JsonMappingException, IOException {
 		Sigmet sm=om.readValue(f, Sigmet.class);
-		//		Debug.println("Sigmet from "+f.getName());
-		//		Debug.println(sm.dumpSigmetGeometryInfo());
 		return sm;
 	}
 
 
 	public void serializeSigmet(ObjectMapper om, String fn) {
-		Debug.println("serializeSigmet to "+fn);
+		log.trace("serializeSigmet to "+fn);
 		if(this.geojson == null || this.phenomenon == null) {
 			throw new IllegalArgumentException("GeoJSON and Phenomenon are required");
 		}
@@ -266,7 +265,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 		try {
 			om.writeValue(new File(fn), this);
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 	}
 
@@ -428,7 +427,7 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			sb.append(va_extra_fields.toTAC());
 		}
 
-        Debug.println("phen: " + this.phenomenon);
+        log.debug("Phenomenon: " + this.phenomenon);
         if (this.phenomenon==null) {
             sb.append(""); //Empty string for missing phenomenon
         } else {
@@ -709,14 +708,14 @@ public class Sigmet implements GeoWebProduct, IExportable<Sigmet>{
 			iwxxmName+="_C_"+this.getLocation_indicator_mwo()+"_"+time;
 			String s=converter.ToIWXXM_2_1(this);
 			if ("FAIL".equals(s)) {
-			  Debug.println(" ToIWXXM_2_1 failed");
-			  toDeleteIfError.stream().forEach(f ->  {Debug.println("REMOVING "+f); Tools.rm(f); });
+			  log.error(" ToIWXXM_2_1 failed");
+			  toDeleteIfError.stream().forEach(f ->  {log.debug("Removing " + f); Tools.rm(f); });
 			  return "ERROR: sigmet.ToIWXXM_2_1() failed";
 			} else {
 				Tools.writeFile(path.getPath() + "/" + iwxxmName + ".xml", s);
 			}
 		} catch (IOException | NullPointerException e) {
-			toDeleteIfError.stream().forEach(f ->  {Debug.println("REMOVING "+f); Tools.rm(f); });
+			toDeleteIfError.stream().forEach(f ->  {log.debug("Removing " + f); Tools.rm(f); });
 			return "ERROR: "+e.getMessage();
 		}
 		return "OK";

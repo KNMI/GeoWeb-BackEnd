@@ -110,3 +110,28 @@ To start from visual studio code, you have to edit your launch configuration (la
 ```
 
 
+# Logging backend information
+
+## Logging system
+
+    Simple Logging Facade for Java (SLF4J)
+
+## Logging levels
+
+| Env  | Name | Example |
+|---|---|---|
+| P  |ERROR   | "IWXXM invalid" |
+| P  |WARN   | "TAF export failed" "Only first geometry was used" |
+| P  |INFO   | "TAF is made" |
+| D  |DEBUG   | "There are 6 products"  |
+| D  |TRACE  | "export is called" "export returned"  |
+
+P = Production; D = Development
+
+## Hierarchy
+
+Logging will be possible by module.
+
+## Stacktraces
+
+Printing of stacktraces has been replaced by logging the related error message.

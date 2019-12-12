@@ -35,7 +35,7 @@ public class GeoWebJwtConverter extends DefaultAccessTokenConverter implements J
     @Override
     public OAuth2Authentication extractAuthentication(Map<String, ?> map) {
         OAuth2Authentication authentication = super.extractAuthentication(map);
-        log.info(map.keySet().toString());
+        log.debug("Authentication keyset: " + map.keySet().toString());
 
         @SuppressWarnings("unchecked")
         Object principal = principalExtractor.extractPrincipal((Map<String, Object>) map);

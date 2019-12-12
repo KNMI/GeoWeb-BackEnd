@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/triggers") 
 public class TriggerServices {
@@ -46,8 +49,7 @@ public class TriggerServices {
 			triggerStore.storeTrigger(trig);
 	    	return ResponseEntity.status(HttpStatus.OK).body("OK");
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
     	return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("FAIL");
     }

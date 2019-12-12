@@ -18,10 +18,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.sigmetairmet.SigmetAirmetStatus;
 
+@Slf4j
 @Component
 public class AirmetStore {
 
@@ -39,14 +40,14 @@ public class AirmetStore {
 
 	public void setLocation(String productstorelocation) throws IOException {
 		String dir = productstorelocation + "/airmets";
-		Debug.println("airmet STORE at " + dir);
+		log.debug("AirmetStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating airmet store at ["+f.getAbsolutePath()+"]");		}
+			log.debug("Creating AirmetStore at ["+f.getAbsolutePath()+"]");		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("airmet directory location is not a directory");
-			throw new NotDirectoryException("airmet directory location is not a directorty");
+			log.error("Airmet directory location is not a directory");
+			throw new NotDirectoryException("Airmet directory location is not a directorty");
 		}
 
 		this.directory=dir;
@@ -74,7 +75,7 @@ public class AirmetStore {
                     (rhs.getSequence() == lhs.getSequence() ? 0 : -1));
 			seq = airmets[0].getSequence() + 1;
 		}
-		Debug.println("SEQUENCE NR: Created sequence number " + seq + " for airmet phenomenon " + airmetToPublish.getPhenomenon().toString());
+		log.info("Created sequence number " + seq + " for Airmet phenomenon " + airmetToPublish.getPhenomenon().toString());
 		return seq;
 	}
 
@@ -127,7 +128,6 @@ public class AirmetStore {
 				try {
 					sm = Airmet.getAirmetFromFile(airmetObjectMapper, f);
 					if (selectActive) {
-//						Debug.println(sm.getStatus()+" "+now+" "+sm.getValiddate()+" "+sm.getValiddate_end());
 						if ((sm.getStatus()==SigmetAirmetStatus.published)&&
 								(sm.getValiddate_end().isAfter(now))) {
 							airmets.add(sm);
@@ -146,8 +146,7 @@ public class AirmetStore {
 						airmets.add(sm);
 					}
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					log.error(e.getMessage());
 				}
 			}
 			airmets.sort(comp);

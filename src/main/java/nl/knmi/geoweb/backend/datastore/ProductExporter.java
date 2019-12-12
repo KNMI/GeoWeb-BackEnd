@@ -8,10 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.IExportable;
 import nl.knmi.geoweb.backend.product.ProductConverter;
 
+@Slf4j
 @Component
 public class ProductExporter<P> {
 	private File path;
@@ -26,8 +28,7 @@ public class ProductExporter<P> {
 			try {
 				Tools.mksubdirs(path.getAbsolutePath());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 		}
 	}

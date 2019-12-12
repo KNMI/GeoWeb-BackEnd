@@ -28,15 +28,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import nl.knmi.adaguc.tools.Debug;
 import nl.knmi.adaguc.tools.HTTPTools;
 import nl.knmi.adaguc.tools.JSONResponse;
 import nl.knmi.geoweb.backend.product.taf.TafSchemaStore;
 
+@Slf4j
 @RestController
 @RequestMapping(path={"/admin", "/store"}, method=RequestMethod.GET)
 public class AdminServices {
@@ -73,7 +75,7 @@ public class AdminServices {
 		try {
 			json_payload = objectMapper.readTree(payload);
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error(e.getMessage());
 			jsonResponse.setException("Failed to read payload", e);
 		}
 		String version = json_payload.at("/config/version").asText();
@@ -107,15 +109,15 @@ public class AdminServices {
 
 	@RequestMapping(path="/create", method=RequestMethod.POST,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void createConfigurationItem(HttpServletRequest req, HttpServletResponse response, @RequestBody String payload) throws JsonProcessingException {
-		Debug.println("admin/create");
+		log.trace("admin/create");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			String type = HTTPTools.getHTTPParam(req, "type");
 			String name = HTTPTools.getHTTPParam(req, "name");
 			JSONObject result = new JSONObject();
-			Debug.println("type:" +type);
-			Debug.println("name:" +name);
-			Debug.println("payload:" +payload);
+			log.debug("type:" +type);
+			log.debug("name:" +name);
+			log.debug("payload:" +payload);
 			adminStore.create(type,name,payload);
 			result.put("message", "ok");
 			jsonResponse.setMessage(result);
@@ -140,12 +142,12 @@ public class AdminServices {
 /*
 	@RequestMapping(path="/validation/schema/{schemaId}", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public ResponseEntity<String> setSchemaContentById(@PathVariable String schemaId, @RequestBody String content) throws JsonProcessingException, IOException {
-		System.out.println(schemaId + ": " + content);
+		log.debug(schemaId + ": " + content);
 		if("taf".equals(schemaId.toLowerCase())) {
 			try {
 				tafSchemaStore.storeTafSchema(content, objectMapper);
 			} catch(Exception e) {
-				e.printStackTrace();
+				log.error(e.getMessage());
 			}
 
 			return ResponseEntity.status(HttpStatus.OK).body(null);
@@ -156,7 +158,7 @@ public class AdminServices {
 
 	@RequestMapping(path="/example_tafs/{id}", method=RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_UTF8_VALUE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void storeExampleTaf(HttpServletRequest req, HttpServletResponse response, @PathVariable int id, @RequestBody String payload) {
-		Debug.println("updating taf");
+		log.trace("updating taf");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			JSONObject result = new JSONObject();
@@ -176,7 +178,7 @@ public class AdminServices {
 
 	@RequestMapping(path="/example_tafs/{id}", method=RequestMethod.DELETE, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void deleteExampleTaf(HttpServletRequest req, HttpServletResponse response, @PathVariable int id) {
-		Debug.println("deleting taf");
+		log.trace("deleting taf");
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			JSONObject result = new JSONObject();
@@ -213,19 +215,19 @@ public class AdminServices {
 		}
 
 	}
-
+	
 	@RequestMapping(path="/example_tafs", method=RequestMethod.GET,	produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 	public void readExampleTafs(HttpServletRequest req, HttpServletResponse response) {
 		JSONResponse jsonResponse = new JSONResponse(req);
 		try {
 			JSONObject result = new JSONObject();
 			List<String> payload = adminStore.readAll("taf", "example");
-			System.out.println(payload);
+			log.debug("Payload: " + payload);
 			result.put("message", "ok");
 			result.put("payload", payload);
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
-			Debug.println("Failed");
+			log.error("Reading TAF failed");
 			jsonResponse.setException("read failed",e);
 		}
 		try {
@@ -246,8 +248,7 @@ public class AdminServices {
 			result.put("payload", new JSONArray(payload));
 			jsonResponse.setMessage(result);
 		} catch (Exception e) {
-			Debug.printStackTrace(e);
-			Debug.errprintln("Failed to read " + e.getMessage());
+			log.error("Failed to read configuration: " + e.getMessage());
 			jsonResponse.setException("read failed",e);
 		}
 

@@ -31,7 +31,6 @@ public class SigmetValidator {
 		try{
 			objectMapper.readValue(sigmetStr, Sigmet.class).toTAC();
 		}catch(Exception e){
-			//			Debug.printStackTrace(e);
 			ObjectMapper om = new ObjectMapper();
 			return new SigmetValidationResult(false,
 					(ObjectNode) om.readTree("{\"/sigmet/message\": [\"Unable to generate TAC report\"]}"));

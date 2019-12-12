@@ -14,11 +14,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.TestConfig;
 import nl.knmi.geoweb.backend.aviation.FIRStore;
 import nl.knmi.geoweb.backend.product.sigmet.Sigmet;
 import nl.knmi.geoweb.backend.product.sigmet.converter.SigmetConverter;
 
+@Slf4j
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = { TestConfig.class })
 public class VASigmetToIWXXMTest {
@@ -46,12 +48,12 @@ public class VASigmetToIWXXMTest {
 			try {
 				vaSigmet = sigmetObjectMapper.readValue(resource.getInputStream(), Sigmet.class);
 			} catch (Exception e) {
-				e.printStackTrace(System.err);
+				log.error(e.getMessage());
 			}
 
 			String result = sigmetConverter.ToIWXXM_2_1(vaSigmet);
-			System.err.println(result);
-			System.err.println("TAC: " + vaSigmet.toTAC(firStore.lookup(vaSigmet.getFirname(), true)));
+			log.debug(result);
+			log.debug("TAC: " + vaSigmet.toTAC(firStore.lookup(vaSigmet.getFirname(), true)));
 		});
 		
 	}

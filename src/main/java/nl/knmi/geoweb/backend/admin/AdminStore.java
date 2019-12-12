@@ -15,9 +15,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 
+@Slf4j
 @Getter
 @Component
 public class AdminStore {
@@ -33,10 +34,10 @@ public class AdminStore {
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			Debug.println("Creating admin store at ["+f.getAbsolutePath()+"]");
+			log.debug("Creating admin store at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
-			Debug.errprintln("Admin store directory location is not a directory");
+			log.error("Admin store directory location is not a directory");
 			throw new NotDirectoryException("Admin store directory location is not a directory");
 		}
 		this.dir=dir;
@@ -95,23 +96,23 @@ public class AdminStore {
 			if (!resourceName.endsWith(".json")) {
 				resourceName += ".json";
 			}
-			Debug.println("Unable to load item [" + file.getAbsolutePath() + "] Attempting to read from resources with name [" + resourceName + "]");
+			log.error("Unable to load item [" + file.getAbsolutePath() + "] Attempting to read from resources with name [" + resourceName + "]");
 			String item = null;
 			try {
 				item = Tools.readResource(resourceName);
-				Debug.println("[OK] Read from resource [" + resourceName + "] now writing to store");
+				log.debug("[OK] Read from resource [" + resourceName + "] now writing to store");
 			}catch(Exception e) {				
 			}
 			if (item != null && item.length() > 0) {
 				Tools.mksubdirs(file.getParentFile().getAbsolutePath());
 				Tools.writeFile(file.getAbsolutePath(), item);
-				Debug.println("[OK] Write  item [" + file.getAbsolutePath() + "]");
+				log.debug("[OK] Write  item [" + file.getAbsolutePath() + "]");
 			} else {
-				Debug.errprintln("Unable to find resource " + resourceName);
+				log.error("Unable to find resource " + resourceName);
 				throw new java.io.IOException("Unable to locate item " + resourceName);
 			}
 		}
-		Debug.println("[ADMINSTORE] Reading item [" + file.getAbsolutePath() + "]");
+		log.debug("[ADMINSTORE] Reading item [" + file.getAbsolutePath() + "]");
 		return Tools.readFile(file.getAbsolutePath());
 	}
 	private Long getTimestamp(String fname) {

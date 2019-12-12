@@ -358,11 +358,10 @@ public class TafValidator {
 	}
 
 	private List<Resource> discoverSchemata(String schemaResourceLocation) {
-		//		log.debug("Discovering all available validation schemata... ");
+
 		List<Resource> resultList = new ArrayList<Resource>();
 		try {
 			String locationPattern = "file:" + schemaResourceLocation + "**/*.json";
-			//			log.debug("Exploring schemata location: [{}]", locationPattern);
 			PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(
 					getClass().getClassLoader());
 			resultList = Arrays.asList(resolver.getResources(locationPattern));
@@ -403,7 +402,6 @@ public class TafValidator {
 		AugmentMaxVisibility.augment(input);
 		AugmentNonRepeatingChanges.augment(input);					// FM Done
 		AugmentMaxVerticalVisibility.augment(input);
-		//		Debug.println(input.toString());
 	}
 
 	/**
@@ -540,35 +538,26 @@ public class TafValidator {
 					(ObjectNode) om.readTree("{\"/forecast/message\": [\"Validation report was null\"]}"), validationReport);
 		}
 
-		//		Debug.println(messagesMap.toString());
-
 		Map<String, Set<String>> errorMessages = convertReportInHumanReadableErrors(validationReport, messagesMap);
 		JsonNode errorJson = new ObjectMapper().readTree("{}");
 
 		if (!validationReport.isSuccess()) {
-//			Debug.println("Validation report failed: " + validationReport.toString());
-
 			//			validationReport.forEach(report -> {
 			//
 			//				try {
-			//					Debug.println((new JSONObject(
+			//					log.debug((new JSONObject(
 			//							report.asJson().toString()
 			//							)).toString(4));
 			//				} catch (JSONException e) {
-			//					e.printStackTrace();
+			//					log.error(e.getMessage());
 			//				}
 			//
 			//			});
 
 			String errorsAsJson = new ObjectMapper().writeValueAsString(errorMessages);
-
-
-
-			//			Debug.println((new JSONObject(new ObjectMapper().writeValueAsString(messagesMap).toString())).toString(4));
 			// Try to find all possible errors and map them to the human-readable variants
 			// using the messages map
 			((ObjectNode) errorJson).setAll((ObjectNode) (ValidationUtils.getJsonNode(errorsAsJson)));
-			//			Debug.println((new JSONObject(errorJson.toString())).toString(4));
 		}
 		// Enrich the JSON with custom data validation, this is validated using a second
 		// schema
@@ -583,11 +572,8 @@ public class TafValidator {
 					(ObjectNode) om.readTree("{\"/forecast/message\": [\"Validation report was null\"]}"), validationReport,
 					enrichedValidationReport);
 		}
-		// Debug.println("Second: " + enrichedValidationReport.toString());
 
 		if (!enrichedValidationReport.isSuccess()) {
-//			Debug.println("Enriched report failed" + enrichedValidationReport.toString());
-//			Debug.println(jsonNode.toString());
 			// Try to find all possible errors and map them to the human-readable variants
 			// using the messages map
 			// Append them to any previous errors, if any
@@ -601,7 +587,6 @@ public class TafValidator {
 		try{
 			objectMapper.readValue(tafStr, Taf.class).toTAC();
 		}catch(Exception e){
-			//			Debug.printStackTrace(e);
 			ObjectMapper om = new ObjectMapper();
 			return new TafValidationResult(false,
 					(ObjectNode) om.readTree("{\"/forecast/message\": [\"Unable to generate TAC report\"]}"), validationReport,

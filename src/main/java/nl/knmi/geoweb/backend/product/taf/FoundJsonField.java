@@ -72,7 +72,7 @@ public class FoundJsonField {
         try {
             return objectMapper.treeToValue(value, classType);
         } catch (JsonProcessingException e) {
-            log.debug(String.format("Could not map the value of the found field to an object of class '%s'", classType.toString()));
+            log.error(String.format("Could not map the value of the found field to an object of class '%s'", classType.toString()));
         }
         return null;
     }

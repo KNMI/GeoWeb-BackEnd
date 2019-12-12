@@ -18,7 +18,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Setter
 @Getter
 @Component
@@ -35,11 +37,11 @@ public class AirportStore {
         String dir = productstorelocation + "/admin/config";
         File f = new File(dir);
         if (f.exists() == false) {
-            Debug.errprintln("Creating airport store at [" + f.getAbsolutePath() + "]");
+            log.debug("Creating airport store at [" + f.getAbsolutePath() + "]");
             Tools.mksubdirs(f.getAbsolutePath());
         }
         if (f.isDirectory() == false) {
-            Debug.errprintln("Airport store location is not a directory");
+            log.error("Airport store location is not a directory");
             throw new NotDirectoryException("Airport store location is not a directory");
         }
         this.directory = dir;
@@ -49,11 +51,11 @@ public class AirportStore {
     public void initStore() throws IOException {
         this.airportInfos = new HashMap<String, AirportInfo>();
         File fn = new File(this.directory + "/" + this.airportFile);
-        Debug.errprintln("fn:" + fn);
+        log.debug("AirportStore filename: " + fn);
         if (fn.exists() && fn.isFile()) {
 
         } else {
-            Debug.errprintln("No airportfile found, copying one from resources dir to " + this.directory);
+            log.warn("No airportfile found, copying one from resources dir to " + this.directory);
             String s = Tools.readResource(this.airportFile);
             String airportText = String.format("%s/%s", this.directory, this.airportFile);
             Tools.writeFile(airportText, s);
@@ -67,13 +69,13 @@ public class AirportStore {
                             Float.parseFloat(airport.getLon()), (airport.getHeight().length() > 0) ? Float.parseFloat(airport.getHeight()) : 0);
                     airportInfos.put(airport.getIcao(), airportInfo);
                 } catch (NumberFormatException e) {
-                    Debug.println("Error parsing airport record " + airport.getIcao());
+                    log.error("Error parsing airport record " + airport.getIcao());
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        Debug.println("Found " + airportInfos.size() + " records of airportinfo");
+        log.debug("Found " + airportInfos.size() + " records of airportinfo");
     }
 
     public AirportInfo lookup(String ICAO) {
@@ -81,7 +83,7 @@ public class AirportStore {
             try {
                 initStore();
             } catch (IOException e) {
-                Debug.errprintln("ERROR: on AirportStore.lookup(" + ICAO + ")" + " " + e);
+                log.error("AirportStore.lookup(" + ICAO + ")" + " failed: " + e.getMessage());
                 return null;
             }
         }

@@ -30,8 +30,7 @@ public class GenericAuthoritiesExtractor implements AuthoritiesExtractor {
             RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResource.getFile(), RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);
         } catch (IOException exception) {
-            log.error("Could not obtain roles to privilege mappings from resource");
-            log.error(exception.getMessage());
+            log.error("Could not obtain roles to privilege mappings from resource. " + exception.getMessage());
             mappingsHolder = new ArrayList<RoleToPrivilegesMapper>();
         }
     }

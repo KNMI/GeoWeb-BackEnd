@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
 import lombok.Setter;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.product.GeoWebProduct;
 import nl.knmi.geoweb.backend.product.IExportable;
@@ -26,6 +26,7 @@ import nl.knmi.geoweb.backend.product.taf.serializers.CloudsSerializer;
 import nl.knmi.geoweb.backend.product.taf.serializers.WeathersSerializer;
 import nl.knmi.geoweb.backend.traceability.ProductTraceability;
 
+@Slf4j
 @Getter
 @Setter
 public class Taf implements GeoWebProduct, IExportable<Taf> {
@@ -842,7 +843,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
         publishTAC += line;
         OffsetDateTime minusOne;
         if (this.metadata.baseTime != null) {
-            Debug.println("basetime");
+            log.debug("baseTime not null");
             minusOne = this.metadata.baseTime.minusHours(1);
         } else {
             minusOne = this.metadata.validityStart.minusHours(1);
@@ -882,7 +883,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
         String time = OffsetDateTime.now(ZoneId.of("Z")).format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         OffsetDateTime reportTime=this.metadata.getBaseTime();
         if (reportTime==null) {
-            Debug.println("MISSING baseTime, using validityStart");
+            log.warn("Missing baseTime, using validityStart");
             reportTime=this.metadata.getValidityStart();
         }
         String validTime = reportTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HHmm"));
@@ -920,8 +921,7 @@ public class Taf implements GeoWebProduct, IExportable<Taf> {
             iwxxmName+="_C_"+this.metadata.getLocation()+"_"+time;
             Tools.writeFile(path.getPath() + "/" + iwxxmName + ".xml", converter.ToIWXXM_2_1(this));
         } catch (Exception e) {
-            Debug.println("creation of IWXXM failed: ");
-            Debug.printStackTrace(e);
+            log.error("Creation of IWXXM failed: " + e.getMessage());
             return "creation of IWXXM failed";
         }
         return "OK";

@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import fi.fmi.avi.model.immutable.PointGeometryImpl;
 import fi.fmi.avi.model.immutable.PolygonsGeometryImpl;
+import lombok.extern.slf4j.Slf4j;
+
 import org.geojson.Feature;
 import org.geojson.LngLatAlt;
 import org.geojson.Point;
@@ -23,6 +25,8 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.locationtech.jts.io.geojson.GeoJsonWriter;
 
+
+@Slf4j
 public class GeoUtils {
 
 	private static GeometryFactory gf;
@@ -67,8 +71,7 @@ public class GeoUtils {
 			String json=om.writeValueAsString(F.getGeometry());
 			return getReader().read(json);
 		} catch(ParseException | JsonProcessingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return null;
 	}
@@ -102,13 +105,11 @@ public class GeoUtils {
 		try {
 			ObjectMapper om=getObjectMapper();
 			String json=getWriter().write(g);
-//			Debug.println(">>>>JSON:"+json);
 			org.geojson.Geometry<Double> geo= om.readValue(json, org.geojson.Geometry.class);
 			f=new Feature();
 			f.setGeometry(geo);
 		} catch(IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.error(e.getMessage());
 		}
 		return f;
 	}

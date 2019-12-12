@@ -75,7 +75,7 @@ public class TafServices {
             TAC = taf.toTAC();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         // END
         try {
@@ -94,7 +94,7 @@ public class TafServices {
                     TAC = taf.toTAC();
 
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error(e.getMessage());
                 }
                 // If there is already a taf published for this location and airport; only for type==normal
                 Taf[] tafs = tafStore.getTafs(true, TAFReportPublishedConcept.published, null, taf.metadata.getLocation());
@@ -116,7 +116,7 @@ public class TafServices {
                 return ResponseEntity.ok(json);
             }
         } catch (ProcessingException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
             JSONObject json = new JSONObject()
                     .put("message", "Unable to validate taf");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(json);
@@ -228,7 +228,7 @@ public class TafServices {
             case correction:
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
                     //Error
-                    log.debug("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
+                    log.error("TAF " + taf.getMetadata().getUuid() + " already published");
                     try {
                         JSONObject json = new JSONObject()
                                 .put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
@@ -238,7 +238,7 @@ public class TafServices {
                 }
                 if (!tafStore.isPublished(taf.getMetadata().getPreviousUuid())) {
                     //Error
-                    log.debug("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
+                    log.error("Previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
                     try {
                         JSONObject json = new JSONObject()
                                 .put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
@@ -304,11 +304,11 @@ public class TafServices {
                             return ResponseEntity.ok(json);
                         } else {
                             //Error
-                            log.error("Error: COR/AMD for old TAF");
+                            log.error("COR/AMD for old TAF");
                         }
                     } else {
                         //Error
-                        log.error("Error: COR/AMD do not match with previousTaf");
+                        log.error("COR/AMD do not match with previousTaf");
                     }
                 }
                 JSONObject errorJson = new JSONObject()
@@ -321,7 +321,7 @@ public class TafServices {
             case canceled:
                 if (tafStore.isPublished(taf.getMetadata().getUuid())) {
                     //Error
-                    log.debug("Err: TAF " + taf.getMetadata().getUuid() + " alreay published");
+                    log.error("TAF " + taf.getMetadata().getUuid() + " already published");
                     try {
                         JSONObject obj = new JSONObject()
                                 .put("error", "TAF " + taf.getMetadata().getUuid() + " already published");
@@ -331,7 +331,7 @@ public class TafServices {
                 }
                 if (!tafStore.isPublished(taf.getMetadata().getPreviousUuid())) {
                     //Error
-                    log.debug("Err: previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
+                    log.error("Previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
                     try {
                         JSONObject obj = new JSONObject()
                                 .put("error", "previous TAF " + taf.getMetadata().getPreviousUuid() + " not published");
@@ -373,7 +373,7 @@ public class TafServices {
                     }
                 }
                 //Error
-                log.debug("Err: cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
+                log.debug("Cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
                 try {
                     JSONObject obj = new JSONObject()
                             .put("error", "cancel of " + taf.getMetadata().getPreviousUuid() + " failed");
@@ -474,7 +474,7 @@ public class TafServices {
             try {
                 JSONObject obj = new JSONObject()
                         .put("error", e.getMessage());
-                e.printStackTrace();
+                log.error(e.getMessage());
                 return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(obj);
             } catch (JSONException e1) {
             }

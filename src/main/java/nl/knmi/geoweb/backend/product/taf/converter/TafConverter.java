@@ -23,7 +23,7 @@ import fi.fmi.avi.model.immutable.GeoPositionImpl;
 import fi.fmi.avi.model.taf.TAF;
 import fi.fmi.avi.model.taf.immutable.TAFImpl;
 import fi.fmi.avi.model.taf.immutable.TAFReferenceImpl;
-import nl.knmi.adaguc.tools.Debug;
+import lombok.extern.slf4j.Slf4j;
 import nl.knmi.geoweb.backend.aviation.AirportInfo;
 import nl.knmi.geoweb.backend.aviation.AirportStore;
 import nl.knmi.geoweb.backend.product.ProductConverter;
@@ -32,6 +32,7 @@ import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebTAFConverter;
 import nl.knmi.geoweb.iwxxm_2_1.converter.GeoWebTafInConverter;
 import nl.knmi.geoweb.iwxxm_2_1.converter.conf.GeoWebConverterConfig;
 
+@Slf4j
 @Configuration
 // @ComponentScan(value = "nl.knmi.geoweb.backend.admin")
 @Import({ IWXXMConverter.class, GeoWebTAFConverter.class, GeoWebTafInConverter.class })
@@ -105,25 +106,24 @@ public class TafConverter implements ProductConverter<Taf> {
                     convertedTAF.setReferredReport(tafReference.build());
                 }
             } else {
-                Debug.errprintln("airportinfo for " + airportName + " not found");
+                log.error("airportinfo for " + airportName + " not found");
             }
             ConversionResult<String> iwxxmResult = tafIWXXMStringSerializer.convertMessage(convertedTAF.build(), ConversionHints.TAF);
             if ((ConversionResult.Status.SUCCESS == iwxxmResult.getStatus())||(ConversionResult.Status.WITH_WARNINGS == iwxxmResult.getStatus())) {
                 for (ConversionIssue iss : iwxxmResult.getConversionIssues()) {
-                    Debug.errprintln("iss: " + iss.getMessage());
+                    log.error("iss: " + iss.getMessage());
                 }
                 return iwxxmResult.getConvertedMessage().get();
             } else {
-                Debug.errprintln("ERR: " + iwxxmResult.getStatus());
+                log.error("IWXXM conversation failed: " + iwxxmResult.getStatus());
                 for (ConversionIssue iss : iwxxmResult.getConversionIssues()) {
-                    Debug.errprintln("iss: " + iss.getMessage());
+                    log.error("issue: " + iss.getMessage());
                 }
             } //TODO
         } else {
-            Debug.errprintln("Taf2IWXXM failed");
-            Debug.errprintln("ERR: " + result.getStatus());
+            log.error("Taf2IWXXM failed: " + result.getStatus());
             for (ConversionIssue iss : result.getConversionIssues()) {
-                Debug.errprintln("iss: " + iss.getMessage());
+                log.error("issue: " + iss.getMessage());
             }
         }
         return "FAIL";

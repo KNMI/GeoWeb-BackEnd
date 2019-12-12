@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import lombok.extern.slf4j.Slf4j;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 import java.io.File;
@@ -20,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("/exportedproducts")
 public class ExportedProductServices {
@@ -44,7 +47,7 @@ public class ExportedProductServices {
                 ,Comparator.reverseOrder()))
                 .forEach(p -> exported.add(p.getFileName().toString()));
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
         return exported;
     }
@@ -71,7 +74,7 @@ public class ExportedProductServices {
                 content = new String(Files.readAllBytes(Paths.get(f.getAbsolutePath())));
                 response.setStatus(HttpStatus.OK.value());
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error(e.getMessage());
                 response.setStatus(HttpStatus.INTERNAL_SERVER_ERROR.value());
             }
         } else {
@@ -80,7 +83,7 @@ public class ExportedProductServices {
         try {
             wrapper.getWriter().write(content);
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
 }
 }
