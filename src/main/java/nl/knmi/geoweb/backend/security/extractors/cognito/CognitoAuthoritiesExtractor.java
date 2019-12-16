@@ -14,11 +14,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.security.models.RoleToPrivilegesMapper;
 
 @Slf4j
@@ -26,10 +27,15 @@ public class CognitoAuthoritiesExtractor implements AuthoritiesExtractor {
 
     private List<RoleToPrivilegesMapper> mappingsHolder;
 
-    public CognitoAuthoritiesExtractor(ObjectMapper objectMapper, Resource mappingResource) {
+    public CognitoAuthoritiesExtractor(ObjectMapper objectMapper, ClassPathResource mappingResource) {
         /* Read the role to privileges mapping into memory */
         try {
-            RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResource.getFile(),
+            /** 
+             * NOTE: mappingResource.getFile() will only work in dev mode!  
+             * Use Tools.readResource, this will work in both production and dev
+             */
+            String mappingResourceAsString = Tools.readResource(mappingResource.getPath());
+            RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResourceAsString,
                     RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);
         } catch (IOException exception) {

@@ -12,7 +12,7 @@ import org.springframework.boot.autoconfigure.security.oauth2.resource.Principal
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -37,8 +37,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Value("classpath:nl/knmi/geoweb/security/rolesToPrivilegesMapping.json")
-    private Resource mappingResource;
+    @Value("nl/knmi/geoweb/security/rolesToPrivilegesMapping.json")
+    private ClassPathResource mappingResource;
 
     
 

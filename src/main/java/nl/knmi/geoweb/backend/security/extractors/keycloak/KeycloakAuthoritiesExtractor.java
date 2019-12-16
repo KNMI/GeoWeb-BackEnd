@@ -13,11 +13,12 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.boot.autoconfigure.security.oauth2.resource.AuthoritiesExtractor;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import nl.knmi.adaguc.tools.Tools;
 import nl.knmi.geoweb.backend.security.models.RoleToPrivilegesMapper;
 
 @Slf4j
@@ -29,9 +30,14 @@ public class KeycloakAuthoritiesExtractor implements AuthoritiesExtractor {
 
     private List<RoleToPrivilegesMapper> mappingsHolder;
 
-    public KeycloakAuthoritiesExtractor(ObjectMapper objectMapper, Resource mappingResource) {
+    public KeycloakAuthoritiesExtractor(ObjectMapper objectMapper, ClassPathResource mappingResource) {
         try {
-            RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResource.getFile(), RoleToPrivilegesMapper[].class);
+            /** 
+             * NOTE: mappingResource.getFile() will only work in dev mode!  
+             * Use Tools.readResource, this will work in both production and dev
+             */
+            String mappingResourceAsString = Tools.readResource(mappingResource.getPath());
+            RoleToPrivilegesMapper[] mappings = objectMapper.readValue(mappingResourceAsString, RoleToPrivilegesMapper[].class);
             mappingsHolder = Arrays.asList(mappings);
         } catch (IOException exception) {
             log.error("Could not obtain roles to privilege mappings from resource. " + exception.getMessage());
