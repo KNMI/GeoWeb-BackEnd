@@ -109,6 +109,12 @@ To start from visual studio code, you have to edit your launch configuration (la
     }
 ```
 
+To start from java
+
+```
+java "-Dserver.ssl.enabled=true" "-Dserver.port=8443" "-Dsecurity.oauth2.client.clientId=7kjte51escl78atbuqe8348v98" "-Dsecurity.oauth2.client.clientSecret=***" "-Dclient.userpool=geoweb-test-userpool20191125" "-Dspring.profiles.active=oauth2-cognito" "-Dclient.frontendURL=http://localhost:3000/" "-Dclient.backendURL=https://localhost:8443" -jar geoweb-backend-1.0.7-SNAPSHOT.jar
+```
+
 
 # Logging backend information
 
