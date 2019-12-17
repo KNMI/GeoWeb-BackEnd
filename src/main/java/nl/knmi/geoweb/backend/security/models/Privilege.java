@@ -24,7 +24,8 @@ public enum Privilege implements GrantedAuthority {
     AIRMET_SETTINGS_EDIT("AIRMET_settings_edit"),
     AIRMET_SETTINGS_READ("AIRMET_settings_read"),
     ANONYMOUS("ANONYMOUS"),
-    WMSSERVICES_FORECASTER("WMSSERVICES_FORECASTER");
+    WMSSERVICES_FORECASTER("WMSSERVICES_FORECASTER"), 
+    TEST_EDIT("TEST_edit");
 
     private final String authority;
 

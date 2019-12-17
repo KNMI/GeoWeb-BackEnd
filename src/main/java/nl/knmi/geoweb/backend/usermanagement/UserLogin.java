@@ -48,7 +48,7 @@ public class UserLogin {
 	public static String[] getUserPrivileges() {
 		if(SecurityServices.isProfileActive(activeProfiles, "generic")){
 			String[] privileges = {"AIRMET_edit", "AIRMET_read", "AIRMET_settings_read", "SIGMET_edit", "SIGMET_read", 
-			                       "SIGMET_settings_read", "TAF_edit", "TAF_read", "TAF_settings_read", "WMSSERVICES_FORECASTER"};
+			                       "SIGMET_settings_read", "TAF_edit", "TAF_read", "TAF_settings_read", "WMSSERVICES_FORECASTER", "TEST_edit"};
 			return privileges;
         }else{
 			if (SecurityContextHolder.getContext().getAuthentication() == null

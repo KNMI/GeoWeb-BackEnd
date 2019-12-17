@@ -115,4 +115,12 @@ public class ApplicationConfig implements WebMvcConfigurer {
         om.setTimeZone(TimeZone.getTimeZone("UTC"));
         return om;
     }
+
+    @Bean("testProductObjectMapper")
+    public ObjectMapper getTestProductObjectMapperBean() {
+        log.trace("testProductObjectMapper");
+        ObjectMapper om=new ObjectMapper();
+        omBaseSettings(om);
+        return om;
+    }
 }
