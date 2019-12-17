@@ -77,6 +77,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/sigmets/**").hasAuthority(Privilege.SIGMET_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/tafs/**").hasAuthority(Privilege.TAF_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/airmets/**").hasAuthority(Privilege.AIRMET_EDIT.getAuthority())
+                .antMatchers(HttpMethod.POST, "/testproduct/**").hasAuthority(Privilege.TEST_EDIT.getAuthority())
                 // TODO: The following are not currently connected with any privileges. Consider for the future.
                 //.antMatchers(HttpMethod.GET, "/getServices", "getOverlayServices").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 //.antMatchers(HttpMethod.GET, "/XML2JSON").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())

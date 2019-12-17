@@ -38,7 +38,8 @@
       "AIRMET_settings_read",
       "TAF_edit",
       "SIGMET_edit",
-      "AIRMET_edit"
+      "AIRMET_edit",
+      "TEST_edit"
     ]
   }
 ]
