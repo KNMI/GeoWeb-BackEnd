@@ -328,6 +328,24 @@
                     ],
                     "type": "boolean"
                 },
+                "visibilityAndSmokeWithinLimit": {
+                    "$geoweb::messages": {
+                        "enum": "Smoke requires a visibility of less than 5000 meters"
+                    },
+                    "enum": [
+                        true
+                    ],
+                    "type": "boolean"
+                },
+                "visibilityAndDustWithinLimit": {
+                    "$geoweb::messages": {
+                        "enum": "Dust requires a visibility of less than 5000 meters"
+                    },
+                    "enum": [ 
+                        true
+                    ],
+                    "type": "boolean"
+                },
                 "verticalVisibilityAndFogWithinLimit": {
                     "$geoweb::messages": {
                         "enum": "Fog requires a vertical visibility of 500 ft or less"
