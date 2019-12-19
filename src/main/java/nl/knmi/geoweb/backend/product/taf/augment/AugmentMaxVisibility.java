@@ -114,6 +114,16 @@ public class AugmentMaxVisibility {
 				}
 			}
 		}
+
+		if (StreamSupport.stream(phenomena.spliterator(), false)
+		.anyMatch(phenomenon -> phenomenon.asText().equals("smoke")))  {
+			forecast.put("visibilityAndSmokeWithinLimit", visibility <= 5000);
+		}
+
+		if (StreamSupport.stream(phenomena.spliterator(), false)
+		.anyMatch(phenomenon -> phenomenon.asText().equals("widespread dust")))  {
+			forecast.put("visibilityAndDustWithinLimit", visibility <= 5000);
+		}
 		
 		/* VA, SA, DRSA, BLSA mogen ook bij zichten > 5000 meter (volgens MBG, 05-09-2018
 		if (StreamSupport.stream(phenomena.spliterator(), false)
