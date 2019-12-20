@@ -40,21 +40,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("nl/knmi/geoweb/security/rolesToPrivilegesMapping.json")
     private ClassPathResource mappingResource;
 
-    
+    @Value("${client.backendURL}")
+    private String backendURL;
 
     @Value("${security.oauth2.client.registeredRedirectUri}")
     private String registeredRedirectUri;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        // http.requiresChannel().antMatchers(
-        //     "/login",
-        //     "/signin",
-        //     "/login/geoweb",
-        //     "/login/options",
-        //     "/logout",
-        //     "/logout/options",
-        //     "/status").requiresSecure();
+        String backendLogoutURL = backendURL + "/logout";
+
         // The order of the rules matters and the more specific request matchers should go first.
         // The first match in the list below will be evaluated
         http.antMatcher("/**").authorizeRequests()
@@ -105,13 +100,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // .antMatchers(HttpMethod.GET, "/store/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 .antMatchers(HttpMethod.GET, "/testOnly/**").hasAuthority(Privilege.SIGMET_EDIT.getAuthority())
                 .anyRequest().authenticated()
-                // .and().formLogin().successHandler(new RefererRedirectionAuthenticationSuccessHandler())
-                // .and().oauth2Login().loginProcessingUrl("/signin")
                 .and().logout()
                 .logoutUrl("/logout/geoweb")
                 .deleteCookies("JSESSIONID")
-                // .logoutRequestMatcher(new AntPathRequestMatcher("/logout/geoweb"))
-                .logoutSuccessUrl("/logout")
+                .logoutSuccessUrl(backendLogoutURL)
                 .and()
                 .exceptionHandling().authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(registeredRedirectUri))
                 .and().cors()
