@@ -274,6 +274,15 @@
                       "type": "string"
                     }]
                 },
+                "funnelCloudsModerateOrHeavy": {
+                    "$geoweb::messages": {
+                        "enum": "FC can only be moderate or heavy"
+                    },
+                    "enum": [
+                        true
+                    ],
+                    "type": "boolean"
+                },
                 "cloudsCBNeededAndPresent": {
                     "$geoweb::messages": {
                         "enum": "When there are thunderstorms, a CB cloud is required"

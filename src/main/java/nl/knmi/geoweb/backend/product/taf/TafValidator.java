@@ -55,6 +55,7 @@ import nl.knmi.geoweb.backend.product.taf.augment.AugmentOverlappingBecomingChan
 import nl.knmi.geoweb.backend.product.taf.augment.AugmentVisibilityWeatherRequired;
 import nl.knmi.geoweb.backend.product.taf.augment.AugmentWindEnoughChange;
 import nl.knmi.geoweb.backend.product.taf.augment.AugmentWindGust;
+import nl.knmi.geoweb.backend.product.taf.augment.AugmentQualifiers;
 
 @Component
 public class TafValidator {
@@ -402,6 +403,7 @@ public class TafValidator {
 		AugmentMaxVisibility.augment(input);
 		AugmentNonRepeatingChanges.augment(input);					// FM Done
 		AugmentMaxVerticalVisibility.augment(input);
+		AugmentQualifiers.augment(input);
 	}
 
 	/**
