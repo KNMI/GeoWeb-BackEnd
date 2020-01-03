@@ -155,36 +155,6 @@
                 },
                 {
                     "additionalProperties": false,
-                    "properties": {
-                        "phenomena": {
-                            "items": {
-                                "enum": [
-                                    "funnel clouds"
-                                ],
-                                "type": "string"
-                            },
-                            "maxItems": 2,
-                            "minItems": 1,
-                            "type": "array",
-                            "uniqueItems": true
-                        },
-                        "qualifier": {
-                          "$geoweb::messages": {
-                                "enum": "FC can only be moderate or heavy"
-                            },
-                            "enum": [
-                                "moderate",
-                                "heavy"
-                            ],
-                            "type": "string"
-                        }
-                    },
-                    "required": [
-                        "phenomena"
-                    ]
-                },
-                {
-                    "additionalProperties": false,
 
                     "properties": {
                         "phenomena": {
@@ -196,7 +166,8 @@
                                     "snow",
                                     "snow grains",
                                     "ice pellets",
-                                    "sandstorm"
+                                    "sandstorm",
+                                    "funnel clouds"
                                 ],
                                 "type": "string"
                             },

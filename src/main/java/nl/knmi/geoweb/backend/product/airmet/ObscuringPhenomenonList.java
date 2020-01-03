@@ -41,7 +41,7 @@ public class ObscuringPhenomenonList {
             allPhenomena.add(new ObscuringPhenomenon("Dust storm", "DS"));
             allPhenomena.add(new ObscuringPhenomenon("Dust", "DU"));
             allPhenomena.add(new ObscuringPhenomenon("Drizzle", "DZ"));
-            allPhenomena.add(new ObscuringPhenomenon("Funnel cloud", "FC"));
+            allPhenomena.add(new ObscuringPhenomenon("Funnel clouds", "FC"));
             // allPhenomena.add(new ObscuringPhenomenon("Dust/sand whirls", "DP"));
             allPhenomena.add(new ObscuringPhenomenon("Fog", "FG"));
             allPhenomena.add(new ObscuringPhenomenon("Smoke", "FU"));

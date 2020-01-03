@@ -1,3 +1,7 @@
+2020-01-03
+* (FIX) GW-205: FC is validated without affecting other obscuration phenomena
+- used the string "funnel clouds" everywhere in the code.
+
 2019-11-27
 * (FIX) GW-218: AIRMET - TAC is not updated when deleting start position of FIR - have ensured the backend does not crash when clicking on the poly draw option to remove an already drawn fir
     Backend now returns "Missing geometry" when no start geometry has been drawn
