@@ -242,7 +242,7 @@
                         "phenomena": {
                             "items": {
                                 "$geoweb::messages": {
-                                    "enum": "Thunderstorm only allowed with no additional phenomena, rain, snow or small hail"
+                                    "enum": "Thunderstorm only allowed with rain, snow or small hail"
                                 },
                                 "enum": [
                                     "rain",
@@ -266,6 +266,7 @@
                         }
                     },
                     "required": [
+                        "phenomena",
                         "descriptor"
                     ]
                 },
@@ -273,9 +274,6 @@
                     "additionalProperties": false,
                     "properties": {
                         "descriptor": {
-                            "$geoweb::messages": {
-                                "enum": "Descriptor unknown"
-                            },
                             "enum": [
                                 "showers"
                             ],
