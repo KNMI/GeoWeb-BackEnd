@@ -61,10 +61,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     "/logout",
                     "/logout/options",
                     "/status",
-                    "/getServices",
+                    "/preset/*",
+                    "/triggers/*",
+                    "/XML2JSON",
+                    "/getPresets",
                     "/admin/read",
                     "/versioninfo/version",
                     "/getOverlayServices",
+                    "/getServices",
                     "/error").permitAll()
                 .antMatchers(HttpMethod.GET, "/sigmets/**").hasAuthority(Privilege.SIGMET_READ.getAuthority())
                 .antMatchers(HttpMethod.GET, "/tafs/**").hasAuthority(Privilege.TAF_READ.getAuthority())
@@ -73,13 +77,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.POST, "/tafs/**").hasAuthority(Privilege.TAF_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/airmets/**").hasAuthority(Privilege.AIRMET_EDIT.getAuthority())
                 .antMatchers(HttpMethod.POST, "/testproduct/**").hasAuthority(Privilege.TEST_EDIT.getAuthority())
-                // TODO: The following are not currently connected with any privileges. Consider for the future.
-                //.antMatchers(HttpMethod.GET, "/getServices", "getOverlayServices").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
-                //.antMatchers(HttpMethod.GET, "/XML2JSON").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
-                //.antMatchers(HttpMethod.GET, "/preset/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
-                //.antMatchers(HttpMethod.POST, "/preset/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
-                //.antMatchers(HttpMethod.GET, "/triggers/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
-                //.antMatchers(HttpMethod.POST, "/triggers/**").hasAnyAuthority(Privilege.PRIVILEGE.getAuthority())
                 .antMatchers(HttpMethod.POST, "/admin/receiveFeedback*").hasAnyAuthority(
                     Privilege.AIRMET_SETTINGS_EDIT.getAuthority(),
                     Privilege.SIGMET_SETTINGS_EDIT.getAuthority(),
@@ -105,6 +102,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .deleteCookies("JSESSIONID")
                 .logoutSuccessUrl(backendLogoutURL)
                 .and()
+                /* Points to IDP login page when needed */
                 .exceptionHandling().authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint(registeredRedirectUri))
                 .and().cors()
                 .and().csrf().disable();
