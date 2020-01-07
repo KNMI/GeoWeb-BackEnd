@@ -1,17 +1,17 @@
 security:
-    oauth2:
-      client:
-        accessTokenUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/token
-        userAuthorizationUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/authorize
-        preEstablishedRedirectUri: ${client.backendURL}/login
-        registeredRedirectUri: ${client.backendURL}/login
-        useCurrentUri: false
-        scope:
-          - openid
-          - profile
-          - email
-      resource:
-        userInfoUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/userInfo
+  oauth2:
+    client:
+      accessTokenUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/token
+      userAuthorizationUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/authorize
+      preEstablishedRedirectUri: ${client.backendURL}/login
+      registeredRedirectUri: ${client.backendURL}/login
+      useCurrentUri: false
+      scope:
+        - openid
+        - profile
+        - email
+    resource:
+      userInfoUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/oauth2/userInfo
 
 client:
   realm: GeoWeb
@@ -20,5 +20,5 @@ client:
   frontendURL: http://localhost:3000/
   logoutUri: https://${client.userpool}.auth.eu-west-1.amazoncognito.com/logout
 
-
-# https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_COXM0r1sc/.well-known/openid-configuration
+server:
+  useForwardHeaders: true
