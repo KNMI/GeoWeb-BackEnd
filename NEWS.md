@@ -1,3 +1,6 @@
+2020-01-14
+* GW-284: Fixed configuration with new Adaguc Services
+
 2020-01-10
 * GW-281: Added the backendURL to the JSON creaded for the testproduct 
 

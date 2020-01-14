@@ -2,7 +2,7 @@
   {
     "name":"RADAR",
     "title":"RADAR",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=RADAR",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=RADAR",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -12,7 +12,7 @@
   {
     "name":"SAT",
     "title":"SAT",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=SAT",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=SAT",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -22,7 +22,7 @@
   {
     "name":"Harmonie36",
     "title":"Harmonie36",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=Harmonie36",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=Harmonie36",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -32,7 +32,7 @@
   {
     "name":"HARMONEPS",
     "title":"HARMONEPS",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=HARMONEPS",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=HARMONEPS",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -42,7 +42,7 @@
   {
     "name":"OBS",
     "title":"OBS",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=OBS",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=OBS",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -52,7 +52,7 @@
   {
     "name":"LGT",
     "title":"LGT",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=LGT",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=LGT",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -62,7 +62,7 @@
   {
     "name":"NOWCASTMIX",
     "title":"NOWCASTMIX",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=NOWCASTMIX",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=NOWCASTMIX",
     "type":"WMS",
     "goal":"LAYER",
     "roles":[
@@ -72,7 +72,7 @@
   {
     "name":"OVL",
     "title":"OVL_EXT",
-    "service":"https://geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=OVL",
+    "service":"https://adaguc-services-geoweb.knmi.nl/adaguc-services/adagucserver?DATASET=OVL",
     "type":"WMS",
     "goal":"OVERLAY",
     "roles":[
