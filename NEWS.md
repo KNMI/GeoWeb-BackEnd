@@ -1,3 +1,6 @@
+2020-01-10
+* GW-281: Added the backendURL to the JSON creaded for the testproduct 
+
 2020-01-07
 * GW-278: Added a new class that runs a timer and checks twice a day (every 12 hours) whether or not there are products in the products folder that are 10 days or older. If so, they are removed from the respective products folder.
 

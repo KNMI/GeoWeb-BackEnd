@@ -25,6 +25,7 @@ import nl.knmi.geoweb.backend.product.ProductConverter;
 public class TestProduct implements GeoWebProduct, IExportable<TestProduct> {
     String timeStamp;
     String userName;
+    String backendURL;
 
 
 
