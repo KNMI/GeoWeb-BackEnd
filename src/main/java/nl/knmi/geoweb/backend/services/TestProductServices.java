@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -41,13 +42,14 @@ public class TestProductServices {
     @RequestMapping(path = "", 
                     method = {RequestMethod.GET, RequestMethod.POST}, 
                     produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<JSONObject> createTestProduct() {
+    public ResponseEntity<JSONObject> createTestProduct(@Value("${client.backendURL}") String backendURL) {
         log.trace("createTestProduct");
 
         String currentTime = OffsetDateTime.now(ZoneId.of("Z")).toString(); 
         TestProduct testProduct = new TestProduct();
         testProduct.setTimeStamp(currentTime);
         testProduct.setUserName(UserLogin.getUserName());
+        testProduct.setBackendURL(backendURL);
 
         try{
             String result = publishTestProductStore.export(testProduct, testProductConverter, testProductObjectMapper);
