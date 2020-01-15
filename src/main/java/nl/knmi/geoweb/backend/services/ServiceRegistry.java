@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import nl.knmi.adaguc.tools.Tools;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -20,19 +22,21 @@ public class ServiceRegistry {
 
 	@Autowired
 	AdminStore adminStore;
-	
+
+	@Autowired
+    @Qualifier("geoWebObjectMapper")
+    private ObjectMapper objectMapper;
+
 	private ServiceRegistry() {
 	}
-	
+
 	private void getServices() throws IOException {
-		ObjectMapper mapper=new ObjectMapper();
-		String json="";
-		json = adminStore.read("config", "services.json");
-		services=mapper.readValue(json, new TypeReference<List<Service>>(){});
+		String json = Tools.readResource("adminstore/config/services.json");
+		services=objectMapper.readValue(json, new TypeReference<List<Service>>(){});
 	}
 
 	public List<Service> getWMSServicesForRole(String role) throws IOException {
-		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
+		this.getServices(); //TODO cache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS) && srv.getGoal().equals(ServiceGoal.LAYER)){
@@ -46,9 +50,9 @@ public class ServiceRegistry {
 		}
 		return foundServices;
 	}
-	
+
 	public List<Service> getWMSOverlayServicesForRole(String role) throws IOException {
-		/* if (services==null) */ this.getServices(); //TODO chache temporarily?
+	    this.getServices(); //TODO cache temporarily?
 		List<Service>foundServices=new ArrayList<Service>();
 		for (Service srv: services) {
 			if (srv.getType().equals(ServiceType.WMS)&&srv.getGoal().equals(ServiceGoal.OVERLAY)){
