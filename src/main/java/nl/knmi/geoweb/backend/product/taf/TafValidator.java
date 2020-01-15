@@ -359,7 +359,6 @@ public class TafValidator {
 	}
 
 	private List<Resource> discoverSchemata(String schemaResourceLocation) {
-
 		List<Resource> resultList = new ArrayList<Resource>();
 		try {
 			String locationPattern = "file:" + schemaResourceLocation + "**/*.json";
@@ -373,6 +372,7 @@ public class TafValidator {
 			throw new IllegalStateException(
 					String.format("Could not discover the configuration files containing the validation rules"));
 		}
+
 		return resultList;
 	}
 
