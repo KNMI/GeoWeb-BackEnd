@@ -5,21 +5,16 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NotDirectoryException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -27,32 +22,36 @@ import nl.knmi.adaguc.tools.Tools;
 
 @Slf4j
 @Component
+@Getter
 public class TafSchemaStore {
-	@Getter
+		
 	private String directory = null;
 	
+	private static boolean schemaCopied=false;
+	
+	private static boolean enrichedSchemaCopied=false;
 /*
 	@Autowired
 	private TafValidator tafValidator;
 */
 
 	public TafSchemaStore(@Value(value = "${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
-	
+
 		String dir = productstorelocation + "/tafs/schemas";
 		log.debug("TafSchemaStore at " + dir);
 		File f = new File(dir);
 		if(f.exists() == false){
 			Tools.mksubdirs(f.getAbsolutePath());
-			log.debug("Creating TafSchemaStore at ["+f.getAbsolutePath()+"]");		
+			log.debug("Creating TafSchemaStore at ["+f.getAbsolutePath()+"]");
 		}
 		if(f.isDirectory() == false){
 			log.debug("Taf directory location is not a directory");
 			throw new NotDirectoryException("Taf directory location is not a directory");
 		}
-		
+
 		this.directory=dir;
 	}
-	
+
 	public String getSchemaSchema() throws IOException {
 		String s = null;
 		try {
@@ -69,24 +68,6 @@ public class TafSchemaStore {
 	private Long getTimestamp(String fname) {
 		return Long.parseLong(fname.replaceAll("\\D+", ""));
 	}
-
-/*      //Does not work work anymore with autowiring
-
-        @Autowired
-        private TafValidator tafValidator;
-
-        public void _storeTafSchema(String schema, ObjectMapper mapper) throws JsonProcessingException, IOException, ProcessingException {
-                JsonNode asJson = mapper.readTree(schema);
-                if (tafValidator.validateSchema(asJson)) {
-                        long unixTime = System.currentTimeMillis() / 1000L;
-                        String fn=String.format("%s/taf_schema_%s.json", this.directory, unixTime);
-                        Tools.writeFile(fn, asJson.toString());
-                } else {
-                        throw new ProcessingException("Schema is not valid");
-                }
-        }
-*/
-
 
 	public String[] getTafSchemas() throws JsonParseException, JsonMappingException, IOException {
 		//Scan directory for tafs
@@ -106,71 +87,67 @@ public class TafSchemaStore {
 				byte[] tafBytes = Files.readAllBytes(f.toPath());
 				tafs.add(new String(tafBytes, "utf-8"));
 			}
-			
 			return (String[])tafs.toArray();
 		}
 		return null;
 	}
 	public String getLatestEnrichedTafSchema() throws IOException {
+		// Delete any *enriched_taf_schema*.json schemata currently in the directory
 		File dir=new File(directory);
 		File[] files=dir.listFiles(new FilenameFilter() {
 
-			@Override
+		@Override
 			public boolean accept(File dir, String name) {
-				return !name.contains("..") && name.contains("enriched_taf_schema")&&name.endsWith(".json");
+				return name.contains("enriched_taf_schema")&&name.endsWith(".json");
 			}
 		});
-		
-		// Timestamp is in the file so sort files according to this timestamp
-		// Oldest are first so pick the final element in the array
-		if (files!=null && files.length > 0) {
-			Arrays.sort(files, (a, b) -> getTimestamp(a.getName()).compareTo(getTimestamp(b.getName())));
-			File latest = files[files.length - 1];
-			byte[] bytes = Files.readAllBytes(latest.toPath());
-			return new String(bytes, "utf-8");
-		} else {
-			log.warn("No enriched taf schemas found, copying one from resources dir");
-			String s = Tools.readResource("EnrichedTafValidatorSchema.json");
-			String fn=String.format("%s/enriched_taf_schema_%d.json",  this.directory, new Date().getTime()/1000);
-			Tools.writeFile(fn, s);
-			return getLatestEnrichedTafSchema();
+		for(File file : files){
+			file.delete();
 		}
-		
 
-	}
-	public String getLatestTafSchema() throws IOException {
-		File dir=new File(directory);
-		File[] files=dir.listFiles(new FilenameFilter() {
-
-			@Override
-			public boolean accept(File dir, String name) {
-				return !name.contains("..") && name.contains("taf_schema") && !name.contains("enriched") && name.endsWith(".json");
-			}
-		});
-		
-		// Timestamp is in the file so sort files according to this timestamp
-		// Oldest are first so pick the final element in the array
-		if (files!=null && files.length > 0) {
-			Arrays.sort(files, (a, b) -> getTimestamp(a.getName()).compareTo(getTimestamp(b.getName())));
-			File latest = files[files.length - 1];
-			byte[] bytes = Files.readAllBytes(latest.toPath());
-			String result = new String(bytes, "utf-8");
-			return result;
-		} else {
-			log.warn("No taf schemas found, copying one from resources dir");
-			String s = Tools.readResource("TafValidatorSchema.json");
-			String fn=String.format("%s/taf_schema_%d.json",  this.directory, new Date().getTime()/1000);
+        if (!enrichedSchemaCopied) {
+            log.warn("No taf enriched schema found, copying from resources dir");
+            String s = Tools.readResource("EnrichedTafValidatorSchema.json");
+            String fn=String.format("%s/EnrichedTafValidatorSchema.json", this.directory);
 			Tools.writeFile(fn, s);
 			
+            enrichedSchemaCopied=true;
+        }
+        byte[] bytes = Files.readAllBytes(Paths.get(this.directory, "EnrichedTafValidatorSchema.json"));
+        String result = new String(bytes, "utf-8");
+        return result;
+	}
+
+	public String getLatestTafSchema() throws IOException {
+
+        if (!schemaCopied) {
+			// Delete any *taf_schema*.json schemata currently in the directory
+			File dir=new File(directory);
+			File[] files=dir.listFiles(new FilenameFilter() {
+
+				@Override
+				public boolean accept(File dir, String name) {
+					return name.contains("taf_schema") && !name.contains("enriched") && name.endsWith(".json");
+				}
+			});
+			for(File file : files){
+				file.delete();
+			}
+
+			log.warn("No taf schemas found, copying one from resources dir");
+			String s = Tools.readResource("TafValidatorSchema.json");
+			String fn=String.format("%s/TafValidatorSchema.json", this.directory);
+			Tools.writeFile(fn, s);
+
 			// Copy subschemas
 			s = Tools.readResource("SubSchemas/clouds.json");
 			fn=String.format("%s/clouds.json",  this.directory);
 			Tools.writeFile(fn, s);
-			
+
 			s = Tools.readResource("SubSchemas/weathergroup.json");
 			fn=String.format("%s/weathergroup.json",  this.directory);
 			Tools.writeFile(fn, s);
-			
+
 			s = Tools.readResource("SubSchemas/visibility.json");
 			fn=String.format("%s/visibility.json",  this.directory);
 			Tools.writeFile(fn, s);
@@ -178,11 +155,11 @@ public class TafSchemaStore {
 			s = Tools.readResource("SubSchemas/wind.json");
 			fn=String.format("%s/wind.json",  this.directory);
 			Tools.writeFile(fn, s);
-			
+
 			s = Tools.readResource("SubSchemas/forecast.json");
 			fn=String.format("%s/forecast.json",  this.directory);
 			Tools.writeFile(fn, s);
-			
+
 			s = Tools.readResource("SubSchemas/weather.json");
 			fn=String.format("%s/weather.json",  this.directory);
 			Tools.writeFile(fn, s);
@@ -202,9 +179,10 @@ public class TafSchemaStore {
 			s = Tools.readResource("SubSchemas/temperature.json");
 			fn=String.format("%s/temperature.json",  this.directory);
 			Tools.writeFile(fn, s);
-			
-			return getLatestTafSchema();
-		}
-
+			schemaCopied=true;
+        }
+        byte[] bytes = Files.readAllBytes(Paths.get(this.directory, "TafValidatorSchema.json"));
+        String result = new String(bytes, "utf-8");
+        return result;
 	}
 }

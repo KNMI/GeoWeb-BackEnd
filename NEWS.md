@@ -1,3 +1,6 @@
+2020-01-15
+* GW-282: The most recent TAF schemas are used now when starting the BE which should keep these up to date if any changes have been made
+
 2020-01-14
 * GW-284: Fixed configuration with new Adaguc Services
 
