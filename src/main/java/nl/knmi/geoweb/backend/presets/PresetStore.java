@@ -35,22 +35,29 @@ public class PresetStore {
 	public static class StoredPreset {
 		Preset preset;
 		private boolean system=false;
+		private boolean shared=true;
 		private String user;
 		private List<String> roles;
 		public StoredPreset(Preset preset) {
-			this.system=true;
+			this(preset,false);
+		}
+		public StoredPreset(Preset preset, boolean shared) {
+			this.system=!shared;
+			this.shared=shared;
 			this.user=null;
 			this.roles=null;
 			this.preset=preset;
 		}
 		public StoredPreset(String user, Preset preset) {
 			this.system=false;
+			this.shared=false;
 			this.user=user;
 			this.roles=null;
 			this.preset=preset;
 		}
 		public StoredPreset(List<String>roles, Preset preset) {
 			this.system=false;
+			this.shared=false;
 			this.user=null;
 			this.roles=roles;
 			this.preset=preset;
@@ -61,6 +68,7 @@ public class PresetStore {
 	private String directory;
 	private String roleDir;
 	private String userDir;
+	private String sharedDir;
 
 
 	public PresetStore(@Value("${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
@@ -91,6 +99,14 @@ public class PresetStore {
 				throw new NotDirectoryException("Presets directory can not be created");
 			}
 		}
+		this.sharedDir=dir+"/shared";
+		f=new File(sharedDir);
+		if(f.exists() == false){
+			if (!f.mkdir()) {
+				log.error("Presets directory can not be created");
+				throw new NotDirectoryException("Presets directory can not be created");
+			}
+		}
 		this.directory=dir;
 
 	}
@@ -111,6 +127,9 @@ public class PresetStore {
 		}else if (preset.getUser()!=null){
 			//Store in userdir
 			f=new File(this.userDir,"user_"+preset.getUser()+"_"+preset.getPreset().getName()+".json");
+		}else if (preset.isShared()) {
+			//Store in sysdir
+			f=new File(this.sharedDir, preset.getPreset().getName()+".json");
 		}else {
 			//Store in roledir
 			f=new File(this.roleDir,"role_"+preset.getPreset().getName()+".json");
@@ -132,6 +151,11 @@ public class PresetStore {
 
 	public void storeSystemPreset(Preset preset) throws IOException {
 		StoredPreset sp=new StoredPreset(preset);
+		store(sp);
+	}
+
+	public void storeSharedPreset(Preset preset) throws IOException {
+		StoredPreset sp=new StoredPreset(preset,true);
 		store(sp);
 	}
 
@@ -238,6 +262,27 @@ public class PresetStore {
 		return presets;
 	}
 	
+	public List<Preset> readSharedPresets() {
+		List<Preset> presets=new ArrayList<Preset>();
+		try (DirectoryStream<Path> files = Files.newDirectoryStream(Paths.get(sharedDir),
+				new DirectoryStream.Filter<Path>() {
+			@Override
+			public boolean accept(Path entry) throws IOException {
+				return true;
+			}
+		})
+				) {
+
+			for (Path path : files) {
+				StoredPreset preset=loadJsonStoredPresetFromFile(path.toString());
+				presets.add(preset.getPreset());
+			}
+
+		} catch (IOException e) {
+			log.error(e.getMessage());
+		}
+		return presets;
+	}
 //	public static void main(String[]args) {
 //		PresetStore ps=null;
 //		try {
