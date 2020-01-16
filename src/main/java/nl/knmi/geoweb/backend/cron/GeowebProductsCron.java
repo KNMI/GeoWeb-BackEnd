@@ -100,6 +100,31 @@ public class GeowebProductsCron {
         log.error(e.getMessage());
       }
     }
+
+    public void cleanSharedPresets(double timeForRemoval) {
+      /* Scan shared preset folder and grab all files*/
+      List<String> filesSharedPresets = new ArrayList<>();
+      try {
+        log.debug("Retrieving shared presets from from " + productstorelocation + "/presets/shared");
+        File[] retrievedFiles = new File(productstorelocation + "/presets/shared").listFiles();
+        long currentDate = new Date().getTime();
+        for (int i = 0; i < retrievedFiles.length; i++){
+          long lastModified = retrievedFiles[i].lastModified();
+          if(retrievedFiles[i].isFile() && lastModified != 0 && (currentDate - lastModified > timeForRemoval)){
+            try {
+              String fileName = retrievedFiles[i].getName().toString();
+              retrievedFiles[i].delete();
+              filesSharedPresets.add(fileName);
+            } catch (Exception e) {
+              log.error(e.getMessage());
+            }
+          }
+        };
+        log.debug("The following files have been deleted from the shared presets folder: " + filesSharedPresets.toString());
+      } catch (Exception e) {
+        log.error(e.getMessage());
+      }
+    }
   
     @Override
     public void run() {
@@ -114,6 +139,9 @@ public class GeowebProductsCron {
 
       /* Scan products folder AIRMETs and grab all files*/
       cleanAirmets (timeForRemoval);
+
+      /* Scan shared preset folder and grab all files*/
+      cleanSharedPresets(timeForRemoval);
     }
   }
   GeowebProductsCron () {

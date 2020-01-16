@@ -66,6 +66,12 @@ public class PresetServices {
 				List<Preset>rolePresets=presetStore.readRolePresets(role);
 				presets.addAll(rolePresets);
 			}
+			List<Preset>sharedPresets=presetStore.readSharedPresets();
+			for (Preset sharedPreset: sharedPresets) {
+				if (sharedPreset.getName().equals(name)) {
+					presets.add(sharedPreset);
+				}
+			}
 		}
 		for (Preset preset : presets) {
 			if (preset.getName().equals(name)) {
@@ -126,5 +132,21 @@ public class PresetServices {
 		}
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);				
 	}
+
+	@RequestMapping(path="/putsharedpreset", method=RequestMethod.POST)
+	public ResponseEntity<String> storeSharedPreset(@RequestParam("name")String name, @RequestBody Preset preset, HttpServletRequest req) {
+		if (preset!=null) {
+			preset.setName(name);
+			try {
+				presetStore.storeSharedPreset(preset);
+				return ResponseEntity.status(HttpStatus.OK).body("{\"message\": \"ok\"}");					
+
+			} catch (IOException e) {
+				log.error(e.getMessage());
+			}
+		}
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);			
+	}
+
 }
 
