@@ -60,8 +60,8 @@ import nl.knmi.geoweb.backend.product.taf.augment.AugmentQualifiers;
 @Component
 public class TafValidator {
 
-	@Autowired
-	@Qualifier("tafObjectMapper")
+//	@Autowired
+//	@Qualifier("tafObjectMapper")
 	private ObjectMapper objectMapper;
 
 	TafSchemaStore tafSchemaStore;

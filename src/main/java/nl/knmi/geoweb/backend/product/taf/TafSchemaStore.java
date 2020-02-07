@@ -24,18 +24,18 @@ import nl.knmi.adaguc.tools.Tools;
 @Component
 @Getter
 public class TafSchemaStore {
-		
+
 	private String directory = null;
-	
+
 	private static boolean schemaCopied=false;
-	
+
 	private static boolean enrichedSchemaCopied=false;
 /*
 	@Autowired
 	private TafValidator tafValidator;
 */
 
-	public TafSchemaStore(@Value(value = "${geoweb.products.storeLocation}") String productstorelocation) throws IOException {
+	public TafSchemaStore(@Value(value = "/tmp") String productstorelocation) throws IOException {
 
 		String dir = productstorelocation + "/tafs/schemas";
 		log.debug("TafSchemaStore at " + dir);
@@ -110,7 +110,7 @@ public class TafSchemaStore {
             String s = Tools.readResource("EnrichedTafValidatorSchema.json");
             String fn=String.format("%s/EnrichedTafValidatorSchema.json", this.directory);
 			Tools.writeFile(fn, s);
-			
+
             enrichedSchemaCopied=true;
         }
         byte[] bytes = Files.readAllBytes(Paths.get(this.directory, "EnrichedTafValidatorSchema.json"));
